@@ -1,5 +1,6 @@
 from peewee import *
 from settings.settings import DB
+from passlib.hash import pbkdf2_sha256
 
 class BaseModel(Model):
     class Meta:
@@ -27,4 +28,13 @@ class User(BaseModel):
 
 if __name__ == "__main__":
     DB.create_tables([User])
-    
+    #密码：1.对称加密，2.非对称加密 用户无法知道原始密码
+    # for i in range(10):
+    #     user = User()
+    #     user.nick_name = f"yolo{i}"
+    #     user.mobile=f"134000000{i}"
+    #     user.password = pbkdf2_sha256.hash("123456")
+    #     user.save()
+    #验证
+    for user in User.select():
+        print(pbkdf2_sha256.verify("123456",user.password))
