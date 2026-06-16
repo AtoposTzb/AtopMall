@@ -3,7 +3,7 @@ import "google/protobuf/empty.proto";
 option go_package = ",;proto";
 
 service User {
-  rpc GetUserList(PageInfo) returns (UserLisResonse); //用户列表 一般后台管理系统使用的接口
+  rpc GetUserList(PageInfo) returns (UserListResponse); //用户列表 一般后台管理系统使用的接口
   rpc GetUserByMobile(MobileRequest) returns (UserInfoResponse); //根据手机号查询用户信息
   rpc GetUserById(IdRequest) returns (UserInfoResponse); //根据用户id查询用户信息
   rpc CreateUser(CreateUserInfo) returns (UserInfoResponse); //添加用户
@@ -37,10 +37,10 @@ message UserInfoResponse {
   string password = 3;
   string mobile = 4;
   string gender = 5;
-  string birthDay = 6;
-  int32 role = 7;
+  uint64 birthDay = 6;
+  int32 rolo = 7;
 }
-message UserLisResonse {
+message UserListResponse {
   uint32 total = 1;
   repeated UserInfoResponse data = 2;
 }

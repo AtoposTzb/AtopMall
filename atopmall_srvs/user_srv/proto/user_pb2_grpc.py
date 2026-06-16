@@ -38,7 +38,7 @@ class UserStub:
         self.GetUserList = channel.unary_unary(
                 '/User/GetUserList',
                 request_serializer=user__pb2.PageInfo.SerializeToString,
-                response_deserializer=user__pb2.UserLisResonse.FromString,
+                response_deserializer=user__pb2.UserListResponse.FromString,
                 _registered_method=True)
         self.GetUserByMobile = channel.unary_unary(
                 '/User/GetUserByMobile',
@@ -106,7 +106,7 @@ def add_UserServicer_to_server(servicer, server):
             'GetUserList': grpc.unary_unary_rpc_method_handler(
                     servicer.GetUserList,
                     request_deserializer=user__pb2.PageInfo.FromString,
-                    response_serializer=user__pb2.UserLisResonse.SerializeToString,
+                    response_serializer=user__pb2.UserListResponse.SerializeToString,
             ),
             'GetUserByMobile': grpc.unary_unary_rpc_method_handler(
                     servicer.GetUserByMobile,
@@ -155,7 +155,7 @@ class User:
             target,
             '/User/GetUserList',
             user__pb2.PageInfo.SerializeToString,
-            user__pb2.UserLisResonse.FromString,
+            user__pb2.UserListResponse.FromString,
             options,
             channel_credentials,
             insecure,
