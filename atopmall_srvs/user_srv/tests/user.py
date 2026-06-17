@@ -1,4 +1,9 @@
+import sys
+import os
 import grpc
+
+BASE_DIR = os.path.dirname(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+sys.path.insert(0,BASE_DIR)
 from user_srv.proto import user_pb2,user_pb2_grpc
 class TestUserServicer:
     def __init__(self):
@@ -12,7 +17,27 @@ class TestUserServicer:
         print(rsp.total)
         for user in rsp.data:
             print(user.mobile,user.birthDay)
-
+    
+    def user_by_id(self,id):
+        #根据用户id获取用户信息
+        rsp:user_pb2.UserInfoResponse = self.stub.GetUserById(user_pb2.IdRequest(id = id))
+        print(rsp.id,rsp.mobile)
+    def user_by_mobile(self,mobile):
+        #根据用户mobile获取用户信息
+        rsp:user_pb2.UserInfoResponse = self.stub.GetUserByMobile(user_pb2.MobileRequest(mobile = mobile))
+        print(rsp.id,rsp.mobile)
+    def create_user(self,nick_name,mobile,password):
+        #创建用户
+        rsp:user_pb2.UserInfoResponse = self.stub.CreateUser(user_pb2.CreateUserInfo(
+            nickName = nick_name,
+            password = password,
+            mobile = mobile
+        ))
+        print(rsp.id)        
+        
 if __name__ == "__main__":
-    testuser = TestUserServicer()
-    testuser.user_list()
+    testUser = TestUserServicer()
+    # testUser.user_list()
+    # testUser.user_by_id(3)
+    # testUser.user_by_mobile("13800000000")
+    testUser.create_user("test_user","13800000000","123456")
