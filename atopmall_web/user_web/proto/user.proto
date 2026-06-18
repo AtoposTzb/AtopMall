@@ -1,6 +1,6 @@
 syntax = "proto3";
 import "google/protobuf/empty.proto";
-option go_package = ",;proto";
+option go_package = "atopmall_web/user_web/proto";
 
 service User {
   rpc GetUserList(PageInfo) returns (UserListResponse); //用户列表 一般后台管理系统使用的接口
