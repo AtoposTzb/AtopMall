@@ -1,14 +1,14 @@
 package initialize
 
 import (
-	"atopmall_web/router"
-
 	"github.com/gin-gonic/gin"
+
+	"atopmall_web/user_web/router"
 )
 
 func RoutersInit() *gin.Engine {
 	r := gin.Default()
-	ApiRouter := r.Group("u/v1")
+	ApiRouter := r.Group("/u/v1")
 	router.InitUserRouter(ApiRouter)
 	return r
 }

@@ -1,9 +1,9 @@
 package router
 
 import (
-	"atopmall_web/api"
-
 	"github.com/gin-gonic/gin"
+
+	"atopmall_web/user_web/api"
 )
 
 func InitUserRouter(r *gin.RouterGroup) {

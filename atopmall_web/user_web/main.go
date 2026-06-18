@@ -1,10 +1,11 @@
 package main
 
 import (
-	"atopmall_web/initialize"
 	"strconv"
 
 	"go.uber.org/zap"
+
+	"atopmall_web/user_web/initialize"
 )
 
 func main() {

@@ -15,5 +15,6 @@ logs/
 # .vscode文件
 .vscode/
 
-# atopmall接口文档 
+# atopmall接口文档 手动完善所有接口文档
+# 更新完善所有接口文档,git仓库已经忽略 需要的邮箱留言：yolo_t@outlook.com
 atopmall接口文档/
