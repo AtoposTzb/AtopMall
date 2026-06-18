@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"atopmall_web/user_web/global"
 	"atopmall_web/user_web/global/responselist"
 	"atopmall_web/user_web/proto"
 )
@@ -49,8 +50,8 @@ func HandleGrpcErrorToHttpError(err error, c *gin.Context) {
 
 func GerUserList(ctx *gin.Context) {
 	//调用user_web的user.proto接口 GetUserList 也就是远程
-	ip := "127.0.0.1"
-	port := 50051
+	ip := global.ServerConfig.UserSrvInfo.Host
+	port := global.ServerConfig.UserSrvInfo.Port
 	userCoun, err := grpc.NewClient(ip+":"+strconv.Itoa(port), grpc.WithInsecure())
 	if err != nil {
 		zap.S().Errorw("[GetUserList]连接【用户服务失败】",
