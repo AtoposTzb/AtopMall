@@ -1,7 +1,12 @@
 package global
 
-import "atopmall_web/user_web/config"
+import (
+	"atopmall_web/user_web/config"
+
+	ut "github.com/go-playground/universal-translator"
+)
 
 var (
 	ServerConfig *config.ServerConfig = &config.ServerConfig{}
+	Trans        ut.Translator
 )

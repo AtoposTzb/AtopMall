@@ -25,28 +25,32 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\x1a\x1bgoogle/protobuf/empty.proto\"-\n\x08PageInfo\x12\x0f\n\x07pageNum\x18\x01 \x01(\r\x12\x10\n\x08pageSize\x18\x02 \x01(\r\"\x1f\n\rMobileRequest\x12\x0e\n\x06mobile\x18\x01 \x01(\t\"\x17\n\tIdRequest\x12\n\n\x02id\x18\x01 \x01(\x05\"D\n\x0e\x43reateUserInfo\x12\x10\n\x08nickName\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x0e\n\x06mobile\x18\x03 \x01(\t\"P\n\x0eUpdateUserInfo\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x08nickName\x18\x02 \x01(\t\x12\x0e\n\x06gender\x18\x03 \x01(\t\x12\x10\n\x08\x62irthDay\x18\x04 \x01(\x04\"\x82\x01\n\x10UserInfoResponse\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x08nickName\x18\x02 \x01(\t\x12\x10\n\x08password\x18\x03 \x01(\t\x12\x0e\n\x06mobile\x18\x04 \x01(\t\x12\x0e\n\x06gender\x18\x05 \x01(\t\x12\x10\n\x08\x62irthDay\x18\x06 \x01(\x04\x12\x0c\n\x04rolo\x18\x07 \x01(\x05\"B\n\x10UserListResponse\x12\r\n\x05total\x18\x01 \x01(\r\x12\x1f\n\x04\x64\x61ta\x18\x02 \x03(\x0b\x32\x11.UserInfoResponse2\x80\x02\n\x04User\x12+\n\x0bGetUserList\x12\t.PageInfo\x1a\x11.UserListResponse\x12\x34\n\x0fGetUserByMobile\x12\x0e.MobileRequest\x1a\x11.UserInfoResponse\x12,\n\x0bGetUserById\x12\n.IdRequest\x1a\x11.UserInfoResponse\x12\x30\n\nCreateUser\x12\x0f.CreateUserInfo\x1a\x11.UserInfoResponse\x12\x35\n\nUpdateUser\x12\x0f.UpdateUserInfo\x1a\x16.google.protobuf.EmptyB\tZ\x07,;protob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\x1a\x1bgoogle/protobuf/empty.proto\"@\n\x11PasswordCheckInfo\x12\x10\n\x08password\x18\x01 \x01(\t\x12\x19\n\x11\x65ncryptedPassword\x18\x02 \x01(\t\" \n\rCheckResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"-\n\x08PageInfo\x12\x0f\n\x07pageNum\x18\x01 \x01(\r\x12\x10\n\x08pageSize\x18\x02 \x01(\r\"\x1f\n\rMobileRequest\x12\x0e\n\x06mobile\x18\x01 \x01(\t\"\x17\n\tIdRequest\x12\n\n\x02id\x18\x01 \x01(\x05\"D\n\x0e\x43reateUserInfo\x12\x10\n\x08nickName\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x0e\n\x06mobile\x18\x03 \x01(\t\"P\n\x0eUpdateUserInfo\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x08nickName\x18\x02 \x01(\t\x12\x0e\n\x06gender\x18\x03 \x01(\t\x12\x10\n\x08\x62irthDay\x18\x04 \x01(\x04\"\x82\x01\n\x10UserInfoResponse\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x08nickName\x18\x02 \x01(\t\x12\x10\n\x08password\x18\x03 \x01(\t\x12\x0e\n\x06mobile\x18\x04 \x01(\t\x12\x0e\n\x06gender\x18\x05 \x01(\t\x12\x10\n\x08\x62irthDay\x18\x06 \x01(\x04\x12\x0c\n\x04rolo\x18\x07 \x01(\x05\"B\n\x10UserListResponse\x12\r\n\x05total\x18\x01 \x01(\r\x12\x1f\n\x04\x64\x61ta\x18\x02 \x03(\x0b\x32\x11.UserInfoResponse2\xb5\x02\n\x04User\x12+\n\x0bGetUserList\x12\t.PageInfo\x1a\x11.UserListResponse\x12\x34\n\x0fGetUserByMobile\x12\x0e.MobileRequest\x1a\x11.UserInfoResponse\x12,\n\x0bGetUserById\x12\n.IdRequest\x1a\x11.UserInfoResponse\x12\x30\n\nCreateUser\x12\x0f.CreateUserInfo\x1a\x11.UserInfoResponse\x12\x35\n\nUpdateUser\x12\x0f.UpdateUserInfo\x1a\x16.google.protobuf.Empty\x12\x33\n\rCheckPassWord\x12\x12.PasswordCheckInfo\x1a\x0e.CheckResponseB\x1dZ\x1b\x61topmall_web/user_web/protob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'user_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'Z\007,;proto'
-  _globals['_PAGEINFO']._serialized_start=43
-  _globals['_PAGEINFO']._serialized_end=88
-  _globals['_MOBILEREQUEST']._serialized_start=90
-  _globals['_MOBILEREQUEST']._serialized_end=121
-  _globals['_IDREQUEST']._serialized_start=123
-  _globals['_IDREQUEST']._serialized_end=146
-  _globals['_CREATEUSERINFO']._serialized_start=148
-  _globals['_CREATEUSERINFO']._serialized_end=216
-  _globals['_UPDATEUSERINFO']._serialized_start=218
-  _globals['_UPDATEUSERINFO']._serialized_end=298
-  _globals['_USERINFORESPONSE']._serialized_start=301
-  _globals['_USERINFORESPONSE']._serialized_end=431
-  _globals['_USERLISTRESPONSE']._serialized_start=433
-  _globals['_USERLISTRESPONSE']._serialized_end=499
-  _globals['_USER']._serialized_start=502
-  _globals['_USER']._serialized_end=758
+  _globals['DESCRIPTOR']._serialized_options = b'Z\033atopmall_web/user_web/proto'
+  _globals['_PASSWORDCHECKINFO']._serialized_start=43
+  _globals['_PASSWORDCHECKINFO']._serialized_end=107
+  _globals['_CHECKRESPONSE']._serialized_start=109
+  _globals['_CHECKRESPONSE']._serialized_end=141
+  _globals['_PAGEINFO']._serialized_start=143
+  _globals['_PAGEINFO']._serialized_end=188
+  _globals['_MOBILEREQUEST']._serialized_start=190
+  _globals['_MOBILEREQUEST']._serialized_end=221
+  _globals['_IDREQUEST']._serialized_start=223
+  _globals['_IDREQUEST']._serialized_end=246
+  _globals['_CREATEUSERINFO']._serialized_start=248
+  _globals['_CREATEUSERINFO']._serialized_end=316
+  _globals['_UPDATEUSERINFO']._serialized_start=318
+  _globals['_UPDATEUSERINFO']._serialized_end=398
+  _globals['_USERINFORESPONSE']._serialized_start=401
+  _globals['_USERINFORESPONSE']._serialized_end=531
+  _globals['_USERLISTRESPONSE']._serialized_start=533
+  _globals['_USERLISTRESPONSE']._serialized_end=599
+  _globals['_USER']._serialized_start=602
+  _globals['_USER']._serialized_end=911
 # @@protoc_insertion_point(module_scope)

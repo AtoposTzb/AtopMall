@@ -4,18 +4,42 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"atopmall_web/user_web/forms"
 	"atopmall_web/user_web/global"
 	"atopmall_web/user_web/global/responselist"
 	"atopmall_web/user_web/proto"
 )
+
+func removeTopStruct(fileds map[string]string) map[string]string {
+	rsp := map[string]string{}
+	for field, err := range fileds {
+		rsp[field[strings.Index(field, ".")+1:]] = err
+	}
+	return rsp
+}
+
+func HandleValidatorError(c *gin.Context, err error) {
+	errs, ok := err.(validator.ValidationErrors)
+	if !ok {
+		c.JSON(http.StatusOK, gin.H{
+			"msg": err.Error(),
+		})
+	}
+	c.JSON(http.StatusBadRequest, gin.H{
+		"error": removeTopStruct(errs.Translate(global.Trans)),
+	})
+	return
+}
 
 func HandleGrpcErrorToHttpError(err error, c *gin.Context) {
 	//将grpc的code转换为http的code(状态码)发送给前端
@@ -63,9 +87,12 @@ func GerUserList(ctx *gin.Context) {
 	defer userCoun.Close()
 	//生成grpc的client并调用接口
 	userSrcClient := proto.NewUserClient(userCoun)
+
+	pnInt, _ := strconv.Atoi(ctx.DefaultQuery("pn", "0"))
+	pnSizeInt, _ := strconv.Atoi(ctx.DefaultQuery("psize", "10"))
 	rsp, err := userSrcClient.GetUserList(context.Background(), &proto.PageInfo{
-		PageNum:  1,
-		PageSize: 10,
+		PageNum:  uint32(pnInt),
+		PageSize: uint32(pnSizeInt),
 	})
 	if err != nil {
 		zap.S().Errorw("[GetUserList] 查询 【用户列表】 失败")
@@ -92,4 +119,72 @@ func GerUserList(ctx *gin.Context) {
 		// result = append(result, data)
 	}
 	ctx.JSON(http.StatusOK, result)
+}
+
+func PasswordLogin(ctx *gin.Context) {
+	//表单验证
+	passwordLoginForm := forms.PasswordLoginForm{}
+	if err := ctx.ShouldBind(&passwordLoginForm); err != nil {
+		HandleValidatorError(ctx, err)
+		return
+	}
+
+	//同样连接用户的grpc服务，和上面重复，后面再优化
+	// ip := global.ServerConfig.UserSrvInfo.Host
+	// port := global.ServerConfig.UserSrvInfo.Port
+	userCoun, err := grpc.NewClient(global.ServerConfig.UserSrvInfo.Host+":"+strconv.Itoa(global.ServerConfig.UserSrvInfo.Port), grpc.WithInsecure())
+	if err != nil {
+		zap.S().Errorw("[GetUserList]连接【用户服务失败】",
+			"msg", err.Error(),
+		)
+
+	}
+	// 关闭连接
+	defer userCoun.Close()
+	//生成grpc的client并调用接口
+	userSrcClient := proto.NewUserClient(userCoun)
+
+	//登录的逻辑：查询用户是否存在，如果存在，判断密码是否正确
+	rsp, err := userSrcClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
+		Mobile: passwordLoginForm.Mobile,
+	})
+	if err != nil {
+		if e, ok := status.FromError(err); ok {
+			switch e.Code() {
+			case codes.NotFound:
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"mobile": "用户不存在",
+				})
+			default:
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"mobile": "登录失败",
+				})
+
+			}
+
+		}
+		return
+	} else {
+		//检查密码是否正确
+		if passRep, passErr := userSrcClient.CheckPassWord(context.Background(), &proto.PasswordCheckInfo{
+			Password:          passwordLoginForm.Password,
+			EncryptedPassword: rsp.Password,
+		}); passErr != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"mobile": "登录失败",
+			})
+		} else {
+			if passRep.Success {
+				ctx.JSON(http.StatusOK, gin.H{
+					"msg": "登录成功",
+				})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{
+					"msg": "密码错误",
+				})
+			}
+
+		}
+	}
+
 }
