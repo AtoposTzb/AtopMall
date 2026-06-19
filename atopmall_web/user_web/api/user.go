@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -17,6 +18,8 @@ import (
 	"atopmall_web/user_web/forms"
 	"atopmall_web/user_web/global"
 	"atopmall_web/user_web/global/responselist"
+	"atopmall_web/user_web/middlewares"
+	"atopmall_web/user_web/models"
 	"atopmall_web/user_web/proto"
 )
 
@@ -38,7 +41,6 @@ func HandleValidatorError(c *gin.Context, err error) {
 	c.JSON(http.StatusBadRequest, gin.H{
 		"error": removeTopStruct(errs.Translate(global.Trans)),
 	})
-	return
 }
 
 func HandleGrpcErrorToHttpError(err error, c *gin.Context) {
@@ -175,8 +177,31 @@ func PasswordLogin(ctx *gin.Context) {
 			})
 		} else {
 			if passRep.Success {
+				//生成token
+				j := middlewares.NewJWT()
+				claims := models.CustomClaims{
+					ID:          uint(rsp.Id),
+					NickName:    rsp.NickName,
+					AuthorityID: uint(rsp.Rolo),
+					RegisteredClaims: jwt.RegisteredClaims{
+						NotBefore: jwt.NewNumericDate(time.Now()), // //签名的生效时间
+						ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+						Issuer:    "atopmall",
+					},
+				}
+				token, err := j.CreateToken(claims)
+				if err != nil {
+					ctx.JSON(http.StatusInternalServerError, gin.H{
+						"msg": "生成token失败",
+					})
+					return
+				}
+				//返回token
 				ctx.JSON(http.StatusOK, gin.H{
-					"msg": "登录成功",
+					"id":         rsp.Id,
+					"nick_name":  rsp.NickName,
+					"token":      token,
+					"expired_at": claims.ExpiresAt.Unix(), //过期时间给前端用 ,单位是秒
 				})
 			} else {
 				ctx.JSON(http.StatusOK, gin.H{
