@@ -74,8 +74,9 @@ func HandleGrpcErrorToHttpError(err error, c *gin.Context) {
 
 }
 
-func GerUserList(ctx *gin.Context) {
+func GetUserList(ctx *gin.Context) {
 	//调用user_web的user.proto接口 GetUserList 也就是远程
+	//跨越问题-- 后端解决 也可以前端解决 这里采用后端解决，跨域问题如何产生？详看有道云笔记
 	ip := global.ServerConfig.UserSrvInfo.Host
 	port := global.ServerConfig.UserSrvInfo.Port
 	userCoun, err := grpc.NewClient(ip+":"+strconv.Itoa(port), grpc.WithInsecure())
@@ -89,6 +90,11 @@ func GerUserList(ctx *gin.Context) {
 	defer userCoun.Close()
 	//生成grpc的client并调用接口
 	userSrcClient := proto.NewUserClient(userCoun)
+
+	//从上下文获取用户的id
+	claims, _ := ctx.Get("claims")
+	currentUser := claims.(*models.CustomClaims)
+	zap.S().Infof("用户的id为:%d", currentUser.ID)
 
 	pnInt, _ := strconv.Atoi(ctx.DefaultQuery("pn", "0"))
 	pnSizeInt, _ := strconv.Atoi(ctx.DefaultQuery("psize", "10"))
