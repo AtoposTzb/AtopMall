@@ -7,7 +7,14 @@
     <script src="https://s3.pstatp.com/cdn/expire-1-M/jquery/3.3.1/jquery.min.js"></script>
   </head>
   <body>
-    <button type="button" id="query">测试跨越请求</button>
+    <button type="button" id="query">测试跨越请求</button><br />
+    <img
+      src="data:image/png;base64,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"
+    />
+    <div
+      id="content"
+      style="background-color: aquamarine; width: 300px; height: 500px"
+    ></div>
   </body>
   <script>
     $("#query").click(function () {
@@ -15,7 +22,7 @@
         url: "http://localhost:8081/u/v1/user/list",
         type: "GET",
         dataType: "json",
-        beforeSend: function () {
+        beforeSend: function (request) {
           request.setRequestHeader(
             "x-token",
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiTmlja05hbWUiOiJ5b2xvMCIsIkF1dGhvcml0eUlEIjoxLCJpc3MiOiJhdG9wbWFsbCIsImV4cCI6MTc4MjIwMzE3MSwibmJmIjoxNzgyMTE2NzcxfQ.XmkHr2BTGbtukkgfVhOiQB3AYr-vm95KkGoU4hDU9KI",

@@ -140,6 +140,15 @@ func PasswordLogin(ctx *gin.Context) {
 	//同样连接用户的grpc服务，和上面重复，后面再优化
 	// ip := global.ServerConfig.UserSrvInfo.Host
 	// port := global.ServerConfig.UserSrvInfo.Port
+
+	//检查验证码是否正确
+	if !store.Verify(passwordLoginForm.CaptchaId, passwordLoginForm.Captcha, true) {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"captcha": "验证码错误",
+		})
+		return
+	}
+
 	userCoun, err := grpc.NewClient(global.ServerConfig.UserSrvInfo.Host+":"+strconv.Itoa(global.ServerConfig.UserSrvInfo.Port), grpc.WithInsecure())
 	if err != nil {
 		zap.S().Errorw("[GetUserList]连接【用户服务失败】",
