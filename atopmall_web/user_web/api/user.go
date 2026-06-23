@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -227,6 +229,101 @@ func PasswordLogin(ctx *gin.Context) {
 			}
 
 		}
+	}
+
+}
+
+func Register(ctx *gin.Context) {
+	//表单验证
+	registerForm := forms.RegisterForm{}
+	if err := ctx.ShouldBind(&registerForm); err != nil {
+		HandleValidatorError(ctx, err)
+		return
+	}
+	//拨号连接用户grpc服务
+	userCoun, err := grpc.NewClient(global.ServerConfig.UserSrvInfo.Host+":"+strconv.Itoa(global.ServerConfig.UserSrvInfo.Port), grpc.WithInsecure())
+	if err != nil {
+		zap.S().Errorw("[Register]连接【用户服务失败】",
+			"msg", err.Error(),
+		)
+
+	}
+	// 关闭连接
+	defer userCoun.Close()
+	//生成grpc的client并调用接口
+	userSrcClient := proto.NewUserClient(userCoun)
+
+	//通过唯一的手机号查询用户是否存在
+	if user, err := userSrcClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
+		Mobile: registerForm.Mobile,
+	}); err == nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": -1,
+			"data": fmt.Sprintf("用户%s已存在,请直接登录", user.Mobile),
+		})
+		return
+	} else {
+		//用户不存在，继续注册,通过邮箱验证码注册用户
+		//邮箱验证码检查
+		value, err := global.RDB.Get(context.Background(), registerForm.Email).Result()
+		if err == redis.Nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"email": "邮箱验证码错误",
+			})
+			return
+		}
+		if err != nil {
+			ctx.JSON(http.StatusOK, gin.H{
+				"code": -1,
+				"data": "验证码获取失败",
+			})
+			return
+		}
+		if value != registerForm.Code {
+			ctx.JSON(http.StatusOK, gin.H{
+				"code": -1,
+				"data": "验证码错误",
+			})
+			return
+		}
+		//验证码正确，注册用户
+		user, err := userSrcClient.CreateUser(context.Background(), &proto.CreateUserInfo{
+			NickName: registerForm.Mobile,
+			Password: registerForm.Password,
+			Mobile:   registerForm.Mobile,
+			Email:    registerForm.Email,
+		})
+		if err != nil {
+			zap.S().Errorw("[Register] 注册用户失败")
+			HandleGrpcErrorToHttpError(err, ctx)
+			return
+		}
+		//生成token
+		j := middlewares.NewJWT()
+		claims := models.CustomClaims{
+			ID:          uint(user.Id),
+			NickName:    user.NickName,
+			AuthorityID: uint(user.Role),
+			RegisteredClaims: jwt.RegisteredClaims{
+				NotBefore: jwt.NewNumericDate(time.Now()), // //签名的生效时间
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+				Issuer:    "atopmall",
+			},
+		}
+		token, err := j.CreateToken(claims)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"msg": "生成token失败",
+			})
+			return
+		}
+		//返回token ,注意敏感信息不要添加到token中
+		ctx.JSON(http.StatusOK, gin.H{
+			"id":         user.Id,
+			"nick_name":  user.NickName,
+			"token":      token,
+			"expired_at": claims.ExpiresAt.Unix(), //过期时间给前端用 ,单位是秒
+		})
 	}
 
 }
