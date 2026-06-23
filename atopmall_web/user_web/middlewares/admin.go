@@ -1,10 +1,11 @@
 package middlewares
 
 import (
-	"atopmall_web/user_web/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"atopmall_web/user_web/models"
 )
 
 func IsAdmin() gin.HandlerFunc {

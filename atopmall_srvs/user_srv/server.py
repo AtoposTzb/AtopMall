@@ -38,7 +38,7 @@ def server():
     # args.ip  获取--ip参数的值  # args.port  获取--port参数的值
 
     logger.add("logs/user_srv_{time}.log") #将日志写入到文件夹logs下
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10)) #创建一个grpc服务器,并指定最大线程数为10
     user_pb2_grpc.add_UserServicer_to_server(UserServicer(),server) #这行代码的意思是将UserServicer类添加到server中,并将其作为UserServicer服务端，简单来说就是注册UserServicer类
     server.add_insecure_port(f"{args.ip}:{args.port}")
 

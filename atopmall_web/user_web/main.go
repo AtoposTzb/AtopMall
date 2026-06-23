@@ -18,9 +18,11 @@ func main() {
 	initialize.LoggerInit()
 	//2.初始化配置
 	initialize.ConfigInit()
-	//3.初始化路由
+	//3.初始化Redis
+	global.RDB = initialize.RedisInit()
+	//4.初始化路由
 	r := initialize.RoutersInit()
-	//4.初始化翻译器
+	//5.初始化翻译器
 	initialize.TransInit("zh")
 
 	//5.注册验证器,自定义验证器，配置到form标签中

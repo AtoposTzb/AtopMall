@@ -19,7 +19,8 @@ class UserServicer(user_pb2_grpc.UserServicer):
         user_info_rsp.id = user.id
         user_info_rsp.password = user.password
         user_info_rsp.mobile = user.mobile
-        user_info_rsp.rolo = user.rolo
+        user_info_rsp.role = user.role
+        user_info_rsp.email = user.email
 
         if user.nick_name:
             user_info_rsp.nickName = user.nick_name
@@ -76,6 +77,17 @@ class UserServicer(user_pb2_grpc.UserServicer):
             return user_pb2.UserInfoResponse()
     
     @logger.catch
+    def GetUserByEmail(self,request:user_pb2.EmailRequest,context):#context是grpc.ServerContext对象,用于获取客户端调用的元数据
+        #通过email查询用户
+        try:
+            user = User.get(User.email == request.email)
+            return self.convert_user_to_rsp(user)
+        except DoesNotExist as e:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details(f"user用户不存在,email={request.email}")
+            return user_pb2.UserInfoResponse()
+    
+    @logger.catch
     def CreateUser(self,request:user_pb2.CreateUserInfo,context):
         #新建用户
         try:
@@ -89,6 +101,7 @@ class UserServicer(user_pb2_grpc.UserServicer):
         user = User()
         user.nick_name = request.nickName
         user.mobile = request.mobile
+        user.email = request.email
         user.password = pbkdf2_sha256.hash(request.password)
         user.save()
         return self.convert_user_to_rsp(user) #将model.User对象转换为message对象

@@ -2,7 +2,7 @@ import sys
 import os
 import grpc
 
-BASE_DIR = os.path.dirname(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0,BASE_DIR)
 from user_srv.proto import user_pb2,user_pb2_grpc
 class TestUserServicer:

@@ -6,4 +6,5 @@ type UserResponse struct {
 	BirthDay string `json:"birthDay"`
 	Gender   string `json:"gender"`
 	Mobile   string `json:"mobile"`
+	Email    string `json:"email"`
 }

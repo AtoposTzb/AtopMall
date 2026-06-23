@@ -24,3 +24,6 @@ tmp/
 
 # 详细文档(暂不公开)
 docs/
+
+#忽略配置文件有邮箱授权码等重要信息，上传git的是配置文件模板
+atopmall_web/user_web/config-debug.yaml

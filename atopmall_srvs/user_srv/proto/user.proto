@@ -6,6 +6,7 @@ service User {
   rpc GetUserList(PageInfo) returns (UserListResponse); //用户列表 一般后台管理系统使用的接口
   rpc GetUserByMobile(MobileRequest) returns (UserInfoResponse); //根据手机号查询用户信息
   rpc GetUserById(IdRequest) returns (UserInfoResponse); //根据用户id查询用户信息
+  rpc GetUserByEmail(EmailRequest) returns (UserInfoResponse); //根据邮箱查询用户信息
   rpc CreateUser(CreateUserInfo) returns (UserInfoResponse); //添加用户
   rpc UpdateUser(UpdateUserInfo) returns (google.protobuf.Empty); //更新用户信息,不关心返回值
   rpc CheckPassWord(PasswordCheckInfo) returns (CheckResponse); //检查密码
@@ -28,10 +29,14 @@ message MobileRequest {
 message IdRequest {
   int32 id = 1;
 }
+message EmailRequest {
+  string email = 1;
+}
 message CreateUserInfo {
   string nickName = 1;
   string password = 2;
   string mobile = 3;
+  string email = 4;
 }
 message UpdateUserInfo {
   int32 id = 1;
@@ -44,9 +49,10 @@ message UserInfoResponse {
   string nickName = 2;
   string password = 3;
   string mobile = 4;
-  string gender = 5;
-  uint64 birthDay = 6;
-  int32 rolo = 7;
+  string email = 5;
+  string gender = 6;
+  uint64 birthDay = 7;
+  int32 role = 8;
 }
 message UserListResponse {
   uint32 total = 1;

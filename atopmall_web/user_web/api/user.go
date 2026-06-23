@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
 	"atopmall_web/user_web/forms"
@@ -79,7 +80,7 @@ func GetUserList(ctx *gin.Context) {
 	//跨越问题-- 后端解决 也可以前端解决 这里采用后端解决，跨域问题如何产生？详看有道云笔记
 	ip := global.ServerConfig.UserSrvInfo.Host
 	port := global.ServerConfig.UserSrvInfo.Port
-	userCoun, err := grpc.NewClient(ip+":"+strconv.Itoa(port), grpc.WithInsecure())
+	userCoun, err := grpc.NewClient(ip+":"+strconv.Itoa(port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		zap.S().Errorw("[GetUserList]连接【用户服务失败】",
 			"msg", err.Error(),
@@ -116,6 +117,7 @@ func GetUserList(ctx *gin.Context) {
 			BirthDay: time.Unix(int64(value.BirthDay), 0).Format("2006-01-02"),
 			Gender:   value.Gender,
 			Mobile:   value.Mobile,
+			Email:    value.Email,
 		}
 		result = append(result, user)
 		// data := make(map[string]interface{})
@@ -126,11 +128,11 @@ func GetUserList(ctx *gin.Context) {
 		// data["mobile"] = value.Mobile
 		// result = append(result, data)
 	}
-	ctx.JSON(http.StatusOK, result)
+	ctx.JSON(http.StatusOK, result) //返回用户列表给前端
 }
 
 func PasswordLogin(ctx *gin.Context) {
-	//表单验证
+	//表单验证,获取前端传递的手机号、密码、验证码、验证码id然后验证
 	passwordLoginForm := forms.PasswordLoginForm{}
 	if err := ctx.ShouldBind(&passwordLoginForm); err != nil {
 		HandleValidatorError(ctx, err)
@@ -197,7 +199,7 @@ func PasswordLogin(ctx *gin.Context) {
 				claims := models.CustomClaims{
 					ID:          uint(rsp.Id),
 					NickName:    rsp.NickName,
-					AuthorityID: uint(rsp.Rolo),
+					AuthorityID: uint(rsp.Role),
 					RegisteredClaims: jwt.RegisteredClaims{
 						NotBefore: jwt.NewNumericDate(time.Now()), // //签名的生效时间
 						ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
@@ -211,7 +213,7 @@ func PasswordLogin(ctx *gin.Context) {
 					})
 					return
 				}
-				//返回token
+				//返回token ,注意敏感信息不要添加到token中
 				ctx.JSON(http.StatusOK, gin.H{
 					"id":         rsp.Id,
 					"nick_name":  rsp.NickName,
