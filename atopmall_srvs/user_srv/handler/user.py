@@ -108,6 +108,7 @@ class UserServicer(user_pb2_grpc.UserServicer):
     
     @logger.catch
     def UpdateUser(self,request:user_pb2.UpdateUserInfo,context):
+        #更新用户信息
         try:
             user = User.get(User.id ==request.id)
 
@@ -124,4 +125,5 @@ class UserServicer(user_pb2_grpc.UserServicer):
         
     @logger.catch
     def CheckPassWord(self,request:user_pb2.PasswordCheckInfo,context):
+        #密码校验
         return user_pb2.CheckResponse(success=pbkdf2_sha256.verify(request.password,request.encryptedPassword))
