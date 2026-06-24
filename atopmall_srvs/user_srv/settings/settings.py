@@ -15,4 +15,11 @@ MYSQL_PASSWORD = "123456"
 
 DB = ReconnectMysqlDatebase(MYSQL_DB,host=MYSQL_HOST,port=MYSQL_PORT,user=MYSQL_USER,password=MYSQL_PASSWORD)
 
+#consul配置
+CONSUL_HOST = "192.168.1.106"
+CONSUL_PORT = 8500
 
+#服务配置
+SERVICE_NAME = "user_srv"
+SERVICE_ID = "user_srv"
+SERVICE_TAGS = ["atopmall","python","srv","yolo_t"]

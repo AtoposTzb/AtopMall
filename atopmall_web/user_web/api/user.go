@@ -13,9 +13,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
 	"atopmall_web/user_web/forms"
@@ -69,7 +67,7 @@ func HandleGrpcErrorToHttpError(err error, c *gin.Context) {
 				})
 			default:
 				c.JSON(http.StatusInternalServerError, gin.H{ //500
-					"msg": s.Code(),
+					"msg": s.Message(),
 				})
 			}
 		}
@@ -78,22 +76,6 @@ func HandleGrpcErrorToHttpError(err error, c *gin.Context) {
 }
 
 func GetUserList(ctx *gin.Context) {
-	//调用user_web的user.proto接口 GetUserList 也就是远程
-	//跨越问题-- 后端解决 也可以前端解决 这里采用后端解决，跨域问题如何产生？详看有道云笔记
-	ip := global.ServerConfig.UserSrvInfo.Host
-	port := global.ServerConfig.UserSrvInfo.Port
-	userCoun, err := grpc.NewClient(ip+":"+strconv.Itoa(port), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		zap.S().Errorw("[GetUserList]连接【用户服务失败】",
-			"msg", err.Error(),
-		)
-
-	}
-	// 关闭连接
-	defer userCoun.Close()
-	//生成grpc的client并调用接口
-	userSrcClient := proto.NewUserClient(userCoun)
-
 	//从上下文获取用户的id
 	claims, _ := ctx.Get("claims")
 	currentUser := claims.(*models.CustomClaims)
@@ -101,7 +83,7 @@ func GetUserList(ctx *gin.Context) {
 
 	pnInt, _ := strconv.Atoi(ctx.DefaultQuery("pn", "0"))
 	pnSizeInt, _ := strconv.Atoi(ctx.DefaultQuery("psize", "10"))
-	rsp, err := userSrcClient.GetUserList(context.Background(), &proto.PageInfo{
+	rsp, err := global.UserSrvClient.GetUserList(context.Background(), &proto.PageInfo{
 		PageNum:  uint32(pnInt),
 		PageSize: uint32(pnSizeInt),
 	})
@@ -146,27 +128,15 @@ func PasswordLogin(ctx *gin.Context) {
 	// port := global.ServerConfig.UserSrvInfo.Port
 
 	//检查验证码是否正确
-	if !store.Verify(passwordLoginForm.CaptchaId, passwordLoginForm.Captcha, true) {
+	if !store.Verify(passwordLoginForm.CaptchaId, passwordLoginForm.Captcha, false) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"captcha": "验证码错误",
 		})
 		return
 	}
 
-	userCoun, err := grpc.NewClient(global.ServerConfig.UserSrvInfo.Host+":"+strconv.Itoa(global.ServerConfig.UserSrvInfo.Port), grpc.WithInsecure())
-	if err != nil {
-		zap.S().Errorw("[GetUserList]连接【用户服务失败】",
-			"msg", err.Error(),
-		)
-
-	}
-	// 关闭连接
-	defer userCoun.Close()
-	//生成grpc的client并调用接口
-	userSrcClient := proto.NewUserClient(userCoun)
-
 	//登录的逻辑：查询用户是否存在，如果存在，判断密码是否正确
-	rsp, err := userSrcClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
+	rsp, err := global.UserSrvClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
 		Mobile: passwordLoginForm.Mobile,
 	})
 	if err != nil {
@@ -187,7 +157,7 @@ func PasswordLogin(ctx *gin.Context) {
 		return
 	} else {
 		//检查密码是否正确
-		if passRep, passErr := userSrcClient.CheckPassWord(context.Background(), &proto.PasswordCheckInfo{
+		if passRep, passErr := global.UserSrvClient.CheckPassWord(context.Background(), &proto.PasswordCheckInfo{
 			Password:          passwordLoginForm.Password,
 			EncryptedPassword: rsp.Password,
 		}); passErr != nil {
@@ -240,21 +210,8 @@ func Register(ctx *gin.Context) {
 		HandleValidatorError(ctx, err)
 		return
 	}
-	//拨号连接用户grpc服务
-	userCoun, err := grpc.NewClient(global.ServerConfig.UserSrvInfo.Host+":"+strconv.Itoa(global.ServerConfig.UserSrvInfo.Port), grpc.WithInsecure())
-	if err != nil {
-		zap.S().Errorw("[Register]连接【用户服务失败】",
-			"msg", err.Error(),
-		)
-
-	}
-	// 关闭连接
-	defer userCoun.Close()
-	//生成grpc的client并调用接口
-	userSrcClient := proto.NewUserClient(userCoun)
-
 	//通过唯一的手机号查询用户是否存在
-	if user, err := userSrcClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
+	if user, err := global.UserSrvClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
 		Mobile: registerForm.Mobile,
 	}); err == nil {
 		ctx.JSON(http.StatusOK, gin.H{
@@ -287,7 +244,7 @@ func Register(ctx *gin.Context) {
 			return
 		}
 		//验证码正确，注册用户
-		user, err := userSrcClient.CreateUser(context.Background(), &proto.CreateUserInfo{
+		user, err := global.UserSrvClient.CreateUser(context.Background(), &proto.CreateUserInfo{
 			NickName: registerForm.Mobile,
 			Password: registerForm.Password,
 			Mobile:   registerForm.Mobile,

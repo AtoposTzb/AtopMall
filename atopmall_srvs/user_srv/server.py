@@ -9,11 +9,16 @@ import grpc
 from loguru import logger
 
 #获取当前文件的上一级目录,即user_srv目录，方便vscode|traeIDE终端运行，其实就是找包的路径，不然会报“module not found”错误
-BASE_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+BASE_DIR =  os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0,BASE_DIR)
 
 from user_srv.proto import user_pb2_grpc
 from user_srv.handler.user import UserServicer
+from grpc_health.v1 import health  #使用官方提供的健康检查服务，下载然后直接导入库即可使用
+from grpc_health.v1 import health_pb2
+from grpc_health.v1 import health_pb2_grpc
+from common.register import consul
+from settings import settings
 
 def on_exit(sig,frame):
     logger.info("进程中断")
@@ -25,13 +30,13 @@ def server():
     parser.add_argument('--ip',
                         nargs='?',
                         type=str,
-                        default="127.0.0.1",
+                        default="192.168.1.6",
                         help="服务端IP地址"
                         )
     parser.add_argument('--port',
                         nargs='?',
-                        type=str,
-                        default="50051",
+                        type=int,
+                        default=50051,
                         help="服务端端口号，默认50051"
                         )
     args = parser.parse_args()  #解析命令行参数,返回一个命名空间对象,包含所有解析后的参数
@@ -39,7 +44,10 @@ def server():
 
     logger.add("logs/user_srv_{time}.log") #将日志写入到文件夹logs下
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10)) #创建一个grpc服务器,并指定最大线程数为10
+    #1.注册用户服务
     user_pb2_grpc.add_UserServicer_to_server(UserServicer(),server) #这行代码的意思是将UserServicer类添加到server中,并将其作为UserServicer服务端，简单来说就是注册UserServicer类
+    #2.注册健康检查consul
+    health_pb2_grpc.add_HealthServicer_to_server(health.HealthServicer(),server)
     server.add_insecure_port(f"{args.ip}:{args.port}")
 
     #主进程退出信号监听
@@ -54,6 +62,15 @@ def server():
 
     logger.info(f"启动服务:{args.ip}:{args.port}")
     server.start()
+    #3.注册服务到consul
+    logger.info("注册服务开始")
+    register = consul.ConsulRegister(settings.CONSUL_HOST,settings.CONSUL_PORT)
+    if not register.register(name=settings.SERVICE_NAME,id=settings.SERVICE_ID,address=args.ip,port=args.port,tags=settings.SERVICE_TAGS,check=None):
+        logger.info("注册服务失败")
+        sys.exit(1) #退出进程,状态码为1,表示失败
+    else:
+        logger.info("注册服务成功")
+    
     server.wait_for_termination() #线程阻塞,等待服务端终止
 
 if __name__ == "__main__":

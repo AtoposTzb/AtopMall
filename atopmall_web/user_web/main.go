@@ -24,6 +24,8 @@ func main() {
 	r := initialize.RoutersInit()
 	//5.初始化翻译器
 	initialize.TransInit("zh")
+	//6.初始化srv-grpc客户端的连接 ,目前只连接用户服务，后续完善
+	initialize.UserSrcClientInit()
 
 	//5.注册验证器,自定义验证器，配置到form标签中
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
