@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/consul/api"
+	_ "github.com/mbobakov/grpc-consul-resolver"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -13,7 +14,24 @@ import (
 	"atopmall_web/user_web/proto"
 )
 
-func UserSrcClientInit() {
+// GPRC负载均衡连接用户服务
+func UserSrcClientInitBL() {
+	consulInfo := global.ServerConfig.ConsulInfo
+	conn, err := grpc.NewClient(
+		fmt.Sprintf("consul://%s:%d/%s?wait=14s", consulInfo.Host, consulInfo.Port, global.ServerConfig.UserSrvInfo.Name),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`),
+	)
+	if err != nil {
+		zap.S().Errorw("[UserSrcClientInitBL] 连接【用户服务】失败")
+		return
+	}
+	userSrcClient := proto.NewUserClient(conn)
+	global.UserSrvClient = userSrcClient
+	zap.S().Infow("[UserSrcClientInitBL] 连接【用户服务】成功", "host", consulInfo.Host, "port", consulInfo.Port)
+}
+
+func UserSrcClientInitOld() {
 	//从服务注册中心consul获取用户的信息，主要是用户服务的ip和端口号
 	cfg := api.DefaultConfig()
 	consulInfo := global.ServerConfig.ConsulInfo

@@ -4,9 +4,10 @@ import logging
 import signal
 import argparse
 import socket
-from concurrent import futures
-
 import grpc
+import uuid
+
+from concurrent import futures
 from loguru import logger
 
 #获取当前文件的上一级目录,即user_srv目录，方便vscode|traeIDE终端运行，其实就是找包的路径，不然会报“module not found”错误
@@ -20,9 +21,14 @@ from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
 from common.register import consul
 from settings import settings
+from functools import partial #偏函数,用于固定参数,返回一个新的函数,新的函数可以少传参数
 
-def on_exit(sig,frame):
-    logger.info("进程中断")
+#，注销服务到consul
+def on_exit(sig,frame,service_id):
+    deregister = consul.ConsulRegister(settings.CONSUL_HOST,settings.CONSUL_PORT)
+    logger.info(f"注销{service_id}服务")
+    deregister.deregister(service_id=service_id)
+    logger.info("注销服务成功")
     sys.exit(0)
 
 #动态获取可用的端口号
@@ -45,8 +51,8 @@ def server():
     parser.add_argument('--port',
                         nargs='?',
                         type=int,
-                        default=50051,
-                        help="服务端端口号,默认50051,0表示动态获取端口号"
+                        default=0,
+                        help="服务端端口号,一般默认为50051,0表示动态获取端口号"
                         )
     args = parser.parse_args()  #解析命令行参数,返回一个命名空间对象,包含所有解析后的参数
     # args.ip  获取--ip参数的值  # args.port  获取--port参数的值
@@ -61,23 +67,23 @@ def server():
     #2.注册健康检查consul
     health_pb2_grpc.add_HealthServicer_to_server(health.HealthServicer(),server)
     server.add_insecure_port(f"{args.ip}:{args.port}")
-
+    service_id = str(uuid.uuid4())
     #主进程退出信号监听
     '''
     window下支持的信号有限:
         SIGINT: Ctrl+C终端
         SIGTERM: kill命令
     '''
-    #优雅退出服务
-    signal.signal(signal.SIGINT,on_exit)
-    signal.signal(signal.SIGTERM,on_exit)
+    #优雅退出服务,注销服务到consul
+    signal.signal(signal.SIGINT,partial(on_exit,service_id=service_id))
+    signal.signal(signal.SIGTERM,partial(on_exit,service_id=service_id))
 
     logger.info(f"启动服务:{args.ip}:{args.port}")
     server.start()
     #3.注册服务到consul
     logger.info("注册服务开始")
     register = consul.ConsulRegister(settings.CONSUL_HOST,settings.CONSUL_PORT)
-    if not register.register(name=settings.SERVICE_NAME,id=settings.SERVICE_ID,address=args.ip,port=args.port,tags=settings.SERVICE_TAGS,check=None):
+    if not register.register(name=settings.SERVICE_NAME,id=service_id,address=args.ip,port=args.port,tags=settings.SERVICE_TAGS,check=None):
         logger.info("注册服务失败")
         sys.exit(1) #退出进程,状态码为1,表示失败
     else:

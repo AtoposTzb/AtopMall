@@ -33,6 +33,7 @@ class UserServicer(user_pb2_grpc.UserServicer):
     
     @logger.catch
     def GetUserList(self,request:user_pb2.PageInfo,context): #参数：request,context 类型：user_pb2.PageInfo,grpc.ServerContext
+        print("测试负载均衡,用户列表...")
         #获取用户的列表
         rsp = user_pb2.UserListResponse()  #创建一个UserListResponse对象,用于存储用户列表，并将数据传递给客户端调用
         users = User.select()
