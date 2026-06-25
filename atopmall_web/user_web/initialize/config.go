@@ -19,8 +19,7 @@ func GetEnvInfo(env string) bool {
 
 // 设置系统环境变量为ATOPMALL_DEBUG 以后记得重启vscode/traeIDE生效
 func ConfigInit() {
-
-	debug := GetEnvInfo("ATOPMALL_DEBUG")
+	debug := GetEnvInfo(global.Env)
 	configFilePrefix := "config"
 	configFileName := fmt.Sprintf("%s-pro.yaml", configFilePrefix)
 	if debug {

@@ -10,6 +10,7 @@ import (
 
 	"atopmall_web/user_web/global"
 	"atopmall_web/user_web/initialize"
+	"atopmall_web/user_web/utils"
 	myValidator "atopmall_web/user_web/validator"
 )
 
@@ -26,6 +27,14 @@ func main() {
 	initialize.TransInit("zh")
 	//6.初始化srv-grpc客户端的连接 ,目前只连接用户服务，后续完善
 	initialize.UserSrcClientInit()
+	//7.动态获取端口号,本地调试还是使用配置文件的端口号8081,方便apifox调试
+	if debug := initialize.GetEnvInfo(global.Env); !debug {
+		userPort, err := utils.GetAddrPort()
+		if err != nil {
+			panic(err)
+		}
+		global.ServerConfig.Port = userPort
+	}
 
 	//5.注册验证器,自定义验证器，配置到form标签中
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {

@@ -3,6 +3,7 @@ import os
 import logging
 import signal
 import argparse
+import socket
 from concurrent import futures
 
 import grpc
@@ -24,6 +25,14 @@ def on_exit(sig,frame):
     logger.info("进程中断")
     sys.exit(0)
 
+#动态获取可用的端口号
+def get_free_port():
+    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM) #创建一个socket对象,并指定协议为IPv4,套接字类型为TCP
+    s.bind(("",0)) #绑定到任意IP地址和端口号0，0表示自动选择一个可用的端口号
+    port = s.getsockname()[1] #获取绑定的端口号，[1]表示获取端口号，[0]表示获取IP地址，
+    s.close()
+    return port
+
 def server():
     #解析命令行参数,这个的作用是通过--ip和--port参数来指定服务端的IP地址和端口号
     parser = argparse.ArgumentParser()
@@ -37,10 +46,13 @@ def server():
                         nargs='?',
                         type=int,
                         default=50051,
-                        help="服务端端口号，默认50051"
+                        help="服务端端口号,默认50051,0表示动态获取端口号"
                         )
     args = parser.parse_args()  #解析命令行参数,返回一个命名空间对象,包含所有解析后的参数
     # args.ip  获取--ip参数的值  # args.port  获取--port参数的值
+    # 没有指定端口号，则动态获取端口号
+    if args.port == 0:
+        args.port = get_free_port()
 
     logger.add("logs/user_srv_{time}.log") #将日志写入到文件夹logs下
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10)) #创建一个grpc服务器,并指定最大线程数为10
@@ -80,5 +92,6 @@ if __name__ == "__main__":
     # logger.warning("警告信息")
     # logger.error("错误信息")
     # logger.critical("严重错误信息")
+    # print(get_free_port())
     logging.basicConfig()
     server()
