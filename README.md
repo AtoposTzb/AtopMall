@@ -21,14 +21,17 @@ AtopMall/
 │       └── server.py                 # gRPC 服务入口（含 Consul 注册）
 │
 ├── atopmall_web/                     # Web API 层（Go + Gin）
-│   └── user_web/                     # 用户 Web 服务
+│   ── user_web/                     # 用户 Web 服务
 │       ├── api/                      # HTTP 接口实现
 │       │   ├── captcha.go            # 图片验证码接口
 │       │   ├── email_code.go         # 邮箱验证码接口
-│       │   └── user.go               # 用户登录/注册/列表接口
+│       │   ├── user.go               # 用户登录/注册/列表接口
+│       │   └── redis_test/           # Redis 连接测试工具
+│       │       ── main.go
 │       ├── config/                   # 配置结构体定义
 │       ├── forms/                    # 请求表单验证
 │       ├── global/                   # 全局变量（配置、Redis、翻译器、gRPC 客户端）
+│       │   └── responselist/         # 响应结构体定义
 │       ├── initialize/               # 初始化（配置加载、路由、日志、Redis、Consul 服务发现）
 │       │   ├── config.go             # Viper 配置加载
 │       │   ├── logger.go             # Zap 日志初始化
@@ -40,6 +43,10 @@ AtopMall/
 │       ├── models/                   # 请求模型定义
 │       ├── proto/                    # Protobuf 定义及生成代码
 │       ├── router/                   # 路由分组
+│       │   ├── base.go               # 基础路由（验证码相关）
+│       │   └── user.go               # 用户路由（登录/注册/列表）
+│       ├── utils/                    # 工具函数
+│       │   └── addr_port.go          # 动态可用端口获取
 │       ├── validator/                # 自定义验证器
 │       ├── config-debug_templ.yaml   # 调试配置模板（可提交）
 │       ├── config-pro.yaml           # 生产配置模板
@@ -77,7 +84,7 @@ AtopMall/
 | 获取用户列表     | GetUserList     | 支持分页查询                     |
 | 通过 id 查询用户 | GetUserById     | 验证用户是否存在                 |
 | 通过 email 查询  | GetUserByEmail  | 验证用户是否存在                 |
-| 根据 mobile 查询 | GetUserByMobile | 登录时验证用户是否存在           |
+| 根据 mobile 查询 | GetUserByMobile | 登录/注册时验证用户是否存在      |
 | 创建用户         | CreateUser      | 注册新用户，密码使用 PBKDF2 加密 |
 | 更新用户信息     | UpdateUser      | 检查用户是否存在后更新           |
 | 密码校验         | CheckPassWord   | 使用 passlib 验证 PBKDF2 哈希    |
@@ -85,19 +92,47 @@ AtopMall/
 
 ### 用户 Web 服务（Go Gin）
 
-| 功能             | 接口                | 说明                                               |
-| ---------------- | ------------------- | -------------------------------------------------- |
-| 图片验证码       | GET /captcha        | 生成 base64 格式验证码图片                         |
-| 邮箱验证码       | POST /email/code    | 发送注册验证码到邮箱，Redis 存储 5 分钟            |
-| 密码登录         | POST /user/login    | 手机号+密码+图片验证码登录，返回 JWT Token         |
-| 用户注册         | POST /user/register | 邮箱验证码+手机号+密码注册                         |
-| 用户列表         | GET /user/list      | 获取用户列表（需 JWT 认证 + 管理员权限）           |
-| JWT 认证中间件   | -                   | 解析 x-token 头部，验证登录状态                    |
-| 管理员权限中间件 | -                   | 验证用户角色是否为管理员                           |
-| CORS 中间件      | -                   | 跨域请求支持                                       |
-| Consul 服务发现  | -                   | 启动时从 Consul 获取用户服务地址，建立 gRPC 长连接 |
+#### API 接口
 
-## 四、开发工具清单
+| 功能       | 接口                 | 方法 | 说明                                           |
+| ---------- | -------------------- | ---- | ---------------------------------------------- |
+| 图片验证码 | /u/v1/base/captcha   | GET  | 生成 base64 格式验证码图片                     |
+| 邮箱验证码 | /u/v1/base/send-code | POST | 发送注册验证码到邮箱，Redis 存储 5 分钟        |
+| 密码登录   | /u/v1/user/pwd_login | POST | 手机号+密码+图片验证码登录，返回 JWT Token     |
+| 用户注册   | /u/v1/user/register  | POST | 邮箱验证码+手机号+密码注册，注册成功返回 Token |
+| 用户列表   | /u/v1/user/list      | GET  | 获取用户列表（需 JWT 认证 + 管理员权限）       |
+
+#### 中间件
+
+| 中间件           | 说明                            |
+| ---------------- | ------------------------------- |
+| JWT 认证中间件   | 解析 x-token 头部，验证登录状态 |
+| 管理员权限中间件 | 验证用户角色是否为管理员        |
+| CORS 中间件      | 跨域请求支持                    |
+
+#### 工具模块
+
+| 模块           | 说明                                     |
+| -------------- | ---------------------------------------- |
+| 动态端口获取   | `utils/addr_port.go` 获取系统可用端口    |
+| Redis 测试工具 | `api/redis_test/` 独立测试 Redis 连接    |
+| 响应结构体     | `global/responselist/` 统一 API 响应格式 |
+
+## 四、API 路由结构
+
+```
+/u/v1/
+├── base/                          # 基础服务（无需登录）
+│   ├── GET  captcha               # 获取图片验证码
+│   └── POST send-code             # 发送邮箱验证码
+│
+└── user/                          # 用户服务
+    ├── POST pwd_login             # 密码登录（无需登录）
+    ├── POST register              # 用户注册（无需登录）
+    └── GET  list                  # 用户列表（需 JWT + 管理员）
+```
+
+## 五、开发工具清单
 
 ### Go 工具
 
@@ -129,7 +164,7 @@ protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=p
 python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. xxx.proto
 ```
 
-## 五、快速开始
+## 六、快速开始
 
 ### 1. 环境准备
 
@@ -166,7 +201,7 @@ go run main.go
 
 > 默认监听端口：8081，启动后从 Consul 发现用户服务地址
 
-## 六、配置说明
+## 七、配置说明
 
 项目使用 Viper 管理配置，支持多环境：
 
@@ -178,24 +213,26 @@ go run main.go
 
 配置项包含：MySQL、Redis、Consul、JWT、邮箱 SMTP 等。
 
-## 七、服务注册与发现流程
+## 八、服务注册与发现流程
 
-```
-──────────────┐     注册      ┌──────────┐     发现      ──────────────┐
-│  user_srv    │ ──────────▶  │  Consul  │  ◀──────────  │  user_web    │
-│ (Python gRPC)│  启动时注册    │          │  启动时查询    │  (Go Gin)    │
-└──────────────┘              └──────────┘               └──────────────┘
-                                   │
-                              健康检查（GRPC）
-                              异常自动注销
-```
+![alt text](docs/image/consul注册服务简单图示.png)
 
 1. **user_srv** 启动时通过 `python-consul` 注册到 Consul，包含 GRPC 健康检查
 2. **user_web** 启动时从 Consul 查询 user_srv 的地址和端口
 3. **user_web** 建立 gRPC 长连接，后续请求复用该连接
 4. **user_srv** 异常退出时，Consul 自动注销该服务实例
 
-## 八、各服务 README
+## 九、用户注册流程
+
+```
+前端 → 获取图片验证码 → 填写注册信息（手机号、密码、邮箱）
+     → 请求发送邮箱验证码 → 后端生成验证码存入 Redis（5分钟有效期）
+     → 用户收到邮件，填写验证码 → 提交注册
+     → 后端校验：手机号是否已存在 → 邮箱验证码是否正确
+     → 调用 gRPC CreateUser 创建用户 → 生成 JWT Token 返回
+```
+
+## 十、各服务 README
 
 > 每个微服务将拥有独立的 README 文档，开发中...
 
