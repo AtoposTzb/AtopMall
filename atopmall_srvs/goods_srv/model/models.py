@@ -13,7 +13,7 @@ DB = ReconnectMysqlDatebase(database="atopmall_goods_srv",host="192.168.1.106",p
 class BaseModel(Model):
     add_time = DateTimeField(default=datetime.now,verbose_name="添加时间")
     update_time = DateTimeField(default=datetime.now,verbose_name="更新时间")
-    is_delete = BooleanField(default=False,verbose_name="是否删除")
+    is_deleted = BooleanField(default=False,verbose_name="是否删除")
 
     #重写save方法，确保update_time字段更新时间更新而不是add_time字段 拦截添加操作
     def save(self, *args, **kwargs): #*args, **kwargs是可变参数，用于接收任意数量的参数和关键字参数
@@ -29,7 +29,7 @@ class BaseModel(Model):
         if permanently:
             return super().delete() #表示物理删除，将数据从数据库中删除
         else:
-            return super().update(is_delete=True) #表示逻辑删除，将is_delete字段设置为True
+            return super().update(is_deleted=True) #表示逻辑删除，将is_deleted字段设置为True
         
     def delete_instance(self, permanently=False,recursive=False, delete_nullable=False):
         if permanently:
@@ -40,7 +40,7 @@ class BaseModel(Model):
     #拦截查询操作，只查询未删除的数据
     @classmethod
     def select(cls, *fields):
-        return super().select(*fields).where(cls.is_delete == False)
+        return super().select(*fields).where(cls.is_deleted == False)
 
     class Meta:
         database = DB
