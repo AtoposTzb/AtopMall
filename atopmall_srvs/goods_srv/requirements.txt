@@ -1,0 +1,9 @@
+peewee
+pymysql
+passlib
+grpcio
+grpcio-tools
+protobuf
+loguru
+py-consul
+nacos-sdk-python<3.0.0
