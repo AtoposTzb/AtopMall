@@ -1,6 +1,10 @@
+import grpc
 from loguru import logger
-from goods_srv.model.models import Goods,Category
+from peewee import DoesNotExist
+from google.protobuf import empty_pb2
+from goods_srv.model.models import Goods,Category,Brands
 from goods_srv.proto import goods_pb2,goods_pb2_grpc
+
 
 class GoodsServicer(goods_pb2_grpc.GoodsServicer):
         
@@ -71,8 +75,10 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
                 elif level == 3:
                     ids.append(request.topCategory)
                 goods = goods.filter(Goods.category_id.in_(ids))
-            except Exception:
-                pass
+            except DoesNotExist:
+                logger.error(f"分类id={request.topCategory}不存在")
+                rsp.total = 0
+                return rsp
         #分页 limit offset
         start = 0
         page = 1
@@ -89,3 +95,130 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
             rsp.data.append(self.convert_model_to_message(good))
 
         return rsp
+    
+    @logger.catch
+    def BatchGetGoods(self,request:goods_pb2.BatchGoodsIdInfo,context):
+        #批量获取商品详情,订单新建的时候可以使用
+        rsp = goods_pb2.GoodsListResponse()
+        goods = Goods.select().where(Goods.id.in_(list(request.id))) #根据商品id列表查询所有商品
+        rsp.total = goods.count()
+        for good in goods:
+            rsp.data.append(self.convert_model_to_message(good))
+        return rsp
+    
+    @logger.catch
+    def DeleteGoods(self,request:goods_pb2.DeleteGoodsInfo,context):
+        #删除商品
+        # rows = Goods.delete().where(Goods.id==request.id)
+        # if rows == 0:
+        #     logger.error(f"商品id={request.id}不存在")
+        #     return empty_pb2.Empty()
+        try:
+           goods =  Goods.get(Goods.id == request.id)
+           goods.delete_instance() #删除商品
+        except DoesNotExist:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details(f"商品id={request.id}不存在")
+            return empty_pb2.Empty()
+        except Exception as e:
+            context.set_code(grpc.StatusCode.INTERNAL) #严重的内部错误
+            context.set_details(str(e))
+            return empty_pb2.Empty()
+        return goods_pb2.Empty()
+    
+    @logger.catch
+    def GetGoodsDetail(self,request:goods_pb2.GoodInfoRequest,context):
+        #获取商品的详情
+        try:
+           goods =  Goods.get(Goods.id == request.id)
+           #每次查询商品详情，商品的点击量+1
+           goods.click_num += 1
+           goods.save() #保存商品信息
+           rsp = self.convert_model_to_message(goods)
+           return rsp
+        except DoesNotExist:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details(f"商品id={request.id}不存在")
+            return goods_pb2.GoodsDetailResponse()
+        
+    @logger.catch
+    def CreateGoods(self,request:goods_pb2.CreateGoodsInfo,context):
+        #创建商品
+        #先处理外键 商品分类和品牌分类
+        try:
+            category = Category.get(Category.id == request.categoryId)
+        except DoesNotExist:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details("商品分类不存在")
+            return goods_pb2.GoodsInfoResponse()
+        try:
+            brand = Brands.get(Brands.id == request.brandId)
+        except DoesNotExist:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details("品牌不存在")
+            return goods_pb2.GoodsInfoResponse()
+        
+        goods = Goods() #创建商品实例 将grpc消息转换为数据库模型存储到数据库
+        goods.brand = brand
+        goods.category = category
+        goods.name = request.name
+        goods.goods_sn = request.goodsSn
+        goods.market_price = request.marketPrice
+        goods.shop_price = request.shopPrice
+        goods.goods_brief = request.goodsBrief
+        goods.ship_free = request.shipFree
+        goods.images = list(request.images)
+        goods.desc_images = list(request.descImages)
+        goods.goods_front_image = request.goodsFrontImage
+        goods.is_new = request.isNew
+        goods.is_hot = request.isHot
+        goods.on_sale = request.onSale
+
+        goods.save()
+
+        #TODO 此处完善库存的设置 - 分布式事务
+        return self.convert_model_to_message(goods)
+    
+    @logger.catch
+    def UpdateGoods(self,request:goods_pb2.UpdateGoodsInfo,context):
+        #更新商品
+      #先处理外键 商品分类和品牌分类和查询商品是否存在
+        try:
+            category = Category.get(Category.id == request.categoryId)
+        except DoesNotExist:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details("商品分类不存在")
+            return goods_pb2.GoodsInfoResponse()
+        try:
+            brand = Brands.get(Brands.id == request.brandId)
+        except DoesNotExist:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details("品牌不存在")
+            return goods_pb2.GoodsInfoResponse()
+        
+        try:
+            goods = Goods.get(Goods.id == request.id)
+        except DoesNotExist:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details("商品不存在")
+            return goods_pb2.GoodsInfoResponse()
+        
+        goods.brand = brand
+        goods.category = category
+        goods.name = request.name
+        goods.goods_sn = request.goodsSn
+        goods.market_price = request.marketPrice
+        goods.shop_price = request.shopPrice
+        goods.goods_brief = request.goodsBrief
+        goods.ship_free = request.shipFree
+        goods.images = list(request.images)
+        goods.desc_images = list(request.descImages)
+        goods.goods_front_image = request.goodsFrontImage
+        goods.is_new = request.isNew
+        goods.is_hot = request.isHot
+        goods.on_sale = request.onSale
+
+        goods.save()
+
+        #TODO 此处完善库存的设置 - 分布式事务
+        return self.convert_model_to_message(goods)

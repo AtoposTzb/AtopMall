@@ -38,8 +38,19 @@ class TestGoodsServicer:
         rsp :goods_pb2.GoodsListResponse = self.stub.GoodsList(goods_pb2.GoodsFilterRequest(keyWords="四川"))
         for goods in rsp.data:
             print(goods.name,goods.shopPrice)
-          
+    
+    def batch_get_goods(self):
+        ids = [421,422]
+        rsp :goods_pb2.GoodsListResponse = self.stub.BatchGetGoods(goods_pb2.BatchGoodsIdInfo(id=ids))
+        for goods in rsp.data:
+            print(goods.name,goods.shopPrice)
+        
+    def get_goods_detail(self):
+        rep:goods_pb2.GoodsDetailResponse = self.stub.GetGoodsDetail(goods_pb2.GoodInfoRequest(id=421))
+        print(rep.name)
         
 if __name__ == "__main__":
     test = TestGoodsServicer()
-    test.goods_list()
+    # test.goods_list()
+    # test.batch_get_goods()
+    test.get_goods_detail()
