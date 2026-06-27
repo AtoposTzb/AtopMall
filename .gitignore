@@ -26,4 +26,7 @@ tmp/
 docs/design/diagrams/
 
 #忽略配置文件有邮箱授权码等重要信息，上传git的是配置文件模板
-atopmall_web/user_web/config-debug.yaml
+# config-debug.yaml配置已经移至nacos配置中心，不在忽略config-debug.yaml文件
+
+#忽略nacos缓存文件
+nacos-data/

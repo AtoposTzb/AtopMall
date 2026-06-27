@@ -100,4 +100,6 @@ if __name__ == "__main__":
     # logger.critical("严重错误信息")
     # print(get_free_port())
     logging.basicConfig()
+    #监听nacos配置修改
+    settings.client.add_config_watcher(settings.NACOS["data_id"],settings.NACOS["group"],settings.update_config)
     server()

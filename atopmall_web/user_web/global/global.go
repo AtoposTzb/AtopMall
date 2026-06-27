@@ -13,7 +13,8 @@ var (
 	Trans         ut.Translator
 	RDB           *redis.Client
 	UserSrvClient proto.UserClient
-	Env           string = "ATOPMALL_DEBUG"
+	Env           string              = "ATOPMALL_DEBUG"
+	NacosConfig   *config.NacosConfig = &config.NacosConfig{}
 )
 
 /*
@@ -23,4 +24,5 @@ var (
 	3. RDB: redis客户端 用于连接redis数据库
 	4. UserSrvClient: 用户服务客户端 用于调用用户服务的接口
 	5. Env: 本地调试用的环境变量{自行在系统环境变量中设置}
+	6. NacosConfig: nacos配置 用于存储nacos的配置信息 连接nacos配置中心
 */

@@ -1,3 +1,6 @@
+# 所有配置均移到nacos配置中心 ，这里只是示例配置
+# nacos配置详见config-debug.yaml文件
+
 name: "user_web" # 服务名称
 port: 8081 # 服务端口 ，默认8081
 user_srv: # 用户服务配置
