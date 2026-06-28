@@ -22,8 +22,7 @@ class CategoryServicer(goods_pb2_grpc.CategoryServicer):
         re["isTab"] = category.is_tab
         return re
 
-
-    @logger.catch
+    @logger.catch # 获取所有分类列表
     def GetAllCategorysList(self, request:empty_pb2.Empty, context):
         categorys = Category.select() #先获取所有的分类
         category_list_rsp = goods_pb2.CategoryListResponse() #这个消息体返回两种格式数据
@@ -86,7 +85,7 @@ class CategoryServicer(goods_pb2_grpc.CategoryServicer):
         category_list_rsp.jsonData = json.dumps(level1) #将一级分类转换为json字符串
         return category_list_rsp
     
-    @logger.catch
+    @logger.catch # 获取子分类列表
     def GetSubCategory(self, request: goods_pb2.CategoryListRequest, context):
         category_list_rsp = goods_pb2.SubCategoryListResponse()
 
@@ -118,7 +117,7 @@ class CategoryServicer(goods_pb2_grpc.CategoryServicer):
 
         return category_list_rsp
 
-    @logger.catch
+    @logger.catch # 创建分类
     def CreateCategory(self, request: goods_pb2.CategoryInfoRequest, context):
         try:
             category = Category()
@@ -143,7 +142,7 @@ class CategoryServicer(goods_pb2_grpc.CategoryServicer):
 
         return category_rsp
 
-    @logger.catch
+    @logger.catch # 删除分类
     def DeleteCategory(self, request: goods_pb2.DeleteCategoryRequest, context):
         try:
             category = Category.get(request.id)
@@ -154,7 +153,7 @@ class CategoryServicer(goods_pb2_grpc.CategoryServicer):
             context.set_details('记录不存在')
             return empty_pb2.Empty()
 
-    @logger.catch
+    @logger.catch # 更新分类
     def UpdateCategory(self, request: goods_pb2.CategoryInfoRequest, context):
         try:
             category = Category.get(request.id)

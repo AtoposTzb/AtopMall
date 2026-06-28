@@ -38,7 +38,7 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
 
         return info_rsp
 
-    @logger.catch
+    @logger.catch # 商品列表页
     def GoodsList(self, request:goods_pb2.GoodsFilterRequest, context):
         #商品列表页
         rsp = goods_pb2.GoodsListResponse() #存储查询到的商品列表信息返回给客户端
@@ -96,7 +96,7 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
 
         return rsp
     
-    @logger.catch
+    @logger.catch # 批量获取商品详情
     def BatchGetGoods(self,request:goods_pb2.BatchGoodsIdInfo,context):
         #批量获取商品详情,订单新建的时候可以使用
         rsp = goods_pb2.GoodsListResponse()
@@ -106,7 +106,7 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
             rsp.data.append(self.convert_model_to_message(good))
         return rsp
     
-    @logger.catch
+    @logger.catch # 删除商品
     def DeleteGoods(self,request:goods_pb2.DeleteGoodsInfo,context):
         #删除商品
         # rows = Goods.delete().where(Goods.id==request.id)
@@ -126,7 +126,7 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
             return empty_pb2.Empty()
         return goods_pb2.Empty()
     
-    @logger.catch
+    @logger.catch # 获取商品详情
     def GetGoodsDetail(self,request:goods_pb2.GoodInfoRequest,context):
         #获取商品的详情
         try:
@@ -141,7 +141,7 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
             context.set_details(f"商品id={request.id}不存在")
             return goods_pb2.GoodsDetailResponse()
         
-    @logger.catch
+    @logger.catch # 创建商品
     def CreateGoods(self,request:goods_pb2.CreateGoodsInfo,context):
         #创建商品
         #先处理外键 商品分类和品牌分类
@@ -179,7 +179,7 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
         #TODO 此处完善库存的设置 - 分布式事务
         return self.convert_model_to_message(goods)
     
-    @logger.catch
+    @logger.catch # 更新商品
     def UpdateGoods(self,request:goods_pb2.CreateGoodsInfo,context):
         #更新商品
       #先处理外键 商品分类和品牌分类和查询商品是否存在

@@ -17,6 +17,9 @@ sys.path.insert(0,BASE_DIR)
 from goods_srv.proto import goods_pb2_grpc
 from goods_srv.handler.goods import GoodsServicer
 from goods_srv.handler.category import CategoryServicer
+from goods_srv.handler.brands import BrandServicer
+from goods_srv.handler.banners import BannerServicer
+from goods_srv.handler.category_brand import CategoryBrandServicer
 from grpc_health.v1 import health  #使用官方提供的健康检查服务，下载然后直接导入库即可使用
 from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
@@ -63,9 +66,13 @@ def server():
 
     logger.add("logs/goods_srv_{time}.log") #将日志写入到文件夹logs下
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10)) #创建一个grpc服务器,并指定最大线程数为10
-    #1.注册商品服务
+    #1.注册商品相关的服务(商品服务,分类服务,品牌服务,轮播图服务,品牌分类服务)
     goods_pb2_grpc.add_GoodsServicer_to_server(GoodsServicer(),server) #这行代码的意思是将GoodsServicer类添加到server中,并将其作为GoodsServicer服务端，简单来说就是注册GoodsServicer类
     goods_pb2_grpc.add_CategoryServicer_to_server(CategoryServicer(),server)
+    goods_pb2_grpc.add_BrandServicer_to_server(BrandServicer(),server)
+    goods_pb2_grpc.add_BannerServicer_to_server(BannerServicer(),server)
+    goods_pb2_grpc.add_CategoryBrandServicer_to_server(CategoryBrandServicer(),server)
+
     #2.注册健康检查consul
     health_pb2_grpc.add_HealthServicer_to_server(health.HealthServicer(),server)
     server.add_insecure_port(f"{args.ip}:{args.port}")
