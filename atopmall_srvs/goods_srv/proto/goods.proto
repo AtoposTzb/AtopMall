@@ -2,6 +2,7 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 option go_package = "atopmall_web/goods_web/proto";
 
+// ===================== 商品服务 =====================
 service Goods {
   //商品接口
   rpc GoodsList(GoodsFilterRequest) returns (GoodsListResponse);
@@ -11,7 +12,10 @@ service Goods {
   rpc DeleteGoods(DeleteGoodsInfo) returns (google.protobuf.Empty);
   rpc UpdateGoods(CreateGoodsInfo) returns (google.protobuf.Empty);
   rpc GetGoodsDetail(GoodInfoRequest) returns (GoodsInfoResponse);
+}
 
+// ===================== 分类服务 =====================
+service Category {
   //商品分类
   rpc GetAllCategorysList(google.protobuf.Empty) returns (CategoryListResponse); //获取所有的分类
   //获取子分类
@@ -19,19 +23,28 @@ service Goods {
   rpc CreateCategory(CategoryInfoRequest) returns (CategoryInfoResponse); //新建分类信息
   rpc DeleteCategory(DeleteCategoryRequest) returns (google.protobuf.Empty); //删除分类
   rpc UpdateCategory(CategoryInfoRequest) returns (google.protobuf.Empty); //修改分类信息
+}
 
+// ===================== 品牌服务 =====================
+service Brand {
   //品牌和轮播图
   rpc BrandList(BrandFilterRequest) returns (BrandListResponse); //批量获取品牌信息
   rpc CreateBrand(BrandRequest) returns (BrandInfoResponse); //新建品牌信息
   rpc DeleteBrand(BrandRequest) returns (google.protobuf.Empty); //删除品牌
   rpc UpdateBrand(BrandRequest) returns (google.protobuf.Empty); //修改品牌信息
+}
 
+// ===================== 轮播图服务 =====================
+service Banner {
   //轮播图
   rpc BannerList(google.protobuf.Empty) returns (BannerListResponse); //获取轮播列表信息
   rpc CreateBanner(BannerRequest) returns (BannerResponse); //添加banner图
   rpc DeleteBanner(BannerRequest) returns (google.protobuf.Empty); //删除轮播图
   rpc UpdateBanner(BannerRequest) returns (google.protobuf.Empty); //修改轮播图
+}
 
+// ===================== 品牌分类服务 =====================
+service CategoryBrand {
   //品牌分类
   rpc CategoryBrandList(CategoryBrandFilterRequest) returns (CategoryBrandListResponse); //获取轮播列表信息
   //通过category获取brands

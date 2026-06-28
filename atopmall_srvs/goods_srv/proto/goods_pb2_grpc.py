@@ -27,7 +27,8 @@ if _version_not_supported:
 
 
 class GoodsStub:
-    """Missing associated documentation comment in .proto file."""
+    """===================== 商品服务 =====================
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -65,100 +66,11 @@ class GoodsStub:
                 request_serializer=goods__pb2.GoodInfoRequest.SerializeToString,
                 response_deserializer=goods__pb2.GoodsInfoResponse.FromString,
                 _registered_method=True)
-        self.GetAllCategorysList = channel.unary_unary(
-                '/Goods/GetAllCategorysList',
-                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-                response_deserializer=goods__pb2.CategoryListResponse.FromString,
-                _registered_method=True)
-        self.GetSubCategory = channel.unary_unary(
-                '/Goods/GetSubCategory',
-                request_serializer=goods__pb2.CategoryListRequest.SerializeToString,
-                response_deserializer=goods__pb2.SubCategoryListResponse.FromString,
-                _registered_method=True)
-        self.CreateCategory = channel.unary_unary(
-                '/Goods/CreateCategory',
-                request_serializer=goods__pb2.CategoryInfoRequest.SerializeToString,
-                response_deserializer=goods__pb2.CategoryInfoResponse.FromString,
-                _registered_method=True)
-        self.DeleteCategory = channel.unary_unary(
-                '/Goods/DeleteCategory',
-                request_serializer=goods__pb2.DeleteCategoryRequest.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                _registered_method=True)
-        self.UpdateCategory = channel.unary_unary(
-                '/Goods/UpdateCategory',
-                request_serializer=goods__pb2.CategoryInfoRequest.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                _registered_method=True)
-        self.BrandList = channel.unary_unary(
-                '/Goods/BrandList',
-                request_serializer=goods__pb2.BrandFilterRequest.SerializeToString,
-                response_deserializer=goods__pb2.BrandListResponse.FromString,
-                _registered_method=True)
-        self.CreateBrand = channel.unary_unary(
-                '/Goods/CreateBrand',
-                request_serializer=goods__pb2.BrandRequest.SerializeToString,
-                response_deserializer=goods__pb2.BrandInfoResponse.FromString,
-                _registered_method=True)
-        self.DeleteBrand = channel.unary_unary(
-                '/Goods/DeleteBrand',
-                request_serializer=goods__pb2.BrandRequest.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                _registered_method=True)
-        self.UpdateBrand = channel.unary_unary(
-                '/Goods/UpdateBrand',
-                request_serializer=goods__pb2.BrandRequest.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                _registered_method=True)
-        self.BannerList = channel.unary_unary(
-                '/Goods/BannerList',
-                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-                response_deserializer=goods__pb2.BannerListResponse.FromString,
-                _registered_method=True)
-        self.CreateBanner = channel.unary_unary(
-                '/Goods/CreateBanner',
-                request_serializer=goods__pb2.BannerRequest.SerializeToString,
-                response_deserializer=goods__pb2.BannerResponse.FromString,
-                _registered_method=True)
-        self.DeleteBanner = channel.unary_unary(
-                '/Goods/DeleteBanner',
-                request_serializer=goods__pb2.BannerRequest.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                _registered_method=True)
-        self.UpdateBanner = channel.unary_unary(
-                '/Goods/UpdateBanner',
-                request_serializer=goods__pb2.BannerRequest.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                _registered_method=True)
-        self.CategoryBrandList = channel.unary_unary(
-                '/Goods/CategoryBrandList',
-                request_serializer=goods__pb2.CategoryBrandFilterRequest.SerializeToString,
-                response_deserializer=goods__pb2.CategoryBrandListResponse.FromString,
-                _registered_method=True)
-        self.GetCategoryBrandList = channel.unary_unary(
-                '/Goods/GetCategoryBrandList',
-                request_serializer=goods__pb2.CategoryInfoRequest.SerializeToString,
-                response_deserializer=goods__pb2.BrandListResponse.FromString,
-                _registered_method=True)
-        self.CreateCategoryBrand = channel.unary_unary(
-                '/Goods/CreateCategoryBrand',
-                request_serializer=goods__pb2.CategoryBrandRequest.SerializeToString,
-                response_deserializer=goods__pb2.CategoryBrandResponse.FromString,
-                _registered_method=True)
-        self.DeleteCategoryBrand = channel.unary_unary(
-                '/Goods/DeleteCategoryBrand',
-                request_serializer=goods__pb2.CategoryBrandRequest.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                _registered_method=True)
-        self.UpdateCategoryBrand = channel.unary_unary(
-                '/Goods/UpdateCategoryBrand',
-                request_serializer=goods__pb2.CategoryBrandRequest.SerializeToString,
-                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                _registered_method=True)
 
 
 class GoodsServicer:
-    """Missing associated documentation comment in .proto file."""
+    """===================== 商品服务 =====================
+    """
 
     def GoodsList(self, request, context):
         """商品接口
@@ -199,136 +111,6 @@ class GoodsServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetAllCategorysList(self, request, context):
-        """商品分类
-        获取所有的分类
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetSubCategory(self, request, context):
-        """获取子分类
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def CreateCategory(self, request, context):
-        """新建分类信息
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def DeleteCategory(self, request, context):
-        """删除分类
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def UpdateCategory(self, request, context):
-        """修改分类信息
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def BrandList(self, request, context):
-        """品牌和轮播图
-        批量获取品牌信息
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def CreateBrand(self, request, context):
-        """新建品牌信息
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def DeleteBrand(self, request, context):
-        """删除品牌
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def UpdateBrand(self, request, context):
-        """修改品牌信息
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def BannerList(self, request, context):
-        """轮播图
-        获取轮播列表信息
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def CreateBanner(self, request, context):
-        """添加banner图
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def DeleteBanner(self, request, context):
-        """删除轮播图
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def UpdateBanner(self, request, context):
-        """修改轮播图
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def CategoryBrandList(self, request, context):
-        """品牌分类
-        获取轮播列表信息
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetCategoryBrandList(self, request, context):
-        """通过category获取brands
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def CreateCategoryBrand(self, request, context):
-        """添加banner图
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def DeleteCategoryBrand(self, request, context):
-        """删除轮播图
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def UpdateCategoryBrand(self, request, context):
-        """修改轮播图
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
 
 def add_GoodsServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -362,96 +144,6 @@ def add_GoodsServicer_to_server(servicer, server):
                     request_deserializer=goods__pb2.GoodInfoRequest.FromString,
                     response_serializer=goods__pb2.GoodsInfoResponse.SerializeToString,
             ),
-            'GetAllCategorysList': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetAllCategorysList,
-                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                    response_serializer=goods__pb2.CategoryListResponse.SerializeToString,
-            ),
-            'GetSubCategory': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetSubCategory,
-                    request_deserializer=goods__pb2.CategoryListRequest.FromString,
-                    response_serializer=goods__pb2.SubCategoryListResponse.SerializeToString,
-            ),
-            'CreateCategory': grpc.unary_unary_rpc_method_handler(
-                    servicer.CreateCategory,
-                    request_deserializer=goods__pb2.CategoryInfoRequest.FromString,
-                    response_serializer=goods__pb2.CategoryInfoResponse.SerializeToString,
-            ),
-            'DeleteCategory': grpc.unary_unary_rpc_method_handler(
-                    servicer.DeleteCategory,
-                    request_deserializer=goods__pb2.DeleteCategoryRequest.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'UpdateCategory': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateCategory,
-                    request_deserializer=goods__pb2.CategoryInfoRequest.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'BrandList': grpc.unary_unary_rpc_method_handler(
-                    servicer.BrandList,
-                    request_deserializer=goods__pb2.BrandFilterRequest.FromString,
-                    response_serializer=goods__pb2.BrandListResponse.SerializeToString,
-            ),
-            'CreateBrand': grpc.unary_unary_rpc_method_handler(
-                    servicer.CreateBrand,
-                    request_deserializer=goods__pb2.BrandRequest.FromString,
-                    response_serializer=goods__pb2.BrandInfoResponse.SerializeToString,
-            ),
-            'DeleteBrand': grpc.unary_unary_rpc_method_handler(
-                    servicer.DeleteBrand,
-                    request_deserializer=goods__pb2.BrandRequest.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'UpdateBrand': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateBrand,
-                    request_deserializer=goods__pb2.BrandRequest.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'BannerList': grpc.unary_unary_rpc_method_handler(
-                    servicer.BannerList,
-                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                    response_serializer=goods__pb2.BannerListResponse.SerializeToString,
-            ),
-            'CreateBanner': grpc.unary_unary_rpc_method_handler(
-                    servicer.CreateBanner,
-                    request_deserializer=goods__pb2.BannerRequest.FromString,
-                    response_serializer=goods__pb2.BannerResponse.SerializeToString,
-            ),
-            'DeleteBanner': grpc.unary_unary_rpc_method_handler(
-                    servicer.DeleteBanner,
-                    request_deserializer=goods__pb2.BannerRequest.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'UpdateBanner': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateBanner,
-                    request_deserializer=goods__pb2.BannerRequest.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'CategoryBrandList': grpc.unary_unary_rpc_method_handler(
-                    servicer.CategoryBrandList,
-                    request_deserializer=goods__pb2.CategoryBrandFilterRequest.FromString,
-                    response_serializer=goods__pb2.CategoryBrandListResponse.SerializeToString,
-            ),
-            'GetCategoryBrandList': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetCategoryBrandList,
-                    request_deserializer=goods__pb2.CategoryInfoRequest.FromString,
-                    response_serializer=goods__pb2.BrandListResponse.SerializeToString,
-            ),
-            'CreateCategoryBrand': grpc.unary_unary_rpc_method_handler(
-                    servicer.CreateCategoryBrand,
-                    request_deserializer=goods__pb2.CategoryBrandRequest.FromString,
-                    response_serializer=goods__pb2.CategoryBrandResponse.SerializeToString,
-            ),
-            'DeleteCategoryBrand': grpc.unary_unary_rpc_method_handler(
-                    servicer.DeleteCategoryBrand,
-                    request_deserializer=goods__pb2.CategoryBrandRequest.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'UpdateCategoryBrand': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateCategoryBrand,
-                    request_deserializer=goods__pb2.CategoryBrandRequest.FromString,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'Goods', rpc_method_handlers)
@@ -461,7 +153,8 @@ def add_GoodsServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Goods:
-    """Missing associated documentation comment in .proto file."""
+    """===================== 商品服务 =====================
+    """
 
     @staticmethod
     def GoodsList(request,
@@ -625,6 +318,124 @@ class Goods:
             metadata,
             _registered_method=True)
 
+
+class CategoryStub:
+    """===================== 分类服务 =====================
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.GetAllCategorysList = channel.unary_unary(
+                '/Category/GetAllCategorysList',
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                response_deserializer=goods__pb2.CategoryListResponse.FromString,
+                _registered_method=True)
+        self.GetSubCategory = channel.unary_unary(
+                '/Category/GetSubCategory',
+                request_serializer=goods__pb2.CategoryListRequest.SerializeToString,
+                response_deserializer=goods__pb2.SubCategoryListResponse.FromString,
+                _registered_method=True)
+        self.CreateCategory = channel.unary_unary(
+                '/Category/CreateCategory',
+                request_serializer=goods__pb2.CategoryInfoRequest.SerializeToString,
+                response_deserializer=goods__pb2.CategoryInfoResponse.FromString,
+                _registered_method=True)
+        self.DeleteCategory = channel.unary_unary(
+                '/Category/DeleteCategory',
+                request_serializer=goods__pb2.DeleteCategoryRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.UpdateCategory = channel.unary_unary(
+                '/Category/UpdateCategory',
+                request_serializer=goods__pb2.CategoryInfoRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+
+
+class CategoryServicer:
+    """===================== 分类服务 =====================
+    """
+
+    def GetAllCategorysList(self, request, context):
+        """商品分类
+        获取所有的分类
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetSubCategory(self, request, context):
+        """获取子分类
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateCategory(self, request, context):
+        """新建分类信息
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteCategory(self, request, context):
+        """删除分类
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateCategory(self, request, context):
+        """修改分类信息
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_CategoryServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'GetAllCategorysList': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetAllCategorysList,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                    response_serializer=goods__pb2.CategoryListResponse.SerializeToString,
+            ),
+            'GetSubCategory': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetSubCategory,
+                    request_deserializer=goods__pb2.CategoryListRequest.FromString,
+                    response_serializer=goods__pb2.SubCategoryListResponse.SerializeToString,
+            ),
+            'CreateCategory': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateCategory,
+                    request_deserializer=goods__pb2.CategoryInfoRequest.FromString,
+                    response_serializer=goods__pb2.CategoryInfoResponse.SerializeToString,
+            ),
+            'DeleteCategory': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteCategory,
+                    request_deserializer=goods__pb2.DeleteCategoryRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'UpdateCategory': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateCategory,
+                    request_deserializer=goods__pb2.CategoryInfoRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'Category', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('Category', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class Category:
+    """===================== 分类服务 =====================
+    """
+
     @staticmethod
     def GetAllCategorysList(request,
             target,
@@ -639,7 +450,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/GetAllCategorysList',
+            '/Category/GetAllCategorysList',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             goods__pb2.CategoryListResponse.FromString,
             options,
@@ -666,7 +477,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/GetSubCategory',
+            '/Category/GetSubCategory',
             goods__pb2.CategoryListRequest.SerializeToString,
             goods__pb2.SubCategoryListResponse.FromString,
             options,
@@ -693,7 +504,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/CreateCategory',
+            '/Category/CreateCategory',
             goods__pb2.CategoryInfoRequest.SerializeToString,
             goods__pb2.CategoryInfoResponse.FromString,
             options,
@@ -720,7 +531,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/DeleteCategory',
+            '/Category/DeleteCategory',
             goods__pb2.DeleteCategoryRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -747,7 +558,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/UpdateCategory',
+            '/Category/UpdateCategory',
             goods__pb2.CategoryInfoRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -759,6 +570,107 @@ class Goods:
             timeout,
             metadata,
             _registered_method=True)
+
+
+class BrandStub:
+    """===================== 品牌服务 =====================
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.BrandList = channel.unary_unary(
+                '/Brand/BrandList',
+                request_serializer=goods__pb2.BrandFilterRequest.SerializeToString,
+                response_deserializer=goods__pb2.BrandListResponse.FromString,
+                _registered_method=True)
+        self.CreateBrand = channel.unary_unary(
+                '/Brand/CreateBrand',
+                request_serializer=goods__pb2.BrandRequest.SerializeToString,
+                response_deserializer=goods__pb2.BrandInfoResponse.FromString,
+                _registered_method=True)
+        self.DeleteBrand = channel.unary_unary(
+                '/Brand/DeleteBrand',
+                request_serializer=goods__pb2.BrandRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.UpdateBrand = channel.unary_unary(
+                '/Brand/UpdateBrand',
+                request_serializer=goods__pb2.BrandRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+
+
+class BrandServicer:
+    """===================== 品牌服务 =====================
+    """
+
+    def BrandList(self, request, context):
+        """品牌和轮播图
+        批量获取品牌信息
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateBrand(self, request, context):
+        """新建品牌信息
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteBrand(self, request, context):
+        """删除品牌
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateBrand(self, request, context):
+        """修改品牌信息
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_BrandServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'BrandList': grpc.unary_unary_rpc_method_handler(
+                    servicer.BrandList,
+                    request_deserializer=goods__pb2.BrandFilterRequest.FromString,
+                    response_serializer=goods__pb2.BrandListResponse.SerializeToString,
+            ),
+            'CreateBrand': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateBrand,
+                    request_deserializer=goods__pb2.BrandRequest.FromString,
+                    response_serializer=goods__pb2.BrandInfoResponse.SerializeToString,
+            ),
+            'DeleteBrand': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteBrand,
+                    request_deserializer=goods__pb2.BrandRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'UpdateBrand': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateBrand,
+                    request_deserializer=goods__pb2.BrandRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'Brand', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('Brand', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class Brand:
+    """===================== 品牌服务 =====================
+    """
 
     @staticmethod
     def BrandList(request,
@@ -774,7 +686,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/BrandList',
+            '/Brand/BrandList',
             goods__pb2.BrandFilterRequest.SerializeToString,
             goods__pb2.BrandListResponse.FromString,
             options,
@@ -801,7 +713,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/CreateBrand',
+            '/Brand/CreateBrand',
             goods__pb2.BrandRequest.SerializeToString,
             goods__pb2.BrandInfoResponse.FromString,
             options,
@@ -828,7 +740,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/DeleteBrand',
+            '/Brand/DeleteBrand',
             goods__pb2.BrandRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -855,7 +767,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/UpdateBrand',
+            '/Brand/UpdateBrand',
             goods__pb2.BrandRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -867,6 +779,107 @@ class Goods:
             timeout,
             metadata,
             _registered_method=True)
+
+
+class BannerStub:
+    """===================== 轮播图服务 =====================
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.BannerList = channel.unary_unary(
+                '/Banner/BannerList',
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                response_deserializer=goods__pb2.BannerListResponse.FromString,
+                _registered_method=True)
+        self.CreateBanner = channel.unary_unary(
+                '/Banner/CreateBanner',
+                request_serializer=goods__pb2.BannerRequest.SerializeToString,
+                response_deserializer=goods__pb2.BannerResponse.FromString,
+                _registered_method=True)
+        self.DeleteBanner = channel.unary_unary(
+                '/Banner/DeleteBanner',
+                request_serializer=goods__pb2.BannerRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.UpdateBanner = channel.unary_unary(
+                '/Banner/UpdateBanner',
+                request_serializer=goods__pb2.BannerRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+
+
+class BannerServicer:
+    """===================== 轮播图服务 =====================
+    """
+
+    def BannerList(self, request, context):
+        """轮播图
+        获取轮播列表信息
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateBanner(self, request, context):
+        """添加banner图
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteBanner(self, request, context):
+        """删除轮播图
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateBanner(self, request, context):
+        """修改轮播图
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_BannerServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'BannerList': grpc.unary_unary_rpc_method_handler(
+                    servicer.BannerList,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                    response_serializer=goods__pb2.BannerListResponse.SerializeToString,
+            ),
+            'CreateBanner': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateBanner,
+                    request_deserializer=goods__pb2.BannerRequest.FromString,
+                    response_serializer=goods__pb2.BannerResponse.SerializeToString,
+            ),
+            'DeleteBanner': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteBanner,
+                    request_deserializer=goods__pb2.BannerRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'UpdateBanner': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateBanner,
+                    request_deserializer=goods__pb2.BannerRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'Banner', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('Banner', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class Banner:
+    """===================== 轮播图服务 =====================
+    """
 
     @staticmethod
     def BannerList(request,
@@ -882,7 +895,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/BannerList',
+            '/Banner/BannerList',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             goods__pb2.BannerListResponse.FromString,
             options,
@@ -909,7 +922,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/CreateBanner',
+            '/Banner/CreateBanner',
             goods__pb2.BannerRequest.SerializeToString,
             goods__pb2.BannerResponse.FromString,
             options,
@@ -936,7 +949,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/DeleteBanner',
+            '/Banner/DeleteBanner',
             goods__pb2.BannerRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -963,7 +976,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/UpdateBanner',
+            '/Banner/UpdateBanner',
             goods__pb2.BannerRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -975,6 +988,124 @@ class Goods:
             timeout,
             metadata,
             _registered_method=True)
+
+
+class CategoryBrandStub:
+    """===================== 品牌分类服务 =====================
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.CategoryBrandList = channel.unary_unary(
+                '/CategoryBrand/CategoryBrandList',
+                request_serializer=goods__pb2.CategoryBrandFilterRequest.SerializeToString,
+                response_deserializer=goods__pb2.CategoryBrandListResponse.FromString,
+                _registered_method=True)
+        self.GetCategoryBrandList = channel.unary_unary(
+                '/CategoryBrand/GetCategoryBrandList',
+                request_serializer=goods__pb2.CategoryInfoRequest.SerializeToString,
+                response_deserializer=goods__pb2.BrandListResponse.FromString,
+                _registered_method=True)
+        self.CreateCategoryBrand = channel.unary_unary(
+                '/CategoryBrand/CreateCategoryBrand',
+                request_serializer=goods__pb2.CategoryBrandRequest.SerializeToString,
+                response_deserializer=goods__pb2.CategoryBrandResponse.FromString,
+                _registered_method=True)
+        self.DeleteCategoryBrand = channel.unary_unary(
+                '/CategoryBrand/DeleteCategoryBrand',
+                request_serializer=goods__pb2.CategoryBrandRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.UpdateCategoryBrand = channel.unary_unary(
+                '/CategoryBrand/UpdateCategoryBrand',
+                request_serializer=goods__pb2.CategoryBrandRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+
+
+class CategoryBrandServicer:
+    """===================== 品牌分类服务 =====================
+    """
+
+    def CategoryBrandList(self, request, context):
+        """品牌分类
+        获取轮播列表信息
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetCategoryBrandList(self, request, context):
+        """通过category获取brands
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateCategoryBrand(self, request, context):
+        """添加banner图
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteCategoryBrand(self, request, context):
+        """删除轮播图
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateCategoryBrand(self, request, context):
+        """修改轮播图
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_CategoryBrandServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'CategoryBrandList': grpc.unary_unary_rpc_method_handler(
+                    servicer.CategoryBrandList,
+                    request_deserializer=goods__pb2.CategoryBrandFilterRequest.FromString,
+                    response_serializer=goods__pb2.CategoryBrandListResponse.SerializeToString,
+            ),
+            'GetCategoryBrandList': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetCategoryBrandList,
+                    request_deserializer=goods__pb2.CategoryInfoRequest.FromString,
+                    response_serializer=goods__pb2.BrandListResponse.SerializeToString,
+            ),
+            'CreateCategoryBrand': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateCategoryBrand,
+                    request_deserializer=goods__pb2.CategoryBrandRequest.FromString,
+                    response_serializer=goods__pb2.CategoryBrandResponse.SerializeToString,
+            ),
+            'DeleteCategoryBrand': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteCategoryBrand,
+                    request_deserializer=goods__pb2.CategoryBrandRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'UpdateCategoryBrand': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateCategoryBrand,
+                    request_deserializer=goods__pb2.CategoryBrandRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'CategoryBrand', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('CategoryBrand', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class CategoryBrand:
+    """===================== 品牌分类服务 =====================
+    """
 
     @staticmethod
     def CategoryBrandList(request,
@@ -990,7 +1121,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/CategoryBrandList',
+            '/CategoryBrand/CategoryBrandList',
             goods__pb2.CategoryBrandFilterRequest.SerializeToString,
             goods__pb2.CategoryBrandListResponse.FromString,
             options,
@@ -1017,7 +1148,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/GetCategoryBrandList',
+            '/CategoryBrand/GetCategoryBrandList',
             goods__pb2.CategoryInfoRequest.SerializeToString,
             goods__pb2.BrandListResponse.FromString,
             options,
@@ -1044,7 +1175,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/CreateCategoryBrand',
+            '/CategoryBrand/CreateCategoryBrand',
             goods__pb2.CategoryBrandRequest.SerializeToString,
             goods__pb2.CategoryBrandResponse.FromString,
             options,
@@ -1071,7 +1202,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/DeleteCategoryBrand',
+            '/CategoryBrand/DeleteCategoryBrand',
             goods__pb2.CategoryBrandRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -1098,7 +1229,7 @@ class Goods:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Goods/UpdateCategoryBrand',
+            '/CategoryBrand/UpdateCategoryBrand',
             goods__pb2.CategoryBrandRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,

@@ -5,7 +5,7 @@ from google.protobuf import empty_pb2
 from goods_srv.model.models import Goods,Category,Brands
 from goods_srv.proto import goods_pb2,goods_pb2_grpc
 
-
+# 商品服务
 class GoodsServicer(goods_pb2_grpc.GoodsServicer):
         
     def convert_model_to_message(self, goods):
@@ -180,7 +180,7 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
         return self.convert_model_to_message(goods)
     
     @logger.catch
-    def UpdateGoods(self,request:goods_pb2.UpdateGoodsInfo,context):
+    def UpdateGoods(self,request:goods_pb2.CreateGoodsInfo,context):
         #更新商品
       #先处理外键 商品分类和品牌分类和查询商品是否存在
         try:
