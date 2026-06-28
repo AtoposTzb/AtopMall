@@ -1,8 +1,10 @@
-# 所有配置均移到nacos配置中心 ，这里只是示例配置
-# nacos配置详见config-debug.yaml文件
+# 所有配置均移到nacos配置中心 ，这里只是示例配置，这里是什么配置，nacos配置中心也是对应的配置
+# nacos自己的配置详见config-debug.yaml文件
 
+host: "" # 服务主机ip 或域名 ，本地调试默认127.0.0.1
 name: "goods_web" # 服务名称
-port: 8081 # 服务端口 ，默认8081
+port: 8082 # 服务端口 ，默认8082
+tags: ["", "", "", ""] #服务标签
 user_srv: # 用户服务配置
   host: "" # 用户服务主机ip 或域名 ，本地调试默认127.0.0.1,但是注意consul的host要和这里一致，对外可访问的IP
   port: 50051 # 用户服务端口 ，默认50051
@@ -10,19 +12,6 @@ user_srv: # 用户服务配置
 
 jwt: # jwt配置
   key: "{*4d5!|pQ]_E3GGkAQZF" # jwt密钥
-
-redis: # redis配置
-  host: "" # redis主机ip 或域名 ，默认127.0.0.1
-  port: 6379 # redis端口 ，默认6379
-  password: "" # redis密码 ，默认空
-  db: 0 # redis数据库 ，默认0
-
-email: # 邮箱配置 发送验证码 ，验证码有效期5分钟，默认300秒
-  host: "" # 邮箱主机ip 登录自己的邮箱查看即可，例如：smtp.qq.com、smtp.sina.com.cn等，
-  port: 465 # 邮箱端口 ，默认465 登录自己的邮箱查看即可，例如：465、587等，
-  username: "" # 邮箱账号 使用自己的邮箱账号
-  password: "" # 邮箱密码 这里是邮箱的授权码，不是邮箱的登录密码
-  expires: 300 # 验证码有效期 ，默认300秒
 
 consul: # consul配置
   host: "" # consul主机ip 或域名 ，为你自己的consul主机ip 或域名

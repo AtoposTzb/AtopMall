@@ -50,7 +50,7 @@ func ConfigInit() {
 
 	//nacos配置中心配置初始化,参考官网文档
 	//1. 配置nacos服务器地址
-	fmt.Println(global.NacosConfig.Host)
+	// fmt.Println(global.NacosConfig.Host)
 	serverConfigs := []constant.ServerConfig{
 		{
 			IpAddr: global.NacosConfig.Host,

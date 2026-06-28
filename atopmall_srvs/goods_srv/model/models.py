@@ -3,10 +3,7 @@ from peewee import *
 from playhouse.shortcuts import ReconnectMixin  #用于自动重连数据库连接
 from playhouse.pool import PooledMySQLDatabase  #用于连接数据库的连接池
 from playhouse.mysql_ext import JSONField
-
-class ReconnectMysqlDatebase(ReconnectMixin,PooledMySQLDatabase):
-    pass
-DB = ReconnectMysqlDatebase(database="atopmall_goods_srv",host="192.168.1.106",port=3306,user="root",password="123456")
+from settings.settings import DB
 
 #删除：物理删除和逻辑删除(软删除)
 #通过save方法做了修改如何确保update_time字段更新时间更新而不是add_time字段

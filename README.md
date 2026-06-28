@@ -10,6 +10,8 @@
 | ---------------- | ------------- | ------------------------------------------ |
 | `atopmall_srvs/` | Python + gRPC | 微服务层，实现业务逻辑（用户、商品等服务） |
 | `atopmall_web/`  | Go + Gin      | Web API 层，对外提供 HTTP 接口             |
+| └ `user_web/`    | Go + Gin      | 用户 Web 服务（登录/注册/验证码）          |
+| └ `goods_web/`   | Go + Gin      | 商品 Web 服务（商品列表/分类/品牌等）      |
 
 每个微服务目录结构统一：`handler/`（业务逻辑）、`model/`（数据模型）、`proto/`（Protobuf）、`settings/`（配置）、`server.py`（服务入口）
 
@@ -38,11 +40,12 @@
 
 ## 三、已完成功能
 
-| 服务          | 语言        | 核心能力                                              |
-| ------------- | ----------- | ----------------------------------------------------- |
-| 用户微服务    | Python gRPC | 用户 CRUD、密码校验、服务注册发现、Nacos 配置管理     |
-| 商品微服务    | Python gRPC | 商品/分类/品牌/轮播图/品牌分类管理（23 个 gRPC 接口） |
-| 用户 Web 服务 | Go Gin      | 图片验证码、邮箱验证码、登录注册、JWT 认证            |
+| 服务          | 语言        | 核心能力                                                       |
+| ------------- | ----------- | -------------------------------------------------------------- |
+| 用户微服务    | Python gRPC | 用户 CRUD、密码校验、服务注册发现、Nacos 配置管理              |
+| 商品微服务    | Python gRPC | 商品/分类/品牌/轮播图/品牌分类管理（23 个 gRPC 接口）          |
+| 用户 Web 服务 | Go Gin      | 图片验证码、邮箱验证码、登录注册、JWT 认证                     |
+| 商品 Web 服务 | Go Gin      | 商品列表查询（多条件过滤）、Consul 服务注册、gRPC 负载均衡连接 |
 
 **通用能力**：Consul 服务注册、gRPC 健康检查、优雅退出、Nacos 配置热更新、动态端口分配、逻辑删除
 
@@ -51,7 +54,7 @@
 ## 四、API 路由结构
 
 ```
-/u/v1/
+/u/v1/                             # 用户服务（端口 8081）
 ├── base/                          # 基础服务（无需登录）
 │   ├── GET  captcha               # 获取图片验证码
 │   └── POST send-code             # 发送邮箱验证码
@@ -60,6 +63,10 @@
     ├── POST pwd_login             # 密码登录（无需登录）
     ├── POST register              # 用户注册（无需登录）
     └── GET  list                  # 用户列表（需 JWT + 管理员）
+
+/g/v1/                             # 商品服务（端口 8082）
+└── goods/
+    ── GET  /                     # 商品列表（支持价格/品牌/分类/关键词/热销/新品过滤）
 ```
 
 ## 五、开发工具清单
@@ -108,8 +115,9 @@ python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. xxx.proto
 | user_srv  | user-srv.json  | dev   | MySQL、Consul、服务名称等配置         |
 | user_web  | user-web.json  | dev   | MySQL、Redis、Consul、JWT、邮箱等配置 |
 | goods_srv | goods-srv.json | dev   | MySQL、Consul、服务名称等配置         |
+| goods_web | goods-web.json | dev   | Consul、JWT、商品服务地址等配置       |
 
-> user_web 的 nacos 配置可参考 `config-debug_templ.yaml` 文件
+> user_web / goods_web 的 nacos 配置可参考 `config-debug_templ.yaml` 文件
 
 ### 3. 启动用户微服务（Python gRPC）
 
@@ -143,6 +151,18 @@ go run main.go
 
 > 默认监听端口：8081，启动后从 Nacos 拉取业务配置，从 Consul 发现用户服务地址
 
+### 6. 启动商品 Web 服务（Go Gin）
+
+```bash
+cd atopmall_web/goods_web
+# 复制配置模板并修改（仅需配置 Nacos 连接信息）
+cp config-debug_templ.yaml config-debug.yaml
+go mod tidy
+go run main.go
+```
+
+> 默认监听端口：8082，启动后从 Nacos 拉取业务配置，从 Consul 发现商品服务地址，自动注册到 Consul
+
 ## 七、配置说明
 
 项目使用 **Viper** 管理本地配置，业务配置统一存放在 **Nacos 配置中心**。
@@ -168,9 +188,10 @@ go run main.go
 ![alt text](docs/image/consul注册服务简单图示.png)
 
 1. **user_srv / goods_srv** 启动时通过 `python-consul` 注册到 Consul，包含 GRPC 健康检查
-2. **user_web** 启动时从 Consul 查询服务的地址和端口
-3. **user_web** 建立 gRPC 长连接（支持负载均衡策略），后续请求复用该连接
-4. 微服务异常退出时，Consul 自动注销该服务实例
+2. **user_web / goods_web** 启动时从 Consul 查询对应微服务的地址和端口
+3. **user_web / goods_web** 建立 gRPC 长连接（支持负载均衡策略），后续请求复用该连接
+4. **user_web / goods_web** 启动时自动注册到 Consul（HTTP 健康检查），供前端或其他服务发现
+5. 微服务异常退出时，Consul 自动注销该服务实例
 
 ## 九、用户注册流程
 
@@ -185,43 +206,24 @@ go run main.go
 ## 十、配置中心架构图
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                        Nacos 配置中心                              │
-│  ─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
-│  │  user-srv.json   │  │  user-web.json   │  │  goods-srv.json  │  │
-│  │  (Python 配置)   │  │  (Go 配置)       │  │  (Python 配置)   │  │
-│  │  - MySQL         │  │  - MySQL         │  │  - MySQL         │  │
-│  │  - Consul        │  │  - Redis         │  │  - Consul        │  │
-│  │  - 服务名称       │  │  - Consul        │  │  - 服务名称       │  │
-│  │                  │  │  - JWT           │  │                  │  │
-│  │                  │  │  - 邮箱 SMTP     │  │                  │  │
-│  └────────┬────────  └────────────────  └────────┬────────  │  │
-│           │ 配置推送            │ 配置推送            │ 配置推送    │  │
-└───────────┼────────────────────┼────────────────────┼──────────┘  │
-            │                    │                    │              │
-            ▼                    ▼                    ▼              │
-┌───────────────────┐  ────────────────────┐  ┌────────────────  │
-│    user_srv       │  │    user_web         │  │   goods_srv    │  │
-│  (Python gRPC)    │  │    (Go Gin)         │  │  (Python gRPC) │  │
-│                   │  │                     │  │                │  │
-│  settings.py      │  │  initialize/        │  │  settings.py   │  │
-│  ↓ Nacos 拉取配置  │  │  config.go          │  │  ↓ Nacos 拉取  │  │
-│  ↓ 配置变更监听    │  │  ↓ Nacos 拉取配置    │  │  ↓ 配置变更监听 │  │
-│  ↓ 初始化 DB      │  │  ↓ 配置变更监听      │  │  ↓ 初始化 DB   │  │
-│                   │  │  ↓ 初始化各组件      │  │                │  │
-│  Consul 注册      │  │  Consul 发现        │  │  Consul 注册   │  │
-│  ↓ 注册服务       │  │  ↓ 获取服务地址      │  │  ↓ 注册服务    │  │
-│  ↓ 健康检查       │  │  ↓ gRPC 长连接      │  │  ↓ 健康检查    │  │
-│  ↓ 优雅退出       │  │  ↓ 负载均衡         │  │  ↓ 优雅退出    │  │
-└───────────────────┘  └────────────────────┘  └────────────────┘  │
+Nacos 配置中心
+├── user-srv.json   (Python) → user_srv  (Python gRPC)
+├── user-web.json   (Go)     → user_web   (Go Gin)
+├── goods-srv.json  (Python) → goods_srv  (Python gRPC)
+└── goods-web.json  (Go)     → goods_web  (Go Gin)
+
+各服务启动流程：
+  Python 微服务: Nacos 拉取配置 → 初始化 DB → Consul 注册 → gRPC 健康检查 → 优雅退出
+  Go Web 服务:   Nacos 拉取配置 → 初始化各组件 → Consul 发现微服务 → gRPC 长连接(负载均衡) → Consul 注册(HTTP 健康检查)
 ```
 
 ## 十一、各服务 README
 
 > 每个微服务将拥有独立的 README 文档，开发中...
 
-| 服务                     | 语言   | 状态   |
-| ------------------------ | ------ | ------ |
-| user_srv（用户微服务）   | Python | 开发中 |
-| goods_srv（商品微服务）  | Python | 开发中 |
-| user_web（用户 Web API） | Go     | 开发中 |
+| 服务                      | 语言   | 状态   |
+| ------------------------- | ------ | ------ |
+| user_srv（用户微服务）    | Python | 开发中 |
+| goods_srv（商品微服务）   | Python | 开发中 |
+| user_web（用户 Web API）  | Go     | 开发中 |
+| goods_web（商品 Web API） | Go     | 开发中 |

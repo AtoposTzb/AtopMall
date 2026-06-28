@@ -89,8 +89,8 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
             page = request.pages
             start = (page-1)*pagePerNums
 
-        goods = goods.limit(pagePerNums).offset(start)
         rsp.total = goods.count()
+        goods = goods.limit(pagePerNums).offset(start)
         for good in goods:
             rsp.data.append(self.convert_model_to_message(good))
 

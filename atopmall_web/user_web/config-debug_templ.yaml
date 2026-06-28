@@ -1,8 +1,10 @@
-# 所有配置均移到nacos配置中心 ，这里只是示例配置
-# nacos配置详见config-debug.yaml文件
+# 所有配置均移到nacos配置中心 ，这里只是示例配置，这里是什么配置，nacos配置中心也是对应的配置
+# nacos自己的配置详见config-debug.yaml文件
 
+host: "" # 服务主机ip 或域名 ，本地调试默认127.0.0.1
 name: "user_web" # 服务名称
 port: 8081 # 服务端口 ，默认8081
+tags: ["", "", "", ""] #服务标签
 user_srv: # 用户服务配置
   host: "" # 用户服务主机ip 或域名 ，本地调试默认127.0.0.1,但是注意consul的host要和这里一致，对外可访问的IP
   port: 50051 # 用户服务端口 ，默认50051
