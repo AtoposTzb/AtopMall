@@ -114,8 +114,9 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
         #     logger.error(f"商品id={request.id}不存在")
         #     return empty_pb2.Empty()
         try:
-           goods =  Goods.get(Goods.id == request.id)
-           goods.delete_instance() #删除商品
+            goods =  Goods.get(Goods.id == request.id)
+            goods.delete_instance() #删除商品
+            return empty_pb2.Empty()
         except DoesNotExist:
             context.set_code(grpc.StatusCode.NOT_FOUND)
             context.set_details(f"商品id={request.id}不存在")
@@ -124,18 +125,17 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
             context.set_code(grpc.StatusCode.INTERNAL) #严重的内部错误
             context.set_details(str(e))
             return empty_pb2.Empty()
-        return goods_pb2.Empty()
     
     @logger.catch # 获取商品详情
     def GetGoodsDetail(self,request:goods_pb2.GoodInfoRequest,context):
         #获取商品的详情
         try:
-           goods =  Goods.get(Goods.id == request.id)
-           #每次查询商品详情，商品的点击量+1
-           goods.click_num += 1
-           goods.save() #保存商品信息
-           rsp = self.convert_model_to_message(goods)
-           return rsp
+            goods =  Goods.get(Goods.id == request.id)
+            #每次查询商品详情，商品的点击量+1
+            goods.click_num += 1
+            goods.save() #保存商品信息
+            rsp = self.convert_model_to_message(goods)
+            return rsp
         except DoesNotExist:
             context.set_code(grpc.StatusCode.NOT_FOUND)
             context.set_details(f"商品id={request.id}不存在")
@@ -182,27 +182,28 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
     @logger.catch # 更新商品
     def UpdateGoods(self,request:goods_pb2.CreateGoodsInfo,context):
         #更新商品
-      #先处理外键 商品分类和品牌分类和查询商品是否存在
+        #先处理外键 商品分类和品牌分类和查询商品是否存在
         try:
             category = Category.get(Category.id == request.categoryId)
         except DoesNotExist:
             context.set_code(grpc.StatusCode.NOT_FOUND)
             context.set_details("商品分类不存在")
             return goods_pb2.GoodsInfoResponse()
+       
         try:
             brand = Brands.get(Brands.id == request.brandId)
         except DoesNotExist:
             context.set_code(grpc.StatusCode.NOT_FOUND)
             context.set_details("品牌不存在")
             return goods_pb2.GoodsInfoResponse()
-        
+
         try:
             goods = Goods.get(Goods.id == request.id)
         except DoesNotExist:
             context.set_code(grpc.StatusCode.NOT_FOUND)
             context.set_details("商品不存在")
             return goods_pb2.GoodsInfoResponse()
-        
+
         goods.brand = brand
         goods.category = category
         goods.name = request.name
@@ -222,3 +223,20 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
 
         #TODO 此处完善库存的设置 - 分布式事务
         return self.convert_model_to_message(goods)
+
+    @logger.catch 
+    def UpdateGoodsStatus(self, request: goods_pb2.GoodsStatusRequest, context):
+        # 更新商品状态（仅更新 is_new/is_hot/on_sale）
+        try:
+            goods = Goods.get(Goods.id == request.id)
+        except DoesNotExist:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details("商品不存在")
+            return empty_pb2.Empty()
+
+        goods.is_new = request.isNew
+        goods.is_hot = request.isHot
+        goods.on_sale = request.onSale
+        goods.save()
+
+        return empty_pb2.Empty()

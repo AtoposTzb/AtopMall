@@ -2022,6 +2022,74 @@ func (x *GoodsListResponse) GetData() []*GoodsInfoResponse {
 	return nil
 }
 
+type GoodsStatusRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	IsNew         bool                   `protobuf:"varint,2,opt,name=isNew,proto3" json:"isNew,omitempty"`
+	IsHot         bool                   `protobuf:"varint,3,opt,name=isHot,proto3" json:"isHot,omitempty"`
+	OnSale        bool                   `protobuf:"varint,4,opt,name=onSale,proto3" json:"onSale,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GoodsStatusRequest) Reset() {
+	*x = GoodsStatusRequest{}
+	mi := &file_goods_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GoodsStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GoodsStatusRequest) ProtoMessage() {}
+
+func (x *GoodsStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_goods_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GoodsStatusRequest.ProtoReflect.Descriptor instead.
+func (*GoodsStatusRequest) Descriptor() ([]byte, []int) {
+	return file_goods_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *GoodsStatusRequest) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *GoodsStatusRequest) GetIsNew() bool {
+	if x != nil {
+		return x.IsNew
+	}
+	return false
+}
+
+func (x *GoodsStatusRequest) GetIsHot() bool {
+	if x != nil {
+		return x.IsHot
+	}
+	return false
+}
+
+func (x *GoodsStatusRequest) GetOnSale() bool {
+	if x != nil {
+		return x.OnSale
+	}
+	return false
+}
+
 var File_goods_proto protoreflect.FileDescriptor
 
 const file_goods_proto_rawDesc = "" +
@@ -2188,13 +2256,19 @@ const file_goods_proto_rawDesc = "" +
 	"\x05brand\x18\x16 \x01(\v2\x12.BrandInfoResponseR\x05brand\"Q\n" +
 	"\x11GoodsListResponse\x12\x14\n" +
 	"\x05total\x18\x01 \x01(\x05R\x05total\x12&\n" +
-	"\x04data\x18\x02 \x03(\v2\x12.GoodsInfoResponseR\x04data2\xd4\x02\n" +
+	"\x04data\x18\x02 \x03(\v2\x12.GoodsInfoResponseR\x04data\"h\n" +
+	"\x12GoodsStatusRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x14\n" +
+	"\x05isNew\x18\x02 \x01(\bR\x05isNew\x12\x14\n" +
+	"\x05isHot\x18\x03 \x01(\bR\x05isHot\x12\x16\n" +
+	"\x06onSale\x18\x04 \x01(\bR\x06onSale2\x96\x03\n" +
 	"\x05Goods\x124\n" +
 	"\tGoodsList\x12\x13.GoodsFilterRequest\x1a\x12.GoodsListResponse\x126\n" +
 	"\rBatchGetGoods\x12\x11.BatchGoodsIdInfo\x1a\x12.GoodsListResponse\x123\n" +
 	"\vCreateGoods\x12\x10.CreateGoodsInfo\x1a\x12.GoodsInfoResponse\x127\n" +
 	"\vDeleteGoods\x12\x10.DeleteGoodsInfo\x1a\x16.google.protobuf.Empty\x127\n" +
-	"\vUpdateGoods\x12\x10.CreateGoodsInfo\x1a\x16.google.protobuf.Empty\x126\n" +
+	"\vUpdateGoods\x12\x10.CreateGoodsInfo\x1a\x16.google.protobuf.Empty\x12@\n" +
+	"\x11UpdateGoodsStatus\x12\x13.GoodsStatusRequest\x1a\x16.google.protobuf.Empty\x126\n" +
 	"\x0eGetGoodsDetail\x12\x10.GoodInfoRequest\x1a\x12.GoodsInfoResponse2\xd3\x02\n" +
 	"\bCategory\x12D\n" +
 	"\x13GetAllCategorysList\x12\x16.google.protobuf.Empty\x1a\x15.CategoryListResponse\x12@\n" +
@@ -2232,7 +2306,7 @@ func file_goods_proto_rawDescGZIP() []byte {
 	return file_goods_proto_rawDescData
 }
 
-var file_goods_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
+var file_goods_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_goods_proto_goTypes = []any{
 	(*CategoryListRequest)(nil),        // 0: CategoryListRequest
 	(*CategoryInfoRequest)(nil),        // 1: CategoryInfoRequest
@@ -2264,7 +2338,8 @@ var file_goods_proto_goTypes = []any{
 	(*GoodsFilterRequest)(nil),         // 27: GoodsFilterRequest
 	(*GoodsInfoResponse)(nil),          // 28: GoodsInfoResponse
 	(*GoodsListResponse)(nil),          // 29: GoodsListResponse
-	(*emptypb.Empty)(nil),              // 30: google.protobuf.Empty
+	(*GoodsStatusRequest)(nil),         // 30: GoodsStatusRequest
+	(*emptypb.Empty)(nil),              // 31: google.protobuf.Empty
 }
 var file_goods_proto_depIdxs = []int32{
 	4,  // 0: CategoryListResponse.data:type_name -> CategoryInfoResponse
@@ -2283,51 +2358,53 @@ var file_goods_proto_depIdxs = []int32{
 	24, // 13: Goods.CreateGoods:input_type -> CreateGoodsInfo
 	20, // 14: Goods.DeleteGoods:input_type -> DeleteGoodsInfo
 	24, // 15: Goods.UpdateGoods:input_type -> CreateGoodsInfo
-	23, // 16: Goods.GetGoodsDetail:input_type -> GoodInfoRequest
-	30, // 17: Category.GetAllCategorysList:input_type -> google.protobuf.Empty
-	0,  // 18: Category.GetSubCategory:input_type -> CategoryListRequest
-	1,  // 19: Category.CreateCategory:input_type -> CategoryInfoRequest
-	2,  // 20: Category.DeleteCategory:input_type -> DeleteCategoryRequest
-	1,  // 21: Category.UpdateCategory:input_type -> CategoryInfoRequest
-	13, // 22: Brand.BrandList:input_type -> BrandFilterRequest
-	14, // 23: Brand.CreateBrand:input_type -> BrandRequest
-	14, // 24: Brand.DeleteBrand:input_type -> BrandRequest
-	14, // 25: Brand.UpdateBrand:input_type -> BrandRequest
-	30, // 26: Banner.BannerList:input_type -> google.protobuf.Empty
-	11, // 27: Banner.CreateBanner:input_type -> BannerRequest
-	11, // 28: Banner.DeleteBanner:input_type -> BannerRequest
-	11, // 29: Banner.UpdateBanner:input_type -> BannerRequest
-	7,  // 30: CategoryBrand.CategoryBrandList:input_type -> CategoryBrandFilterRequest
-	1,  // 31: CategoryBrand.GetCategoryBrandList:input_type -> CategoryInfoRequest
-	9,  // 32: CategoryBrand.CreateCategoryBrand:input_type -> CategoryBrandRequest
-	9,  // 33: CategoryBrand.DeleteCategoryBrand:input_type -> CategoryBrandRequest
-	9,  // 34: CategoryBrand.UpdateCategoryBrand:input_type -> CategoryBrandRequest
-	29, // 35: Goods.GoodsList:output_type -> GoodsListResponse
-	29, // 36: Goods.BatchGetGoods:output_type -> GoodsListResponse
-	28, // 37: Goods.CreateGoods:output_type -> GoodsInfoResponse
-	30, // 38: Goods.DeleteGoods:output_type -> google.protobuf.Empty
-	30, // 39: Goods.UpdateGoods:output_type -> google.protobuf.Empty
-	28, // 40: Goods.GetGoodsDetail:output_type -> GoodsInfoResponse
-	5,  // 41: Category.GetAllCategorysList:output_type -> CategoryListResponse
-	6,  // 42: Category.GetSubCategory:output_type -> SubCategoryListResponse
-	4,  // 43: Category.CreateCategory:output_type -> CategoryInfoResponse
-	30, // 44: Category.DeleteCategory:output_type -> google.protobuf.Empty
-	30, // 45: Category.UpdateCategory:output_type -> google.protobuf.Empty
-	16, // 46: Brand.BrandList:output_type -> BrandListResponse
-	15, // 47: Brand.CreateBrand:output_type -> BrandInfoResponse
-	30, // 48: Brand.DeleteBrand:output_type -> google.protobuf.Empty
-	30, // 49: Brand.UpdateBrand:output_type -> google.protobuf.Empty
-	17, // 50: Banner.BannerList:output_type -> BannerListResponse
-	12, // 51: Banner.CreateBanner:output_type -> BannerResponse
-	30, // 52: Banner.DeleteBanner:output_type -> google.protobuf.Empty
-	30, // 53: Banner.UpdateBanner:output_type -> google.protobuf.Empty
-	18, // 54: CategoryBrand.CategoryBrandList:output_type -> CategoryBrandListResponse
-	16, // 55: CategoryBrand.GetCategoryBrandList:output_type -> BrandListResponse
-	10, // 56: CategoryBrand.CreateCategoryBrand:output_type -> CategoryBrandResponse
-	30, // 57: CategoryBrand.DeleteCategoryBrand:output_type -> google.protobuf.Empty
-	30, // 58: CategoryBrand.UpdateCategoryBrand:output_type -> google.protobuf.Empty
-	35, // [35:59] is the sub-list for method output_type
-	11, // [11:35] is the sub-list for method input_type
+	30, // 16: Goods.UpdateGoodsStatus:input_type -> GoodsStatusRequest
+	23, // 17: Goods.GetGoodsDetail:input_type -> GoodInfoRequest
+	31, // 18: Category.GetAllCategorysList:input_type -> google.protobuf.Empty
+	0,  // 19: Category.GetSubCategory:input_type -> CategoryListRequest
+	1,  // 20: Category.CreateCategory:input_type -> CategoryInfoRequest
+	2,  // 21: Category.DeleteCategory:input_type -> DeleteCategoryRequest
+	1,  // 22: Category.UpdateCategory:input_type -> CategoryInfoRequest
+	13, // 23: Brand.BrandList:input_type -> BrandFilterRequest
+	14, // 24: Brand.CreateBrand:input_type -> BrandRequest
+	14, // 25: Brand.DeleteBrand:input_type -> BrandRequest
+	14, // 26: Brand.UpdateBrand:input_type -> BrandRequest
+	31, // 27: Banner.BannerList:input_type -> google.protobuf.Empty
+	11, // 28: Banner.CreateBanner:input_type -> BannerRequest
+	11, // 29: Banner.DeleteBanner:input_type -> BannerRequest
+	11, // 30: Banner.UpdateBanner:input_type -> BannerRequest
+	7,  // 31: CategoryBrand.CategoryBrandList:input_type -> CategoryBrandFilterRequest
+	1,  // 32: CategoryBrand.GetCategoryBrandList:input_type -> CategoryInfoRequest
+	9,  // 33: CategoryBrand.CreateCategoryBrand:input_type -> CategoryBrandRequest
+	9,  // 34: CategoryBrand.DeleteCategoryBrand:input_type -> CategoryBrandRequest
+	9,  // 35: CategoryBrand.UpdateCategoryBrand:input_type -> CategoryBrandRequest
+	29, // 36: Goods.GoodsList:output_type -> GoodsListResponse
+	29, // 37: Goods.BatchGetGoods:output_type -> GoodsListResponse
+	28, // 38: Goods.CreateGoods:output_type -> GoodsInfoResponse
+	31, // 39: Goods.DeleteGoods:output_type -> google.protobuf.Empty
+	31, // 40: Goods.UpdateGoods:output_type -> google.protobuf.Empty
+	31, // 41: Goods.UpdateGoodsStatus:output_type -> google.protobuf.Empty
+	28, // 42: Goods.GetGoodsDetail:output_type -> GoodsInfoResponse
+	5,  // 43: Category.GetAllCategorysList:output_type -> CategoryListResponse
+	6,  // 44: Category.GetSubCategory:output_type -> SubCategoryListResponse
+	4,  // 45: Category.CreateCategory:output_type -> CategoryInfoResponse
+	31, // 46: Category.DeleteCategory:output_type -> google.protobuf.Empty
+	31, // 47: Category.UpdateCategory:output_type -> google.protobuf.Empty
+	16, // 48: Brand.BrandList:output_type -> BrandListResponse
+	15, // 49: Brand.CreateBrand:output_type -> BrandInfoResponse
+	31, // 50: Brand.DeleteBrand:output_type -> google.protobuf.Empty
+	31, // 51: Brand.UpdateBrand:output_type -> google.protobuf.Empty
+	17, // 52: Banner.BannerList:output_type -> BannerListResponse
+	12, // 53: Banner.CreateBanner:output_type -> BannerResponse
+	31, // 54: Banner.DeleteBanner:output_type -> google.protobuf.Empty
+	31, // 55: Banner.UpdateBanner:output_type -> google.protobuf.Empty
+	18, // 56: CategoryBrand.CategoryBrandList:output_type -> CategoryBrandListResponse
+	16, // 57: CategoryBrand.GetCategoryBrandList:output_type -> BrandListResponse
+	10, // 58: CategoryBrand.CreateCategoryBrand:output_type -> CategoryBrandResponse
+	31, // 59: CategoryBrand.DeleteCategoryBrand:output_type -> google.protobuf.Empty
+	31, // 60: CategoryBrand.UpdateCategoryBrand:output_type -> google.protobuf.Empty
+	36, // [36:61] is the sub-list for method output_type
+	11, // [11:36] is the sub-list for method input_type
 	11, // [11:11] is the sub-list for extension type_name
 	11, // [11:11] is the sub-list for extension extendee
 	0,  // [0:11] is the sub-list for field type_name
@@ -2344,7 +2421,7 @@ func file_goods_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_goods_proto_rawDesc), len(file_goods_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   30,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   5,
 		},

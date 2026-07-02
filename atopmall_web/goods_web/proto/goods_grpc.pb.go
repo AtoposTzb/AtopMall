@@ -20,12 +20,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Goods_GoodsList_FullMethodName      = "/Goods/GoodsList"
-	Goods_BatchGetGoods_FullMethodName  = "/Goods/BatchGetGoods"
-	Goods_CreateGoods_FullMethodName    = "/Goods/CreateGoods"
-	Goods_DeleteGoods_FullMethodName    = "/Goods/DeleteGoods"
-	Goods_UpdateGoods_FullMethodName    = "/Goods/UpdateGoods"
-	Goods_GetGoodsDetail_FullMethodName = "/Goods/GetGoodsDetail"
+	Goods_GoodsList_FullMethodName         = "/Goods/GoodsList"
+	Goods_BatchGetGoods_FullMethodName     = "/Goods/BatchGetGoods"
+	Goods_CreateGoods_FullMethodName       = "/Goods/CreateGoods"
+	Goods_DeleteGoods_FullMethodName       = "/Goods/DeleteGoods"
+	Goods_UpdateGoods_FullMethodName       = "/Goods/UpdateGoods"
+	Goods_UpdateGoodsStatus_FullMethodName = "/Goods/UpdateGoodsStatus"
+	Goods_GetGoodsDetail_FullMethodName    = "/Goods/GetGoodsDetail"
 )
 
 // GoodsClient is the client API for Goods service.
@@ -41,6 +42,7 @@ type GoodsClient interface {
 	CreateGoods(ctx context.Context, in *CreateGoodsInfo, opts ...grpc.CallOption) (*GoodsInfoResponse, error)
 	DeleteGoods(ctx context.Context, in *DeleteGoodsInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UpdateGoods(ctx context.Context, in *CreateGoodsInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UpdateGoodsStatus(ctx context.Context, in *GoodsStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetGoodsDetail(ctx context.Context, in *GoodInfoRequest, opts ...grpc.CallOption) (*GoodsInfoResponse, error)
 }
 
@@ -102,6 +104,16 @@ func (c *goodsClient) UpdateGoods(ctx context.Context, in *CreateGoodsInfo, opts
 	return out, nil
 }
 
+func (c *goodsClient) UpdateGoodsStatus(ctx context.Context, in *GoodsStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Goods_UpdateGoodsStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *goodsClient) GetGoodsDetail(ctx context.Context, in *GoodInfoRequest, opts ...grpc.CallOption) (*GoodsInfoResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GoodsInfoResponse)
@@ -125,6 +137,7 @@ type GoodsServer interface {
 	CreateGoods(context.Context, *CreateGoodsInfo) (*GoodsInfoResponse, error)
 	DeleteGoods(context.Context, *DeleteGoodsInfo) (*emptypb.Empty, error)
 	UpdateGoods(context.Context, *CreateGoodsInfo) (*emptypb.Empty, error)
+	UpdateGoodsStatus(context.Context, *GoodsStatusRequest) (*emptypb.Empty, error)
 	GetGoodsDetail(context.Context, *GoodInfoRequest) (*GoodsInfoResponse, error)
 	mustEmbedUnimplementedGoodsServer()
 }
@@ -150,6 +163,9 @@ func (UnimplementedGoodsServer) DeleteGoods(context.Context, *DeleteGoodsInfo) (
 }
 func (UnimplementedGoodsServer) UpdateGoods(context.Context, *CreateGoodsInfo) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateGoods not implemented")
+}
+func (UnimplementedGoodsServer) UpdateGoodsStatus(context.Context, *GoodsStatusRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateGoodsStatus not implemented")
 }
 func (UnimplementedGoodsServer) GetGoodsDetail(context.Context, *GoodInfoRequest) (*GoodsInfoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetGoodsDetail not implemented")
@@ -265,6 +281,24 @@ func _Goods_UpdateGoods_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Goods_UpdateGoodsStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GoodsStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GoodsServer).UpdateGoodsStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Goods_UpdateGoodsStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GoodsServer).UpdateGoodsStatus(ctx, req.(*GoodsStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Goods_GetGoodsDetail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GoodInfoRequest)
 	if err := dec(in); err != nil {
@@ -309,6 +343,10 @@ var Goods_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateGoods",
 			Handler:    _Goods_UpdateGoods_Handler,
+		},
+		{
+			MethodName: "UpdateGoodsStatus",
+			Handler:    _Goods_UpdateGoodsStatus_Handler,
 		},
 		{
 			MethodName: "GetGoodsDetail",

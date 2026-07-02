@@ -32,8 +32,8 @@ class BaseModel(Model):
         if permanently:
             return self.delete(permanently).where(self._pk_expr()).execute() #表示物理删除，将数据从数据库中删除
         else:
-            self.is_delete = True
-            return self.save() #表示逻辑删除，将is_delete字段设置为True
+            self.is_deleted = True
+            return self.save() #表示逻辑删除，将is_deleted字段设置为True
     #拦截查询操作，只查询未删除的数据
     @classmethod
     def select(cls, *fields):
