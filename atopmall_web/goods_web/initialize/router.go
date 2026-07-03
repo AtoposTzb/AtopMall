@@ -19,7 +19,15 @@ func RoutersInit() *gin.Engine {
 			"msg":  "success",
 		})
 	})
+
 	ApiRouter := r.Group("/g/v1")
-	router.InitGoodsRouter(ApiRouter)
+	{
+		router.GoodsRouterInit(ApiRouter)
+		router.CategoryRouterInit(ApiRouter)
+		router.BrandRouterInit(ApiRouter)
+		router.BannerRouterInit(ApiRouter)
+		router.CategoryBrandRouterInit(ApiRouter)
+	}
+
 	return r
 }

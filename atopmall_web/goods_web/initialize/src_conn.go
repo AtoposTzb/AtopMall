@@ -12,7 +12,8 @@ import (
 	"atopmall_web/goods_web/proto"
 )
 
-// GPRC负载均衡连接商品服务
+// GPRC负载均衡连接商品服务()
+// 复用同一个连接创建所有子服务的客户端，统一赋值给聚合结构体
 func GoodsSrcClientInitBL() {
 	consulInfo := global.ServerConfig.ConsulInfo
 	conn, err := grpc.NewClient(
@@ -21,10 +22,16 @@ func GoodsSrcClientInitBL() {
 		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`),
 	)
 	if err != nil {
-		zap.S().Errorw("[UserSrcClientInitBL] 连接【用户服务】失败")
+		zap.S().Errorw("[GoodsSrcClientInitBL] 连接【商品服务】失败")
 		return
 	}
-	goodsSrcClient := proto.NewGoodsClient(conn)
-	global.GoodsSrvClient = goodsSrcClient
+	// 一次性初始化所有子服务客户端，统一赋值给全局变量
+	global.GoodsSrvCli = &global.GoodsRpcClient{
+		Goods:         proto.NewGoodsClient(conn),
+		Brand:         proto.NewBrandClient(conn),
+		Category:      proto.NewCategoryClient(conn),
+		Banner:        proto.NewBannerClient(conn),
+		CategoryBrand: proto.NewCategoryBrandClient(conn),
+	}
 	zap.S().Infow("[GoodsSrcClientInitBL] 连接【商品服务】成功", "host", consulInfo.Host, "port", consulInfo.Port)
 }

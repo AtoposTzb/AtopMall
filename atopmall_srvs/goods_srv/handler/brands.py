@@ -13,12 +13,23 @@ from peewee import DoesNotExist
 # 品牌服务
 class BrandServicer(goods_pb2_grpc.BrandServicer):
     @logger.catch # 获取品牌列表
-    def BrandList(self, request: empty_pb2.Empty, context):
+    def BrandList(self, request: goods_pb2.BrandFilterRequest, context):
         # 获取品牌列表
         rsp = goods_pb2.BrandListResponse()
         brands = Brands.select()
-
         rsp.total = brands.count()
+        #分页 默认每页10条
+        start = 0
+        page = 1
+        pagePerNums = 10
+        if request.pagePerNums:
+            pagePerNums = request.pagePerNums
+        if request.pages:
+            page = request.pages
+            start = (page-1)*pagePerNums
+        brands = brands.limit(pagePerNums).offset(start)
+
+
         for brand in brands:
             brand_rsp = goods_pb2.BrandInfoResponse()
 

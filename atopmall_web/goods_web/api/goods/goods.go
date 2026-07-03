@@ -4,69 +4,15 @@ import (
 	"context"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
+	"atopmall_web/goods_web/api"
 	"atopmall_web/goods_web/forms"
 	"atopmall_web/goods_web/global"
 	"atopmall_web/goods_web/proto"
 )
-
-func removeTopStruct(fileds map[string]string) map[string]string {
-	rsp := map[string]string{}
-	for field, err := range fileds {
-		rsp[field[strings.Index(field, ".")+1:]] = err
-	}
-	return rsp
-}
-
-func HandleValidatorError(c *gin.Context, err error) {
-	errs, ok := err.(validator.ValidationErrors)
-	if !ok {
-		c.JSON(http.StatusOK, gin.H{
-			"msg": err.Error(),
-		})
-	}
-	c.JSON(http.StatusBadRequest, gin.H{
-		"error": removeTopStruct(errs.Translate(global.Trans)),
-	})
-}
-
-func HandleGrpcErrorToHttpError(err error, c *gin.Context) {
-	//将grpc的code转换为http的code(状态码)发送给前端
-	if err != nil {
-		if s, ok := status.FromError(err); ok {
-			switch s.Code() {
-			case codes.NotFound:
-				c.JSON(http.StatusNotFound, gin.H{ //404
-					"msg": s.Message(),
-				})
-			case codes.Internal:
-				c.JSON(http.StatusInternalServerError, gin.H{ //500
-					"msg": "服务器内部错误",
-				})
-			case codes.InvalidArgument:
-				c.JSON(http.StatusBadRequest, gin.H{ //400
-					"msg": "参数错误",
-				})
-			case codes.Unavailable:
-				c.JSON(http.StatusServiceUnavailable, gin.H{ //503
-					"msg": "用户服务不可用",
-				})
-			default:
-				c.JSON(http.StatusInternalServerError, gin.H{ //500
-					"msg": s.Message(),
-				})
-			}
-		}
-	}
-
-}
 
 func GetGoodsList(ctx *gin.Context) {
 	//查询商品列表（各种过滤）
@@ -109,10 +55,10 @@ func GetGoodsList(ctx *gin.Context) {
 	req.Brand = int32(brandIdInt)
 
 	//grpc 请求商品的service服务
-	r, err := global.GoodsSrvClient.GoodsList(context.WithValue(context.Background(), "ginContext", ctx), req)
+	r, err := global.GoodsSrvCli.Goods.GoodsList(context.WithValue(context.Background(), "ginContext", ctx), req)
 	if err != nil {
 		zap.S().Errorw("[GetGoodsList] 查询 【商品列表】失败")
-		HandleGrpcErrorToHttpError(err, ctx)
+		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
 
@@ -155,12 +101,11 @@ func NewGoods(ctx *gin.Context) {
 	//新增商品
 	goodsForm := forms.GoodsForm{}
 	if err := ctx.ShouldBindJSON(&goodsForm); err != nil {
-		HandleValidatorError(ctx, err)
+		api.HandleValidatorError(ctx, err)
 		return
 	}
 	//通过grpc调用商品的service服务
-	goodsClient := global.GoodsSrvClient //商品服务客户端
-	rsp, err := goodsClient.CreateGoods(context.Background(), &proto.CreateGoodsInfo{
+	rsp, err := global.GoodsSrvCli.Goods.CreateGoods(context.Background(), &proto.CreateGoodsInfo{
 		Name:            goodsForm.Name,
 		GoodsSn:         goodsForm.GoodsSn,
 		Stocks:          goodsForm.Stocks,
@@ -175,7 +120,7 @@ func NewGoods(ctx *gin.Context) {
 		BrandId:         goodsForm.Brand,
 	})
 	if err != nil {
-		HandleGrpcErrorToHttpError(err, ctx)
+		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
 	ctx.JSON(http.StatusOK, rsp)
@@ -189,12 +134,11 @@ func GetGoodsDetail(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
-	goodsClient := global.GoodsSrvClient //商品服务客户端
-	rsp, err := goodsClient.GetGoodsDetail(context.Background(), &proto.GoodInfoRequest{
+	rsp, err := global.GoodsSrvCli.Goods.GetGoodsDetail(context.Background(), &proto.GoodInfoRequest{
 		Id: int32(idINt),
 	})
 	if err != nil {
-		HandleGrpcErrorToHttpError(err, ctx)
+		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
 	rsps := map[string]interface{}{
@@ -230,9 +174,9 @@ func DeleteGoods(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
-	_, err = global.GoodsSrvClient.DeleteGoods(context.Background(), &proto.DeleteGoodsInfo{Id: int32(i)})
+	_, err = global.GoodsSrvCli.Goods.DeleteGoods(context.Background(), &proto.DeleteGoodsInfo{Id: int32(i)})
 	if err != nil {
-		HandleGrpcErrorToHttpError(err, ctx)
+		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
 
@@ -256,19 +200,19 @@ func Stocks(ctx *gin.Context) {
 func UpdateGoodsStatus(ctx *gin.Context) {
 	goodsStatusForm := forms.GoodsStatusForm{}
 	if err := ctx.ShouldBindJSON(&goodsStatusForm); err != nil {
-		HandleValidatorError(ctx, err)
+		api.HandleValidatorError(ctx, err)
 		return
 	}
 
 	id := ctx.Param("id")
 	i, err := strconv.ParseInt(id, 10, 32)
-	if _, err = global.GoodsSrvClient.UpdateGoodsStatus(context.Background(), &proto.GoodsStatusRequest{
+	if _, err = global.GoodsSrvCli.Goods.UpdateGoodsStatus(context.Background(), &proto.GoodsStatusRequest{
 		Id:     int32(i),
 		IsHot:  *goodsStatusForm.IsHot,
 		IsNew:  *goodsStatusForm.IsNew,
 		OnSale: *goodsStatusForm.OnSale,
 	}); err != nil {
-		HandleGrpcErrorToHttpError(err, ctx)
+		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
@@ -280,13 +224,13 @@ func UpdateGoodsStatus(ctx *gin.Context) {
 func UpdateGoods(ctx *gin.Context) {
 	goodsForm := forms.GoodsForm{}
 	if err := ctx.ShouldBindJSON(&goodsForm); err != nil {
-		HandleValidatorError(ctx, err)
+		api.HandleValidatorError(ctx, err)
 		return
 	}
 
 	id := ctx.Param("id")
 	i, err := strconv.ParseInt(id, 10, 32)
-	if _, err = global.GoodsSrvClient.UpdateGoods(context.Background(), &proto.CreateGoodsInfo{
+	if _, err = global.GoodsSrvCli.Goods.UpdateGoods(context.Background(), &proto.CreateGoodsInfo{
 		Id:              int32(i),
 		Name:            goodsForm.Name,
 		GoodsSn:         goodsForm.GoodsSn,
@@ -301,7 +245,7 @@ func UpdateGoods(ctx *gin.Context) {
 		CategoryId:      goodsForm.CategoryId,
 		BrandId:         goodsForm.Brand,
 	}); err != nil {
-		HandleGrpcErrorToHttpError(err, ctx)
+		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
