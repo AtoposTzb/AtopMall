@@ -128,7 +128,45 @@ AtopMall/
 │       ├── config-debug_templ.yaml   # 调试配置模板（可提交）
 │       ├── config-debug.yaml         # Nacos 连接调试配置（含敏感信息，不提交）
 │       ├── config-pro.yaml           # Nacos 连接生产配置
-│       ── main.go                   # 服务入口（初始化 + Consul 注册 + 启动）
+│       └── main.go                   # 服务入口（初始化 + Consul 注册 + 启动）
+│   │
+│   └── oss-web/                      # 文件存储服务（MinIO）
+│       ├── handler/                  # HTTP 接口实现
+│       │   └── minio_oss.go          # MinIO 预签名直传 + 孤儿文件清理
+│       ├── config/                   # 配置结构体定义
+│       │   └── config.go             # MinIOOssConfig / JWTConfig / ConsulConfig / ServerConfig / NacosConfig
+│       ├── global/                   # 全局变量（配置、翻译器、MinIO 客户端）
+│       │   └── global.go             # ServerConfig / Trans / MinioCli
+│       ├── initialize/               # 初始化（配置加载、路由、日志、MinIO 客户端）
+│       │   ├── config.go             # Viper + Nacos 配置加载
+│       │   ├── logger.go             # Zap 日志初始化
+│       │   ├── minio_oss.go          # MinIO 客户端初始化（自动创建桶）
+│       │   ├── router.go             # Gin 路由注册（含 /health 健康检查）
+│       │   └── validator.go          # 表单验证器中文翻译
+│       ├── middlewares/              # 中间件（JWT、CORS、权限）
+│       │   ├── admin.go              # 管理员权限中间件
+│       │   ├── cors.go               # CORS 跨域中间件
+│       │   └── jwt.go                # JWT 认证中间件
+│       ├── models/                   # 请求模型定义
+│       │   └── request.go            # 请求模型
+│       ├── router/                   # 路由分组
+│       │   └── minio_oss.go          # 文件存储路由（token / cleanup）
+│       ├── static/                   # 静态资源
+│       │   ├── css/
+│       │   │   └── style.css         # 上传页面样式
+│       │   ├── js/
+│       │   │   └── upload.js         # MinIO 文件直传前端逻辑（原生 HTML5 + PUT）
+│       │   └── lib/                  # 第三方库（plupload，已弃用）
+│       ├── templates/                # HTML 模板
+│       │   └── index.html            # MinIO 文件直传测试页面（拖拽/点击上传）
+│       ├── utils/                    # 工具函数
+│       │   ├── addr.go               # 动态可用端口获取
+│       │   └── register/
+│       │       └── consul/
+│       │           └── register.go   # Consul 服务注册（接口 + 实现）
+│       ├── config-debug.yaml         # Nacos 连接调试配置（含敏感信息，不提交）
+│       ├── config-pro.yaml           # Nacos 连接生产配置
+│       └── main.go                   # 服务入口（初始化 + Consul 注册 + 启动）
 │
 ├── docs/                             # 项目文档
 │   ├── project-structure.md          # 项目结构详细说明（本文档）
@@ -173,10 +211,11 @@ xxx_srv/
 
 Go + Gin 实现的 HTTP 接口层，通过 gRPC 调用微服务层。
 
-| 目录         | 说明                                  |
-| ------------ | ------------------------------------- |
-| `user_web/`  | 用户 Web 服务（登录/注册/验证码）     |
-| `goods_web/` | 商品 Web 服务（商品列表/分类/品牌等） |
+| 目录         | 说明                                                       |
+| ------------ | ---------------------------------------------------------- |
+| `user_web/`  | 用户 Web 服务（登录/注册/验证码）                          |
+| `goods_web/` | 商品 Web 服务（商品列表/分类/品牌等）                      |
+| `oss-web/`   | 文件存储服务（MinIO 预签名直传、孤儿文件清理、前端测试页） |
 
 每个 Web 服务目录结构统一：
 
@@ -230,3 +269,13 @@ xxx_web/
 | `middlewares/jwt.go`                | JWT 认证中间件，解析 x-token 头部                           |
 | `router/*.go`                       | 路由分组，定义 API 路径和中间件挂载                         |
 | `utils/register/consul/register.go` | Consul 服务注册（接口定义 + 实现），支持 HTTP 健康检查      |
+
+### 文件存储服务关键文件（oss-web）
+
+| 文件                      | 说明                                                       |
+| ------------------------- | ---------------------------------------------------------- |
+| `handler/minio_oss.go`    | MinIO 预签名直传接口 + 孤儿文件清理接口                    |
+| `initialize/minio_oss.go` | MinIO 客户端初始化，自动创建桶、存储全局客户端             |
+| `static/js/upload.js`     | 前端上传逻辑（原生 HTML5 + XMLHttpRequest，替代 plupload） |
+| `templates/index.html`    | 文件上传测试页面（支持拖拽上传、点击上传、进度条显示）     |
+| `global/global.go`        | 全局变量定义，包含 MinioCli 客户端实例                     |

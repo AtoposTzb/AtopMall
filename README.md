@@ -6,12 +6,13 @@
 
 项目采用分层架构，主要分为两大模块：
 
-| 模块             | 技术栈        | 职责                                       |
-| ---------------- | ------------- | ------------------------------------------ |
-| `atopmall_srvs/` | Python + gRPC | 微服务层，实现业务逻辑（用户、商品等服务） |
-| `atopmall_web/`  | Go + Gin      | Web API 层，对外提供 HTTP 接口             |
-| └ `user_web/`    | Go + Gin      | 用户 Web 服务（登录/注册/验证码）          |
-| └ `goods_web/`   | Go + Gin      | 商品 Web 服务（商品列表/分类/品牌等）      |
+| 模块             | 技术栈        | 职责                                           |
+| ---------------- | ------------- | ---------------------------------------------- |
+| `atopmall_srvs/` | Python + gRPC | 微服务层，实现业务逻辑（用户、商品等服务）     |
+| `atopmall_web/`  | Go + Gin      | Web API 层，对外提供 HTTP 接口                 |
+| └ `user_web/`    | Go + Gin      | 用户 Web 服务（登录/注册/验证码）              |
+| └ `goods_web/`   | Go + Gin      | 商品 Web 服务（商品列表/分类/品牌等）          |
+| └ `oss-web/`     | Go + Gin      | 文件存储服务（MinIO 预签名直传、孤儿文件清理） |
 
 每个微服务目录结构统一：`handler/`（业务逻辑）、`model/`（数据模型）、`proto/`（Protobuf）、`settings/`（配置）、`server.py`（服务入口）
 
@@ -37,6 +38,7 @@
 | 图片验证码   | base64Captcha           | 登录防暴力破解                             |
 | 邮件服务     | jordan-wright/email     | SMTP 邮箱验证码发送                        |
 | 表单验证     | go-playground/validator | 请求参数校验                               |
+| 对象存储     | MinIO                   | 文件存储（预签名 PUT 直传、孤儿文件清理）  |
 
 ## 三、已完成功能
 
@@ -46,6 +48,7 @@
 | 商品微服务    | Python gRPC | 商品/分类/品牌/轮播图/品牌分类管理（23 个 gRPC 接口）          |
 | 用户 Web 服务 | Go Gin      | 图片验证码、邮箱验证码、登录注册、JWT 认证                     |
 | 商品 Web 服务 | Go Gin      | 商品列表查询（多条件过滤）、Consul 服务注册、gRPC 负载均衡连接 |
+| 文件存储服务  | Go Gin      | MinIO 预签名直传、拖拽上传、孤儿文件清理                       |
 
 **通用能力**：Consul 服务注册、gRPC 健康检查、优雅退出、Nacos 配置热更新、动态端口分配、逻辑删除
 
@@ -65,8 +68,16 @@
     └── GET  list                  # 用户列表（需 JWT + 管理员）
 
 /g/v1/                             # 商品服务（端口 8082）
-└── goods/
-    ── GET  /                     # 商品列表（支持价格/品牌/分类/关键词/热销/新品过滤）
+├── goods/                         # 商品（列表/详情/CRUD/库存/状态更新）
+├── categorys/                     # 分类（列表/详情/CRUD）
+├── brands/                        # 品牌（列表/CRUD）
+├── banners/                       # 轮播图（列表/CRUD）
+└── categorybrands/                # 品牌分类（列表/按分类查/CRUD）
+
+/oss/v1/                           # 文件存储服务（端口 8083）
+└── oss/
+    ├── GET  token                 # 获取 MinIO 预签名上传 URL
+    └── DELETE cleanup             # 清理孤儿文件（支持 hours 参数）
 ```
 
 ## 五、开发工具清单
@@ -116,6 +127,7 @@ python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. xxx.proto
 | user_web  | user-web.json  | dev   | MySQL、Redis、Consul、JWT、邮箱等配置 |
 | goods_srv | goods-srv.json | dev   | MySQL、Consul、服务名称等配置         |
 | goods_web | goods-web.json | dev   | Consul、JWT、商品服务地址等配置       |
+| oss-web   | oss-web.json   | dev   | MinIO、Consul 等配置                  |
 
 > user_web / goods_web 的 nacos 配置可参考 `config-debug_templ.yaml` 文件
 
@@ -144,7 +156,7 @@ python -m server
 ```bash
 cd atopmall_web/user_web
 # 复制配置模板并修改（仅需配置 Nacos 连接信息）
-cp config-debug_templ.yaml config-debug.yaml
+cp config-debug.yaml
 go mod tidy
 go run main.go
 ```
@@ -156,12 +168,24 @@ go run main.go
 ```bash
 cd atopmall_web/goods_web
 # 复制配置模板并修改（仅需配置 Nacos 连接信息）
-cp config-debug_templ.yaml config-debug.yaml
+cp config-debug.yaml
 go mod tidy
 go run main.go
 ```
 
 > 默认监听端口：8082，启动后从 Nacos 拉取业务配置，从 Consul 发现商品服务地址，自动注册到 Consul
+
+### 7. 启动文件存储服务（Go Gin）
+
+```bash
+cd atopmall_web/oss-web
+# 复制配置模板并修改（仅需配置 Nacos 连接信息）
+cp config-debug.yaml
+go mod tidy
+go run main.go
+```
+
+> 默认监听端口：8083，启动后从 Nacos 拉取业务配置，初始化 MinIO 客户端，自动注册到 Consul
 
 ## 七、配置说明
 
@@ -190,7 +214,7 @@ go run main.go
 1. **user_srv / goods_srv** 启动时通过 `python-consul` 注册到 Consul，包含 GRPC 健康检查
 2. **user_web / goods_web** 启动时从 Consul 查询对应微服务的地址和端口
 3. **user_web / goods_web** 建立 gRPC 长连接（支持负载均衡策略），后续请求复用该连接
-4. **user_web / goods_web** 启动时自动注册到 Consul（HTTP 健康检查），供前端或其他服务发现
+4. **user_web / goods_web / oss-web** 启动时自动注册到 Consul（HTTP 健康检查），供前端或其他服务发现
 5. 微服务异常退出时，Consul 自动注销该服务实例
 
 ## 九、用户注册流程
@@ -210,11 +234,13 @@ Nacos 配置中心
 ├── user-srv.json   (Python) → user_srv  (Python gRPC)
 ├── user-web.json   (Go)     → user_web   (Go Gin)
 ├── goods-srv.json  (Python) → goods_srv  (Python gRPC)
-└── goods-web.json  (Go)     → goods_web  (Go Gin)
+├── goods-web.json  (Go)     → goods_web  (Go Gin)
+└── oss-web.json    (Go)     → oss-web    (Go Gin + MinIO)
 
 各服务启动流程：
   Python 微服务: Nacos 拉取配置 → 初始化 DB → Consul 注册 → gRPC 健康检查 → 优雅退出
   Go Web 服务:   Nacos 拉取配置 → 初始化各组件 → Consul 发现微服务 → gRPC 长连接(负载均衡) → Consul 注册(HTTP 健康检查)
+  Go 文件服务:   Nacos 拉取配置 → 初始化 MinIO 客户端 → Consul 注册(HTTP 健康检查)
 ```
 
 ## 十一、各服务 README
@@ -227,3 +253,4 @@ Nacos 配置中心
 | goods_srv（商品微服务）   | Python | 开发中 |
 | user_web（用户 Web API）  | Go     | 开发中 |
 | goods_web（商品 Web API） | Go     | 开发中 |
+| oss-web（文件存储服务）   | Go     | 开发中 |

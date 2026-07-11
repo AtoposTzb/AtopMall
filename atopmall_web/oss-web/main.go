@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/nacos-group/nacos-sdk-go/v2/inner/uuid"
+	"github.com/nacos-group/nacos-sdk-go/inner/uuid"
 	"go.uber.org/zap"
 
-	"atopmall_web/goods_web/global"
-	"atopmall_web/goods_web/initialize"
-	"atopmall_web/goods_web/utils"
-	"atopmall_web/goods_web/utils/register/consul"
+	"atopmall_web/oss-web/global"
+	"atopmall_web/oss-web/initialize"
+	"atopmall_web/oss-web/utils"
+	"atopmall_web/oss-web/utils/register/consul"
 )
 
 func main() {
@@ -24,23 +24,28 @@ func main() {
 	r := initialize.RoutersInit()
 	//4.初始化翻译器
 	initialize.TransInit("zh")
-	//5.初始化商品服务的grpc客户端连接
-	initialize.GoodsSrcClientInitBL() //带负载均衡策略的连接
+
 	//6.动态获取端口号,方便apifox调试使用固定8082
 	if debug := initialize.GetEnvInfo(global.Env); !debug {
-		goodsPort, err := utils.GetAddrPort()
+		goodsPort, err := utils.GetFreePort()
 		if err != nil {
 			panic(err)
 		}
 		global.ServerConfig.Port = goodsPort
 	}
 
-	//7.初始化consul注册中心
+	//7.初始化MinIO客户端
+	if err := initialize.InitMinIO(); err != nil {
+		zap.S().Panic("初始化MinIO客户端失败:", zap.Error(err))
+	}
+
+	//8.初始化consul注册中心
 	registryClient := consul.NewRegistryClient(global.ServerConfig.ConsulInfo.Host, global.ServerConfig.ConsulInfo.Port)
-	//8.注册服务
+
+	//9.注册服务
 	serviceId, _ := uuid.NewV4()
 	if err := registryClient.Register(global.ServerConfig.Host, global.ServerConfig.Port, global.ServerConfig.Name, global.ServerConfig.Tags, serviceId.String()); err != nil {
-		zap.S().Panic("注册服务失败：", zap.Error(err))
+		zap.S().Panic("注册服务失败:", zap.Error(err))
 	}
 
 	zap.S().Debugf("启动服务器,端口:%d", global.ServerConfig.Port)
@@ -48,7 +53,7 @@ func main() {
 	//处理优雅的退出信号
 	go func() {
 		if err := r.Run(":" + strconv.Itoa(global.ServerConfig.Port)); err != nil {
-			zap.S().Panic("启动服务器失败：", zap.Error(err))
+			zap.S().Panic("启动服务器失败:", zap.Error(err))
 		}
 	}()
 	//10.接收退出信号

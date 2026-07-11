@@ -70,7 +70,7 @@ func main() {
 		}
 	}()
 	//10.接收退出信号
-	quit := make(chan os.Signal)                         //定义一个信号通道，用于接收退出信号
+	quit := make(chan os.Signal, 1)                      //定义一个信号通道，用于接收退出信号
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM) //监听SIGINT和SIGTERM信号
 	<-quit                                               //等待信号通道接收信号
 	if err := registryClient.Deregister(serviceId.String()); err != nil {

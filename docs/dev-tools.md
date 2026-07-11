@@ -8,6 +8,7 @@
 | protoc-gen-go      | protoc Go 代码生成插件   | `go install google.golang.org/protobuf/cmd/protoc-gen-go@latest`  |
 | protoc-gen-go-grpc | gRPC Go 代码生成插件     | `go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest` |
 | air                | 代码热重载，保存自动重启 | `go install github.com/cosmtrek/air@latest`                       |
+| mc                 | MinIO 命令行客户端       | 官网下载二进制包或 `docker pull minio/mc`                         |
 
 ## Python 工具
 

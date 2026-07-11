@@ -20,6 +20,7 @@
 | user_web  | user-web.json  | dev   | 用户 Web 服务业务配置 |
 | goods_srv | goods-srv.json | dev   | 商品微服务业务配置    |
 | goods_web | goods-web.json | dev   | 商品 Web 服务业务配置 |
+| oss-web   | oss-web.json   | dev   | 文件存储服务业务配置（MinIO、Consul） |
 
 ## 配置加载流程
 

@@ -3,6 +3,7 @@ pymysql
 passlib
 grpcio
 grpcio-tools
+grpcio-health-checking
 protobuf
 loguru
 py-consul

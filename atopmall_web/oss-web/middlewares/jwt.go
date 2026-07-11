@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 
-	"atopmall_web/user_web/global"
-	"atopmall_web/user_web/models"
+	"atopmall_web/oss-web/global"
+	"atopmall_web/oss-web/models"
 )
 
 func JWTAuth() gin.HandlerFunc {
@@ -28,11 +28,13 @@ func JWTAuth() gin.HandlerFunc {
 		claims, err := j.ParseToken(token)
 		if err != nil {
 			if err == TokenExpired {
-				c.JSON(http.StatusUnauthorized, map[string]string{
-					"msg": "授权已过期",
-				})
-				c.Abort()
-				return
+				if err == TokenExpired {
+					c.JSON(http.StatusUnauthorized, map[string]string{
+						"msg": "授权已过期",
+					})
+					c.Abort()
+					return
+				}
 			}
 
 			c.JSON(http.StatusUnauthorized, "未登陆")
@@ -74,17 +76,18 @@ func (j *JWT) ParseToken(tokenString string) (*models.CustomClaims, error) {
 		return j.SigningKey, nil
 	})
 	if err != nil {
-		// 解析token失败,根据错误类型返回不同的错误,错误类型有4种:TokenMalformed,TokenExpired,TokenNotValidYet,TokenInvalid
-		if errors.Is(err, jwt.ErrTokenMalformed) {
-			return nil, TokenMalformed
-		} else if errors.Is(err, jwt.ErrTokenExpired) {
-			return nil, TokenExpired
-		} else if errors.Is(err, jwt.ErrTokenNotValidYet) {
-			return nil, TokenNotValidYet
-		} else {
-			return nil, TokenInvalid
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+				return nil, TokenMalformed
+			} else if ve.Errors&jwt.ValidationErrorExpired != 0 {
+				// Token is expired
+				return nil, TokenExpired
+			} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
+				return nil, TokenNotValidYet
+			} else {
+				return nil, TokenInvalid
+			}
 		}
-
 	}
 	if token != nil {
 		if claims, ok := token.Claims.(*models.CustomClaims); ok && token.Valid {
@@ -101,20 +104,18 @@ func (j *JWT) ParseToken(tokenString string) (*models.CustomClaims, error) {
 
 // 更新token
 func (j *JWT) RefreshToken(tokenString string) (string, error) {
-	//jwt v4 的写法，jwt.TimeFunc 是全局的，修改会影响 所有并发的 JWT 验证，这里为了刷新token，我们修改为0秒时间
-	// jwt.TimeFunc = func() time.Time {
-	// 	return time.Unix(0, 0)
-	// }
+	jwt.TimeFunc = func() time.Time {
+		return time.Unix(0, 0)
+	}
 	token, err := jwt.ParseWithClaims(tokenString, &models.CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return j.SigningKey, nil
-	},
-		jwt.WithoutClaimsValidation()) //跳过 claims 验证（包括过期检查） v5版本的写法
+	})
 	if err != nil {
 		return "", err
 	}
 	if claims, ok := token.Claims.(*models.CustomClaims); ok && token.Valid {
-		//jwt.TimeFunc = time.Now  // 刷新token时，需要修改为当前时间，否则会报错 恢复，v4版本需要修改为当前时间
-		claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(500 * time.Hour)) // 刷新token过期时间为500小时,方便测试
+		jwt.TimeFunc = time.Now
+		claims.StandardClaims.ExpiresAt = time.Now().Add(1 * time.Hour).Unix()
 		return j.CreateToken(*claims)
 	}
 	return "", TokenInvalid

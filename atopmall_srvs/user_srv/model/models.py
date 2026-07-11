@@ -75,10 +75,20 @@ if __name__ == "__main__":
     for i in range(10):
         user = User()
         user.nick_name = f"yolo{i}"
-        user.mobile=f"134000000{i}"
+        user.mobile=f"1345678910{i}"
         user.email="3488447218@qq.com"
         user.password = pbkdf2_sha256.hash("123456")
         user.save()
     #验证
     for user in User.select():
         print(pbkdf2_sha256.verify("123456",user.password))
+
+    #添加管理员用户用于测试
+    user = User()
+    user.nick_name = "admin"
+    user.mobile="13456789112"
+    user.email="admin@qq.com"
+    user.password = pbkdf2_sha256.hash("123456")
+    user.role = 2
+    user.save()
+    print(user)
