@@ -1,7 +1,5 @@
 from datetime import datetime
 from peewee import *
-from playhouse.shortcuts import ReconnectMixin  #用于自动重连数据库连接
-from playhouse.pool import PooledMySQLDatabase  #用于连接数据库的连接池
 from playhouse.mysql_ext import JSONField
 from settings.settings import DB
 
