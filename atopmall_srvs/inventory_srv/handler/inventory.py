@@ -45,25 +45,33 @@ class InventoryServicer(inventory_pb2_grpc.InventoryServicer):
         for item in request.goodsInfo:
             # 分布式锁,防止超卖等问题
             lock = Lock(REDIS_CLIENT,f"lock:goods_{item.goodsId}",auto_renewal=True,expire=15) #auto_renewal=True 自动续期
-            # with上下文管理锁，无论分支break/异常都会自动release，不会卡死BLPOP
-            with lock.acquire(blocking=True,timeout=10):
-                with DB.atomic() as txn: #peewee使用atomic()方法开启事务
-                    try:
-                        inv = Inventory.get(Inventory.goods == item.goodsId)
-                    except DoesNotExist:
-                        txn.rollback() #回滚事务
-                        context.set_code(grpc.StatusCode.NOT_FOUND)
-                        context.set_details("商品不存在库存记录")
-                        return empty_pb2.Empty() 
-                    if inv.stocks < item.num:
-                        context.set_code(grpc.StatusCode.RESOURCE_EXHAUSTED)
-                        context.set_details("库存不足")
-                        txn.rollback() #回滚事务
-                        return empty_pb2.Empty()
-                    else:
-                        #超卖问题 可能引起数据不一致-分布式锁解决 详解tests文件夹文件
-                        inv.stocks -= item.num
-                        inv.save()
+            # 修复：acquire()返回bool，不能用在with中，用if+try/finally确保释放
+            if lock.acquire(blocking=True, timeout=10):
+                try:
+                    with DB.atomic() as txn: #peewee使用atomic()方法开启事务
+                        try:
+                            inv = Inventory.get(Inventory.goods == item.goodsId)
+                        except DoesNotExist:
+                            txn.rollback() #回滚事务
+                            context.set_code(grpc.StatusCode.NOT_FOUND)
+                            context.set_details("商品不存在库存记录")
+                            return empty_pb2.Empty() 
+                        if inv.stocks < item.num:
+                            context.set_code(grpc.StatusCode.RESOURCE_EXHAUSTED)
+                            context.set_details("库存不足")
+                            txn.rollback() #回滚事务
+                            return empty_pb2.Empty()
+                        else:
+                            #超卖问题 可能引起数据不一致-分布式锁解决 详解tests文件夹文件
+                            inv.stocks -= item.num
+                            inv.save()
+                finally: #无论try里正常结束、还是抛异常、还是break，都会执行release释放锁
+                    lock.release()
+            else:
+                # 获取锁失败
+                context.set_code(grpc.StatusCode.ABORTED)
+                context.set_details("系统繁忙，请稍后重试")
+                return empty_pb2.Empty()
             return empty_pb2.Empty()
         
     @logger.catch
@@ -72,17 +80,24 @@ class InventoryServicer(inventory_pb2_grpc.InventoryServicer):
         for item in request.goodsInfo:
             # 分布式锁
             lock = Lock(REDIS_CLIENT,f"lock:goods_{item.goodsId}",auto_renewal=True,expire=15) #auto_renewal=True 自动续期
-            # with上下文管理锁，无论分支break/异常都会自动release，不会卡死BLPOP
-            with lock.acquire(blocking=True,timeout=10):
-                with DB.atomic() as txn: #peewee使用atomic()方法开启事务
-                    try:
-                        inv = Inventory.get(Inventory.goods == item.goodsId)
-                    except DoesNotExist:
-                        txn.rollback() #回滚事务
-                        context.set_code(grpc.StatusCode.NOT_FOUND)
-                        context.set_details("商品不存在库存记录")
-                        return empty_pb2.Empty() 
-                    #TODO: 可能引起数据不一致-分布式锁解决
-                    inv.stocks += item.num
-                    inv.save()
+            # acquire()返回bool，不能用在with中，用if+try/finally确保释放
+            if lock.acquire(blocking=True, timeout=10):
+                try:
+                    with DB.atomic() as txn: #peewee使用atomic()方法开启事务
+                        try:
+                            inv = Inventory.get(Inventory.goods == item.goodsId)
+                        except DoesNotExist:
+                            txn.rollback() #回滚事务
+                            context.set_code(grpc.StatusCode.NOT_FOUND)
+                            context.set_details("商品不存在库存记录")
+                            return empty_pb2.Empty() 
+                        inv.stocks += item.num
+                        inv.save()
+                finally: #无论try里正常结束、还是抛异常、还是break，都会执行release释放锁
+                    lock.release()
+            else:
+                # 获取锁失败
+                context.set_code(grpc.StatusCode.ABORTED)
+                context.set_details("系统繁忙，请稍后重试")
+                return empty_pb2.Empty()
             return empty_pb2.Empty()

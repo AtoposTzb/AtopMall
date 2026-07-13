@@ -12,11 +12,13 @@
 
 ## Python 工具
 
-| 工具名称         | 核心用途                    | 安装方式                             |
-| ---------------- | --------------------------- | ------------------------------------ |
-| grpcio-tools     | Protobuf 代码生成（Python） | `pip install grpcio-tools`           |
-| python-consul    | Consul 客户端               | `pip install python-consul`          |
-| nacos-sdk-python | Nacos 客户端（Python）      | `pip install nacos-sdk-python<3.0.0` |
+| 工具名称              | 核心用途                    | 安装方式                             |
+| --------------------- | --------------------------- | ------------------------------------ |
+| grpcio-tools          | Protobuf 代码生成（Python） | `pip install grpcio-tools`           |
+| python-consul         | Consul 客户端               | `pip install python-consul`          |
+| nacos-sdk-python      | Nacos 客户端（Python）      | `pip install nacos-sdk-python<3.0.0` |
+| redis                 | Redis 客户端                | `pip install redis`                  |
+| python-redis-lock     | Redis 分布式锁              | `pip install python-redis-lock`      |
 
 ## Proto 文件生成命令
 

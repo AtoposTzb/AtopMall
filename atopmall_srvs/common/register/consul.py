@@ -1,5 +1,6 @@
 import consul
 import requests
+import random
 from common.register.base import Register
 
 class ConsulRegister(Register):
@@ -36,3 +37,16 @@ class ConsulRegister(Register):
             "filter":filter
         }
         return requests.get(url,params=params).json()
+    
+    def get_host_port(self,filter):
+        url = f"http://{self.host}:{self.port}/v1/agent/services"
+        params = {
+            "filter":filter
+        }
+        data =  requests.get(url,params=params).json() 
+        if data:
+            service_info = random.choice(list(data.values())) 
+            return service_info["Address"],service_info["Port"] #随机选择并返回一个服务的地址和端口
+        else:
+            return None,None
+

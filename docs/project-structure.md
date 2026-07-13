@@ -45,6 +45,47 @@ AtopMall/
 │       ├── tests/                    # gRPC 客户端测试
 │       │   └── goods.py              # 商品服务 gRPC 测试
 │       ├── requirements.txt          # Python 依赖
+│   │   └── server.py                 # gRPC 服务入口（含 Consul 注册 + 优雅退出）
+│   │
+│   ├── order_srv/                    # 订单服务
+│   │   ├── handler/                  # gRPC 服务实现
+│   │   │   ├── order.py              # 订单服务（创建/列表/详情/更新状态）
+│   │   │   └── shopping_cart.py      # 购物车服务（列表/创建/更新/删除）
+│   │   ├── model/                    # Peewee ORM 数据模型
+│   │   │   └── models.py             # ShoppingCart/OrderInfo/OrderGoods 模型
+│   │   ├── proto/                    # Protobuf 定义及生成代码
+│   │   │   ├── order.proto           # 订单服务 Protobuf 定义（2 个 service）
+│   │   │   ├── order_pb2.py          # 生成的消息类
+│   │   │   ├── order_pb2_grpc.py     # 生成的 gRPC 服务类
+│   │   │   ├── goods.proto           # 商品服务 proto（跨服务调用）
+│   │   │   ├── inventory.proto       # 库存服务 proto（跨服务调用）
+│   │   │   ├── goods_pb2.py          # 商品消息类
+│   │   │   ├── goods_pb2_grpc.py     # 商品 gRPC 服务类
+│   │   │   ├── inventory_pb2.py      # 库存消息类
+│   │   │   └── inventory_pb2_grpc.py # 库存 gRPC 服务类
+│   │   ├── settings/                 # 配置管理
+│   │   │   └── settings.py           # Nacos 配置加载 + 配置变更监听
+│   │   ├── tests/                    # gRPC 客户端测试
+│   │   │   └── order_client.py       # 订单服务 gRPC 测试
+│   │   ├── requirements.txt          # Python 依赖
+│   │   └── server.py                 # gRPC 服务入口（含 Consul 注册 + 优雅退出）
+│   │
+│   └── inventory_srv/                # 库存服务
+│       ├── handler/                  # gRPC 服务实现
+│       │   └── inventory.py          # 库存服务（设置/查询/扣减/归还）
+│       ├── model/                    # Peewee ORM 数据模型
+│       │   └── models.py             # Inventory 模型（含乐观锁 version 字段）
+│       ├── proto/                    # Protobuf 定义及生成代码
+│       │   ├── inventory.proto       # 库存服务 Protobuf 定义
+│       │   ├── inventory_pb2.py      # 生成的消息类
+│       │   └── inventory_pb2_grpc.py # 生成的 gRPC 服务类
+│       ├── settings/                 # 配置管理
+│       │   └── settings.py           # Nacos 配置加载 + Redis 连接
+│       ├── tests/                    # 锁机制测试
+│       │   ├── inventory.py          # 库存服务 gRPC 测试
+│       │   ├── lock_test.py          # 分布式锁并发测试
+│       │   └── redis_loc_test.py     # Redis 锁实现测试
+│       ├── requirements.txt          # Python 依赖
 │       └── server.py                 # gRPC 服务入口（含 Consul 注册 + 优雅退出）
 │
 ├── atopmall_web/                     # Web API 层（Go + Gin）
@@ -188,11 +229,13 @@ AtopMall/
 
 Python + gRPC 实现的微服务层，每个服务独立目录，共享 `common/` 公共模块。
 
-| 目录               | 说明                                                       |
-| ------------------ | ---------------------------------------------------------- |
-| `common/register/` | Consul 服务注册公共模块，提供抽象基类和 Consul 实现        |
-| `user_srv/`        | 用户微服务，提供用户 CRUD、密码校验等 gRPC 接口            |
-| `goods_srv/`       | 商品微服务，提供商品/分类/品牌/轮播图/品牌分类等 gRPC 接口 |
+| 目录               | 说明                                                               |
+| ------------------ | ------------------------------------------------------------------ |
+| `common/register/` | Consul 服务注册公共模块，提供抽象基类和 Consul 实现                |
+| `user_srv/`        | 用户微服务，提供用户 CRUD、密码校验等 gRPC 接口                    |
+| `goods_srv/`       | 商品微服务，提供商品/分类/品牌/轮播图/品牌分类等 gRPC 接口         |
+| `order_srv/`       | 订单微服务，提供购物车 CRUD、订单创建/查询/详情等 gRPC 接口        |
+| `inventory_srv/`   | 库存微服务，提供库存设置/查询/扣减/归还，使用 Redis 分布式锁防超卖 |
 
 每个微服务目录结构统一：
 

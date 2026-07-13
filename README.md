@@ -6,13 +6,13 @@
 
 项目采用分层架构，主要分为两大模块：
 
-| 模块             | 技术栈        | 职责                                           |
-| ---------------- | ------------- | ---------------------------------------------- |
-| `atopmall_srvs/` | Python + gRPC | 微服务层，实现业务逻辑（用户、商品等服务）     |
-| `atopmall_web/`  | Go + Gin      | Web API 层，对外提供 HTTP 接口                 |
-| └ `user_web/`    | Go + Gin      | 用户 Web 服务（登录/注册/验证码）              |
-| └ `goods_web/`   | Go + Gin      | 商品 Web 服务（商品列表/分类/品牌等）          |
-| └ `oss-web/`     | Go + Gin      | 文件存储服务（MinIO 预签名直传、孤儿文件清理） |
+| 模块             | 技术栈        | 职责                                                   |
+| ---------------- | ------------- | ------------------------------------------------------ |
+| `atopmall_srvs/` | Python + gRPC | 微服务层，实现业务逻辑（用户、商品、订单、库存等服务） |
+| `atopmall_web/`  | Go + Gin      | Web API 层，对外提供 HTTP 接口                         |
+| └ `user_web/`    | Go + Gin      | 用户 Web 服务（登录/注册/验证码）                      |
+| └ `goods_web/`   | Go + Gin      | 商品 Web 服务（商品列表/分类/品牌等）                  |
+| └ `oss-web/`     | Go + Gin      | 文件存储服务（MinIO 预签名直传、孤儿文件清理）         |
 
 每个微服务目录结构统一：`handler/`（业务逻辑）、`model/`（数据模型）、`proto/`（Protobuf）、`settings/`（配置）、`server.py`（服务入口）
 
@@ -20,25 +20,27 @@
 
 ## 二、技术栈总览
 
-| 分类         | 技术选型                | 说明                                       |
-| ------------ | ----------------------- | ------------------------------------------ |
-| 开发语言     | Go 1.22+ / Python 3.13+ | Go 负责 Web API 层，Python 负责微服务层    |
-| 微服务通信   | gRPC + Protobuf         | 服务间远程调用                             |
-| 服务注册发现 | Consul                  | 微服务注册与健康检查                       |
-| 配置中心     | Nacos                   | 统一配置管理，支持配置变更实时推送         |
-| Web 框架     | Gin                     | Go HTTP 接口层开发                         |
-| Python ORM   | Peewee                  | Python 数据库操作（含连接池 + 断线重连）   |
-| Go ORM       | GORM（待集成）          | Go 数据库操作                              |
-| Python 日志  | Loguru                  | Python 端日志组件                          |
-| Go 日志      | Zap                     | Go 端高性能结构化日志                      |
-| 配置管理     | Viper                   | YAML 配置文件加载与管理（本地 Nacos 连接） |
-| 数据库       | MySQL                   | 数据存储                                   |
-| 缓存         | Redis                   | 验证码存储、会话管理                       |
-| JWT 认证     | golang-jwt/v5           | Token 生成与验证                           |
-| 图片验证码   | base64Captcha           | 登录防暴力破解                             |
-| 邮件服务     | jordan-wright/email     | SMTP 邮箱验证码发送                        |
-| 表单验证     | go-playground/validator | 请求参数校验                               |
-| 对象存储     | MinIO                   | 文件存储（预签名 PUT 直传、孤儿文件清理）  |
+| 分类         | 技术选型                  | 说明                                       |
+| ------------ | ------------------------- | ------------------------------------------ |
+| 开发语言     | Go 1.22+ / Python 3.13+   | Go 负责 Web API 层，Python 负责微服务层    |
+| 微服务通信   | gRPC + Protobuf           | 服务间远程调用                             |
+| 服务注册发现 | Consul                    | 微服务注册与健康检查                       |
+| 配置中心     | Nacos                     | 统一配置管理，支持配置变更实时推送         |
+| Web 框架     | Gin                       | Go HTTP 接口层开发                         |
+| Python ORM   | Peewee                    | Python 数据库操作（含连接池 + 断线重连）   |
+| Go ORM       | GORM（待集成）            | Go 数据库操作                              |
+| Python 日志  | Loguru                    | Python 端日志组件                          |
+| Go 日志      | Zap                       | Go 端高性能结构化日志                      |
+| 配置管理     | Viper                     | YAML 配置文件加载与管理（本地 Nacos 连接） |
+| 数据库       | MySQL                     | 数据存储                                   |
+| 缓存         | Redis                     | 验证码存储、会话管理、分布式锁             |
+| 分布式锁     | Redis + python-redis-lock | 防止超卖等并发问题                         |
+| 乐观锁       | MySQL version 字段        | 库存扣减并发控制                           |
+| JWT 认证     | golang-jwt/v5             | Token 生成与验证                           |
+| 图片验证码   | base64Captcha             | 登录防暴力破解                             |
+| 邮件服务     | jordan-wright/email       | SMTP 邮箱验证码发送                        |
+| 表单验证     | go-playground/validator   | 请求参数校验                               |
+| 对象存储     | MinIO                     | 文件存储（预签名 PUT 直传、孤儿文件清理）  |
 
 ## 三、已完成功能
 
@@ -46,6 +48,8 @@
 | ------------- | ----------- | -------------------------------------------------------------- |
 | 用户微服务    | Python gRPC | 用户 CRUD、密码校验、服务注册发现、Nacos 配置管理              |
 | 商品微服务    | Python gRPC | 商品/分类/品牌/轮播图/品牌分类管理（23 个 gRPC 接口）          |
+| 订单微服务    | Python gRPC | 购物车 CRUD、订单创建/查询、跨服务调用（商品+库存）            |
+| 库存微服务    | Python gRPC | 库存设置/查询/扣减/归还、Redis 分布式锁防超卖                  |
 | 用户 Web 服务 | Go Gin      | 图片验证码、邮箱验证码、登录注册、JWT 认证                     |
 | 商品 Web 服务 | Go Gin      | 商品列表查询（多条件过滤）、Consul 服务注册、gRPC 负载均衡连接 |
 | 文件存储服务  | Go Gin      | MinIO 预签名直传、拖拽上传、孤儿文件清理                       |
@@ -186,6 +190,26 @@ go run main.go
 ```
 
 > 默认监听端口：8083，启动后从 Nacos 拉取业务配置，初始化 MinIO 客户端，自动注册到 Consul
+
+### 8. 启动订单微服务（Python gRPC）
+
+```bash
+cd atopmall_srvs/order_srv
+pip install -r requirements.txt
+python -m server
+```
+
+> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，需先启动商品服务和库存服务
+
+### 9. 启动库存微服务（Python gRPC）
+
+```bash
+cd atopmall_srvs/inventory_srv
+pip install -r requirements.txt
+python -m server
+```
+
+> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，需要 Redis 支持分布式锁
 
 ## 七、配置说明
 
