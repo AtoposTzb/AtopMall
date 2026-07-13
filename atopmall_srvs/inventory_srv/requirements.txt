@@ -9,3 +9,4 @@ loguru
 py-consul
 nacos-sdk-python<3.0.0
 redis
+python-redis-lock

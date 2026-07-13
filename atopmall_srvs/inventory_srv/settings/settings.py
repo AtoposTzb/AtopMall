@@ -1,4 +1,5 @@
 import json
+import redis
 from playhouse.pool import PooledMySQLDatabase
 from playhouse.shortcuts import ReconnectMixin
 from nacos import NacosClient
@@ -34,7 +35,6 @@ def update_config(args):
     print("配置文件发生变化")
     print(args)
 
-DB = ReconnectMysqlDatebase(database=data["mysql"]["db"],host=data["mysql"]["host"],port=data["mysql"]["port"],user=data["mysql"]["user"],password=data["mysql"]["password"])
 #consul配置
 CONSUL_HOST = data["consul"]["host"]
 CONSUL_PORT = data["consul"]["port"]
@@ -43,3 +43,21 @@ CONSUL_PORT = data["consul"]["port"]
 SERVICE_NAME = data["name"]
 SERVICE_ID = data["name"]
 SERVICE_TAGS = data["tags"]
+
+#mysql配置
+MYSQL_DB = data["mysql"]["db"]
+MYSQL_HOST = data["mysql"]["host"]
+MYSQL_PORT = data["mysql"]["port"]
+MYSQL_USER = data["mysql"]["user"]
+MYSQL_PASSWORD = data["mysql"]["password"]
+
+#redis配置
+REDIS_HOST = data["redis"]["host"]
+REDIS_PORT = data["redis"]["port"]
+# REDIS_PASSWORD = data["redis"]["password"]
+REDIS_DB = data["redis"]["db"]
+
+#数据库全局连接池(mysql和redis连接池)
+DB = ReconnectMysqlDatebase(database=MYSQL_DB,host=MYSQL_HOST,port=MYSQL_PORT,user=MYSQL_USER,password=MYSQL_PASSWORD)
+pool = redis.ConnectionPool(host=REDIS_HOST,port=REDIS_PORT,db=REDIS_DB)
+REDIS_CLIENT = redis.StrictRedis(connection_pool=pool)

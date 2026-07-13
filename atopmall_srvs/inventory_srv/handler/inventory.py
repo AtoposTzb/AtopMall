@@ -8,7 +8,8 @@ sys.path.insert(0,BASE_DIR)
 from google.protobuf import empty_pb2
 from model.models import Inventory
 from proto import inventory_pb2,inventory_pb2_grpc
-from settings.settings import DB
+from settings.settings import DB,REDIS_CLIENT
+from redis_lock import Lock
 
 # 库存服务
 class InventoryServicer(inventory_pb2_grpc.InventoryServicer):
@@ -41,39 +42,47 @@ class InventoryServicer(inventory_pb2_grpc.InventoryServicer):
     @logger.catch
     def SellInv(self, request:inventory_pb2.SellInfo, context):
         #扣减库存 超卖问题 事务处理:执行多个sql是原子性的
-        with DB.atomic() as txn: #peewee使用atomic()方法开启事务
-            for item in request.goodsInfo:
-                try:
-                    inv = Inventory.get(Inventory.goods == item.goodsId)
-                except DoesNotExist:
-                    txn.rollback() #回滚事务
-                    context.set_code(grpc.StatusCode.NOT_FOUND)
-                    context.set_details("商品不存在库存记录")
-                    return empty_pb2.Empty() 
-                if inv.stocks < item.num:
-                    context.set_code(grpc.StatusCode.RESOURCE_EXHAUSTED)
-                    context.set_details("库存不足")
-                    txn.rollback() #回滚事务
-                    return empty_pb2.Empty()
-                else:
-                    #TODO: 超卖问题 可能引起数据不一致-分布式锁解决
-                    inv.stocks -= item.num
-                    inv.save()
+        for item in request.goodsInfo:
+            # 分布式锁,防止超卖等问题
+            lock = Lock(REDIS_CLIENT,f"lock:goods_{item.goodsId}",auto_renewal=True,expire=15) #auto_renewal=True 自动续期
+            # with上下文管理锁，无论分支break/异常都会自动release，不会卡死BLPOP
+            with lock.acquire(blocking=True,timeout=10):
+                with DB.atomic() as txn: #peewee使用atomic()方法开启事务
+                    try:
+                        inv = Inventory.get(Inventory.goods == item.goodsId)
+                    except DoesNotExist:
+                        txn.rollback() #回滚事务
+                        context.set_code(grpc.StatusCode.NOT_FOUND)
+                        context.set_details("商品不存在库存记录")
+                        return empty_pb2.Empty() 
+                    if inv.stocks < item.num:
+                        context.set_code(grpc.StatusCode.RESOURCE_EXHAUSTED)
+                        context.set_details("库存不足")
+                        txn.rollback() #回滚事务
+                        return empty_pb2.Empty()
+                    else:
+                        #超卖问题 可能引起数据不一致-分布式锁解决 详解tests文件夹文件
+                        inv.stocks -= item.num
+                        inv.save()
             return empty_pb2.Empty()
         
     @logger.catch
     def RebackInv(self, request:inventory_pb2.SellInfo, context):
         #库存归还 几种种情况：1.订单超时会自动归还 2.订单创建失败，需要归还之前的库存 3.手动归还库存
-        with DB.atomic() as txn: #peewee使用atomic()方法开启事务
-            for item in request.goodsInfo:
-                try:
-                    inv = Inventory.get(Inventory.goods == item.goodsId)
-                except DoesNotExist:
-                    txn.rollback() #回滚事务
-                    context.set_code(grpc.StatusCode.NOT_FOUND)
-                    context.set_details("商品不存在库存记录")
-                    return empty_pb2.Empty() 
-                #TODO: 可能引起数据不一致-分布式锁解决
-                inv.stocks += item.num
-                inv.save()
+        for item in request.goodsInfo:
+            # 分布式锁
+            lock = Lock(REDIS_CLIENT,f"lock:goods_{item.goodsId}",auto_renewal=True,expire=15) #auto_renewal=True 自动续期
+            # with上下文管理锁，无论分支break/异常都会自动release，不会卡死BLPOP
+            with lock.acquire(blocking=True,timeout=10):
+                with DB.atomic() as txn: #peewee使用atomic()方法开启事务
+                    try:
+                        inv = Inventory.get(Inventory.goods == item.goodsId)
+                    except DoesNotExist:
+                        txn.rollback() #回滚事务
+                        context.set_code(grpc.StatusCode.NOT_FOUND)
+                        context.set_details("商品不存在库存记录")
+                        return empty_pb2.Empty() 
+                    #TODO: 可能引起数据不一致-分布式锁解决
+                    inv.stocks += item.num
+                    inv.save()
             return empty_pb2.Empty()
