@@ -139,7 +139,7 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
         except DoesNotExist:
             context.set_code(grpc.StatusCode.NOT_FOUND)
             context.set_details(f"商品id={request.id}不存在")
-            return goods_pb2.GoodsDetailResponse()
+            return goods_pb2.GoodsInfoResponse()
         
     @logger.catch # 创建商品
     def CreateGoods(self,request:goods_pb2.CreateGoodsInfo,context):

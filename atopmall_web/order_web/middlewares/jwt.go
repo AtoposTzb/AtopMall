@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
-	"atopmall_web/user_web/global"
-	"atopmall_web/user_web/models"
+	"atopmall_web/order_web/global"
+	"atopmall_web/order_web/models"
 )
 
 func JWTAuth() gin.HandlerFunc {

@@ -32,14 +32,14 @@ class TestOrderServicer:
     
     def create_cart_item(self):
         rsp = self.cart_stub.CreateCartItem(
-            order_pb2.CartItemRequest(goodsId=422,userId=1,nums=15)
+            order_pb2.CartItemRequest(goodsId=422,userId=11,nums=15)
         )
         print(rsp)
     
     def create_order(self):
         rsp = self.order_stub.CreateOrder(
             order_pb2.OrderRequest(
-                userId=1,
+                userId=11,
                 address="云南菌子地",
                 mobile="13800000001",
                 name="张三",
@@ -47,7 +47,12 @@ class TestOrderServicer:
                 )
         )
         print(rsp)
-
+    
+    def order_list(self):
+        rsp = self.order_stub.OrderList(
+            order_pb2.OrderFilterRequest(userId=11)
+        )
+        print(rsp)
 
 if __name__ == "__main__":
     test = TestOrderServicer()
@@ -55,4 +60,5 @@ if __name__ == "__main__":
     # test.get_inv()
     # test.sell()
     # test.create_cart_item()
-    test.create_order()
+    # test.create_order()
+    test.order_list()

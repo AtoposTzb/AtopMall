@@ -47,6 +47,7 @@ class OrderServicer(order_pb2_grpc.OrderServicer):
             tmp_rsp.address = order.address
             tmp_rsp.name = order.signer_name
             tmp_rsp.mobile = order.singer_mobile
+            tmp_rsp.addTime = order.add_time.strftime("%Y-%m-%d %H:%M:%S")
 
             rsp.data.append(tmp_rsp)
         return rsp
@@ -56,7 +57,10 @@ class OrderServicer(order_pb2_grpc.OrderServicer):
         #获取订单详情
         rsp = order_pb2.OrderInfoDetailResponse()
         try:
-            order = OrderInfo.get(OrderInfo.id==request.id)
+            if request.userId: #如果有用户id，就根据用户id来查询订单(简单的权限校验)
+                order = OrderInfo.get(OrderInfo.id==request.id,OrderInfo.user==request.userId)
+            else:
+                order = OrderInfo.get(OrderInfo.id==request.id)
             rsp.orderInfo.id = order.id
             rsp.orderInfo.userId = order.user
             rsp.orderInfo.orderSn = order.order_sn
@@ -172,6 +176,7 @@ class OrderServicer(order_pb2_grpc.OrderServicer):
             #创建订单
             try:
                 order = OrderInfo()
+                order.user = request.userId
                 order.order_sn = create_order_sn(request.userId)
                 order.order_mount = order_allmount
                 order.address = request.address
@@ -195,6 +200,7 @@ class OrderServicer(order_pb2_grpc.OrderServicer):
         #返回订单信息
         return order_pb2.OrderInfoResponse(
             id=order.id,
+            userId=order.user,
             orderSn=order.order_sn,
             total=order.order_mount,
         )

@@ -69,7 +69,6 @@ func GetCategoryDetail(ctx *gin.Context) {
 
 		ctx.JSON(http.StatusOK, reMap)
 	}
-	return
 }
 
 func NewCategory(ctx *gin.Context) {

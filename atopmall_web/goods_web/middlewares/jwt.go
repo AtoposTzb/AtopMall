@@ -58,8 +58,7 @@ var (
 
 func NewJWT() *JWT {
 	return &JWT{
-		[]byte(global.ServerConfig.JWTInfo.SigningKey),
-		//可以设置过期时间
+		[]byte(global.ServerConfig.JWTInfo.SigningKey), //可以设置过期时间
 	}
 }
 
@@ -113,9 +112,11 @@ func (j *JWT) RefreshToken(tokenString string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	//刷新token过期时间到nacos配置
+	expireDuration := time.Duration(global.ServerConfig.JWTInfo.RefreshExpireHour) * time.Hour
 	if claims, ok := token.Claims.(*models.CustomClaims); ok && token.Valid {
 		//jwt.TimeFunc = time.Now  // 刷新token时，需要修改为当前时间，否则会报错 恢复，v4版本需要修改为当前时间
-		claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(500 * time.Hour)) // 刷新token过期时间为500小时,方便测试
+		claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(expireDuration))
 		return j.CreateToken(*claims)
 	}
 	return "", TokenInvalid

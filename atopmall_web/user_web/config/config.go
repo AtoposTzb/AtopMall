@@ -7,7 +7,9 @@ type UserSrvConfig struct {
 }
 
 type JWTConfig struct {
-	SigningKey string `mapstructure:"Key" json:"Key"`
+	SigningKey        string `mapstructure:"Key" json:"Key"`
+	LoginExpireHour   int    `mapstructure:"login-expire-hour" json:"login-expire-hour"`
+	RefreshExpireHour int    `mapstructure:"refresh-expire-hour" json:"refresh-expire-hour"`
 }
 
 type RedisConfig struct {

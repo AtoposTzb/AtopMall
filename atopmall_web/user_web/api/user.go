@@ -168,13 +168,14 @@ func PasswordLogin(ctx *gin.Context) {
 			if passRep.Success {
 				//生成token
 				j := middlewares.NewJWT()
+				expireDuration := time.Duration(global.ServerConfig.JWTInfo.LoginExpireHour) * time.Hour //nacos配置登录token过期时间
 				claims := models.CustomClaims{
 					ID:          uint(rsp.Id),
 					NickName:    rsp.NickName,
 					AuthorityID: uint(rsp.Role),
 					RegisteredClaims: jwt.RegisteredClaims{
-						NotBefore: jwt.NewNumericDate(time.Now()), // //签名的生效时间
-						ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+						NotBefore: jwt.NewNumericDate(time.Now()),                     //签名的生效时间
+						ExpiresAt: jwt.NewNumericDate(time.Now().Add(expireDuration)), //过期时间
 						Issuer:    "atopmall",
 					},
 				}
@@ -257,13 +258,14 @@ func Register(ctx *gin.Context) {
 		}
 		//生成token
 		j := middlewares.NewJWT()
+		expireDuration := time.Duration(global.ServerConfig.JWTInfo.LoginExpireHour) * time.Hour //nacos配置登录token过期时间
 		claims := models.CustomClaims{
 			ID:          uint(user.Id),
 			NickName:    user.NickName,
 			AuthorityID: uint(user.Role),
 			RegisteredClaims: jwt.RegisteredClaims{
-				NotBefore: jwt.NewNumericDate(time.Now()), // //签名的生效时间
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+				NotBefore: jwt.NewNumericDate(time.Now()),                     //签名的生效时间
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(expireDuration)), //过期时间
 				Issuer:    "atopmall",
 			},
 		}

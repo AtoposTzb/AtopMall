@@ -181,7 +181,6 @@ func DeleteGoods(ctx *gin.Context) {
 	}
 
 	ctx.Status(http.StatusOK)
-	return
 }
 
 func Stocks(ctx *gin.Context) {
@@ -192,8 +191,6 @@ func Stocks(ctx *gin.Context) {
 		return
 	}
 
-	//TODO 商品的库存
-	return
 }
 
 // 更新部分状态 GoodsStatusForm字段
