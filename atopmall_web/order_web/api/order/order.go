@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"atopmall_web/order_web/api"
+	"atopmall_web/order_web/api/pay"
 	"atopmall_web/order_web/forms"
 	"atopmall_web/order_web/global"
 	"atopmall_web/order_web/models"
@@ -118,6 +119,13 @@ func OrderDetail(ctx *gin.Context) {
 		goodsList = append(goodsList, tmpMap)
 	}
 	reMap["goods"] = goodsList
+	//添加支付宝支付链接
+	url := pay.AlipayUrl(ctx, pay.OrderInfo{
+		OrderSn: rsp.OrderInfo.OrderSn,
+		Total:   rsp.OrderInfo.Total,
+	})
+	reMap["alipay_url"] = url
+
 	ctx.JSON(http.StatusOK, reMap)
 }
 
@@ -140,8 +148,15 @@ func OrderCreate(ctx *gin.Context) {
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
-	//TODO 生成支付宝支付链接
+
+	//生成支付宝支付链接
+	url := pay.AlipayUrl(ctx, pay.OrderInfo{
+		OrderSn: orderRsp.OrderSn,
+		Total:   orderRsp.Total,
+	})
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"id": orderRsp.Id,
+		"id":         orderRsp.Id,
+		"alipay_url": url,
 	})
 }
