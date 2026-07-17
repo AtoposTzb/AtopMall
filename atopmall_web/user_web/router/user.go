@@ -14,4 +14,7 @@ func InitUserRouter(r *gin.RouterGroup) {
 	UserRouter.GET("list", middlewares.JWTAuth(), middlewares.IsAdmin(), api.GetUserList)
 	UserRouter.POST("pwd_login", api.PasswordLogin)
 	UserRouter.POST("register", api.Register)
+
+	UserRouter.GET("detail", middlewares.JWTAuth(), api.GetUserDetail) // 获取用户详情
+	UserRouter.PUT("update", middlewares.JWTAuth(), api.UpdateUser)    // 更新用户信息
 }

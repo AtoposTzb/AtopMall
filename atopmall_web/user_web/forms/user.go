@@ -15,3 +15,10 @@ type RegisterForm struct {
 	Email    string `json:"email" form:"email" binding:"required,email"`     //注册获取验证码用的邮箱
 	Code     string `json:"code" form:"code" binding:"required,min=6,max=6"` //注册获取验证码用的验证码
 }
+
+//更新用户信息的form结构体，存储用户信息
+type UserUpdateForm struct {
+	Name     string `json:"name" form:"name" binding:"required,min=3,max=10"`
+	Gender   string `json:"gender" form:"gender" binding:"required,oneof=female male"`
+	Birthday string `json:"birthday" form:"birthday" binding:"required,datetime=2006-01-02"`
+}

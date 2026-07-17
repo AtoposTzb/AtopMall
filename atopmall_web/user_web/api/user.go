@@ -286,3 +286,57 @@ func Register(ctx *gin.Context) {
 	}
 
 }
+
+// 获取用户详情
+func GetUserDetail(ctx *gin.Context) {
+	// 从token中获取用户ID
+	userId, _ := ctx.Get("userId")
+	userRsp, err := global.UserSrvClient.GetUserById(context.Background(), &proto.IdRequest{
+		Id: int32(userId.(uint)),
+	})
+	if err != nil {
+		zap.S().Errorw("查询用户详情失败")
+		HandleGrpcErrorToHttpError(err, ctx)
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"name":     userRsp.NickName,
+		"birthday": time.Unix(int64(userRsp.BirthDay), 0).Format("2006-01-02"),
+		"mobile":   userRsp.Mobile,
+		"email":    userRsp.Email,
+		"gender":   userRsp.Gender,
+	})
+}
+
+// 更新用户信息
+func UpdateUser(ctx *gin.Context) {
+	// 从token中获取用户ID
+	userId, _ := ctx.Get("userId")
+	//表单验证
+	userUpdateForm := forms.UserUpdateForm{}
+	if err := ctx.ShouldBind(&userUpdateForm); err != nil {
+		HandleValidatorError(ctx, err)
+		return
+	}
+	//将前端传递过来的日期转换为int
+	birthday, err := time.Parse("2006-01-02", userUpdateForm.Birthday)
+	if err != nil {
+		HandleValidatorError(ctx, err)
+		return
+	}
+	//更新用户信息
+	_, err = global.UserSrvClient.UpdateUser(context.Background(), &proto.UpdateUserInfo{
+		Id:       int32(userId.(uint)),
+		NickName: userUpdateForm.Name,
+		Gender:   userUpdateForm.Gender,
+		BirthDay: uint64(birthday.Unix()),
+	})
+	if err != nil {
+		zap.S().Errorw("更新用户信息失败")
+		HandleGrpcErrorToHttpError(err, ctx)
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"msg": "更新用户信息成功",
+	})
+}
