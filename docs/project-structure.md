@@ -70,21 +70,43 @@ AtopMall/
 │   │   ├── requirements.txt          # Python 依赖
 │   │   └── server.py                 # gRPC 服务入口（含 Consul 注册 + 优雅退出）
 │   │
-│   └── inventory_srv/                # 库存服务
+│   ├── inventory_srv/                # 库存服务
+│   │   ├── handler/                  # gRPC 服务实现
+│   │   │   └── inventory.py          # 库存服务（设置/查询/扣减/归还）
+│   │   ├── model/                    # Peewee ORM 数据模型
+│   │   │   └── models.py             # Inventory 模型（含乐观锁 version 字段）
+│   │   ├── proto/                    # Protobuf 定义及生成代码
+│   │   │   ├── inventory.proto       # 库存服务 Protobuf 定义
+│   │   │   ├── inventory_pb2.py      # 生成的消息类
+│   │   │   └── inventory_pb2_grpc.py # 生成的 gRPC 服务类
+│   │   ├── settings/                 # 配置管理
+│   │   │   └── settings.py           # Nacos 配置加载 + Redis 连接
+│   │   ├── tests/                    # 锁机制测试
+│   │   │   ├── inventory.py          # 库存服务 gRPC 测试
+│   │   │   ├── lock_test.py          # 分布式锁并发测试
+│   │   │   └── redis_loc_test.py     # Redis 锁实现测试
+│   │   ├── requirements.txt          # Python 依赖
+│   │   └── server.py                 # gRPC 服务入口（含 Consul 注册 + 优雅退出）
+│   │
+│   └── userop_srv/                   # 用户操作服务
 │       ├── handler/                  # gRPC 服务实现
-│       │   └── inventory.py          # 库存服务（设置/查询/扣减/归还）
+│       │   ├── address.py            # 地址服务（列表/创建/删除/更新）
+│       │   ├── message.py            # 留言服务（列表/创建）
+│       │   └── user_fav.py           # 用户收藏服务（列表/添加/删除/详情）
 │       ├── model/                    # Peewee ORM 数据模型
-│       │   └── models.py             # Inventory 模型（含乐观锁 version 字段）
+│       │   └── models.py             # LeavingMessages/Address/UserFav 模型
 │       ├── proto/                    # Protobuf 定义及生成代码
-│       │   ├── inventory.proto       # 库存服务 Protobuf 定义
-│       │   ├── inventory_pb2.py      # 生成的消息类
-│       │   └── inventory_pb2_grpc.py # 生成的 gRPC 服务类
+│       │   ├── address.proto         # 地址服务 Protobuf 定义
+│       │   ├── address_pb2.py        # 生成的消息类
+│       │   ├── address_pb2_grpc.py   # 生成的 gRPC 服务类
+│       │   ├── message.proto         # 留言服务 Protobuf 定义
+│       │   ├── message_pb2.py        # 生成的消息类
+│       │   ├── message_pb2_grpc.py   # 生成的 gRPC 服务类
+│       │   ├── userfav.proto         # 用户收藏服务 Protobuf 定义
+│       │   ├── userfav_pb2.py        # 生成的消息类
+│       │   └── userfav_pb2_grpc.py   # 生成的 gRPC 服务类
 │       ├── settings/                 # 配置管理
-│       │   └── settings.py           # Nacos 配置加载 + Redis 连接
-│       ├── tests/                    # 锁机制测试
-│       │   ├── inventory.py          # 库存服务 gRPC 测试
-│       │   ├── lock_test.py          # 分布式锁并发测试
-│       │   └── redis_loc_test.py     # Redis 锁实现测试
+│       │   └── settings.py           # Nacos 配置加载 + 配置变更监听
 │       ├── requirements.txt          # Python 依赖
 │       └── server.py                 # gRPC 服务入口（含 Consul 注册 + 优雅退出）
 │
@@ -171,40 +193,129 @@ AtopMall/
 │       ├── config-pro.yaml           # Nacos 连接生产配置
 │       └── main.go                   # 服务入口（初始化 + Consul 注册 + 启动）
 │   │
-│   └── oss-web/                      # 文件存储服务（MinIO）
-│       ├── handler/                  # HTTP 接口实现
-│       │   └── minio_oss.go          # MinIO 预签名直传 + 孤儿文件清理
+│   ├── oss_web/                      # 文件存储服务（MinIO）
+│   │   ├── handler/                  # HTTP 接口实现
+│   │   │   └── minio_oss.go          # MinIO 预签名直传 + 孤儿文件清理
+│   │   ├── config/                   # 配置结构体定义
+│   │   │   └── config.go             # MinIOOssConfig / JWTConfig / ConsulConfig / ServerConfig / NacosConfig
+│   │   ├── global/                   # 全局变量（配置、翻译器、MinIO 客户端）
+│   │   │   └── global.go             # ServerConfig / Trans / MinioCli
+│   │   ├── initialize/               # 初始化（配置加载、路由、日志、MinIO 客户端）
+│   │   │   ├── config.go             # Viper + Nacos 配置加载
+│   │   │   ├── logger.go             # Zap 日志初始化
+│   │   │   ├── minio_oss.go          # MinIO 客户端初始化（自动创建桶）
+│   │   │   ├── router.go             # Gin 路由注册（含 /health 健康检查）
+│   │   │   └── validator.go          # 表单验证器中文翻译
+│   │   ├── middlewares/              # 中间件（JWT、CORS、权限）
+│   │   │   ├── admin.go              # 管理员权限中间件
+│   │   │   ├── cors.go               # CORS 跨域中间件
+│   │   │   └── jwt.go                # JWT 认证中间件
+│   │   ├── models/                   # 请求模型定义
+│   │   │   └── request.go            # 请求模型
+│   │   ├── router/                   # 路由分组
+│   │   │   └── minio_oss.go          # 文件存储路由（token / cleanup）
+│   │   ├── static/                   # 静态资源
+│   │   │   ├── css/
+│   │   │   │   └── style.css         # 上传页面样式
+│   │   │   ├── js/
+│   │   │   │   └── upload.js         # MinIO 文件直传前端逻辑（原生 HTML5 + PUT）
+│   │   │   └── lib/                  # 第三方库（plupload，已弃用）
+│   │   ├── templates/                # HTML 模板
+│   │   │   └── index.html            # MinIO 文件直传测试页面（拖拽/点击上传）
+│   │   ├── utils/                    # 工具函数
+│   │   │   ├── addr.go               # 动态可用端口获取
+│   │   │   └── register/
+│   │   │       └── consul/
+│   │   │           └── register.go   # Consul 服务注册（接口 + 实现）
+│   │   ├── config-debug.yaml         # Nacos 连接调试配置（含敏感信息，不提交）
+│   │   ├── config-pro.yaml           # Nacos 连接生产配置
+│   │   └── main.go                   # 服务入口（初始化 + Consul 注册 + 启动）
+│   │
+│   ├── order_web/                    # 订单 Web 服务
+│   │   ├── api/                      # HTTP 接口实现
+│   │   │   ├── order/
+│   │   │   │   └── order.go          # 订单接口（列表/创建/详情）
+│   │   │   └── shopping_cart/
+│   │   │       └── shopping_cart.go  # 购物车接口（列表/添加/删除/更新）
+│   │   ├── config/                   # 配置结构体定义
+│   │   │   └── config.go             # ServerConfig / ConsulConfig / NacosConfig 等结构体
+│   │   ├── forms/                    # 请求表单验证
+│   │   │   └── order.go              # 订单表单验证
+│   │   ├── global/                   # 全局变量（配置、翻译器、gRPC 客户端）
+│   │   │   └── global.go             # ServerConfig / Trans / OrderSrvClient / InventorySrvClient
+│   │   ├── initialize/               # 初始化（配置加载、路由、日志、Consul 服务发现）
+│   │   │   ├── config.go             # Viper + Nacos 配置加载
+│   │   │   ├── logger.go             # Zap 日志初始化
+│   │   │   ├── router.go             # Gin 路由注册（含 /health 健康检查）
+│   │   │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡）
+│   │   │   └── validator_trans.go    # 表单验证器中文翻译
+│   │   ├── middlewares/              # 中间件（JWT、CORS）
+│   │   │   ├── cors.go               # CORS 跨域中间件
+│   │   │   └── jwt.go                # JWT 认证中间件
+│   │   ├── models/                   # 请求模型定义
+│   │   │   └── order.go              # 请求模型
+│   │   ├── proto/                    # Protobuf 定义及生成代码
+│   │   │   ├── order.proto           # 订单服务 Protobuf 定义（与 order_srv 共享）
+│   │   │   ├── order.pb.go           # 生成的 Go 消息类
+│   │   │   └── order_grpc.pb.go      # 生成的 Go gRPC 服务类
+│   │   ├── router/                   # 路由分组
+│   │   │   ├── order.go              # 订单路由（列表/创建/详情）
+│   │   │   └── shopping_cart.go      # 购物车路由（列表/添加/删除/更新）
+│   │   ├── utils/                    # 工具函数
+│   │   │   ├── addr_port.go          # 动态可用端口获取
+│   │   │   └── register/
+│   │   │       └── consul/
+│   │   │           └── register.go   # Consul 服务注册（接口 + 实现）
+│   │   ├── validator/                # 自定义验证器
+│   │   ├── config-debug.yaml         # Nacos 连接调试配置（含敏感信息，不提交）
+│   │   ├── config-pro.yaml           # Nacos 连接生产配置
+│   │   └── main.go                   # 服务入口（初始化 + Consul 注册 + 启动）
+│   │
+│   └── userop_web/                   # 用户操作 Web 服务
+│       ├── api/                      # HTTP 接口实现
+│       │   ├── address/
+│       │   │   └── address.go        # 地址接口（列表/创建/删除/更新）
+│       │   ├── message/
+│       │   │   └── message.go        # 留言接口（列表/创建）
+│       │   └── user_fav/
+│       │       └── user_fav.go       # 用户收藏接口（列表/详情/添加/删除）
 │       ├── config/                   # 配置结构体定义
-│       │   └── config.go             # MinIOOssConfig / JWTConfig / ConsulConfig / ServerConfig / NacosConfig
-│       ├── global/                   # 全局变量（配置、翻译器、MinIO 客户端）
-│       │   └── global.go             # ServerConfig / Trans / MinioCli
-│       ├── initialize/               # 初始化（配置加载、路由、日志、MinIO 客户端）
+│       │   └── config.go             # ServerConfig / ConsulConfig / NacosConfig 等结构体
+│       ├── forms/                    # 请求表单验证
+│       │   └── address.go            # 地址表单验证
+│       ├── global/                   # 全局变量（配置、翻译器、gRPC 客户端）
+│       │   └── global.go             # ServerConfig / Trans / UseropSrvClient
+│       ├── initialize/               # 初始化（配置加载、路由、日志、Consul 服务发现）
 │       │   ├── config.go             # Viper + Nacos 配置加载
 │       │   ├── logger.go             # Zap 日志初始化
-│       │   ├── minio_oss.go          # MinIO 客户端初始化（自动创建桶）
 │       │   ├── router.go             # Gin 路由注册（含 /health 健康检查）
-│       │   └── validator.go          # 表单验证器中文翻译
-│       ├── middlewares/              # 中间件（JWT、CORS、权限）
-│       │   ├── admin.go              # 管理员权限中间件
+│       │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡）
+│       │   └── validator_trans.go    # 表单验证器中文翻译
+│       ├── middlewares/              # 中间件（JWT、CORS）
 │       │   ├── cors.go               # CORS 跨域中间件
 │       │   └── jwt.go                # JWT 认证中间件
 │       ├── models/                   # 请求模型定义
 │       │   └── request.go            # 请求模型
+│       ├── proto/                    # Protobuf 定义及生成代码
+│       │   ├── address.proto         # 地址服务 Protobuf 定义（与 userop_srv 共享）
+│       │   ├── address.pb.go         # 生成的 Go 消息类
+│       │   ├── address_grpc.pb.go    # 生成的 Go gRPC 服务类
+│       │   ├── message.proto         # 留言服务 Protobuf 定义
+│       │   ├── message.pb.go         # 生成的 Go 消息类
+│       │   ├── message_grpc.pb.go    # 生成的 Go gRPC 服务类
+│       │   ├── userfav.proto         # 用户收藏服务 Protobuf 定义
+│       │   ├── userfav.pb.go         # 生成的 Go 消息类
+│       │   └── userfav_grpc.pb.go    # 生成的 Go gRPC 服务类
 │       ├── router/                   # 路由分组
-│       │   └── minio_oss.go          # 文件存储路由（token / cleanup）
-│       ├── static/                   # 静态资源
-│       │   ├── css/
-│       │   │   └── style.css         # 上传页面样式
-│       │   ├── js/
-│       │   │   └── upload.js         # MinIO 文件直传前端逻辑（原生 HTML5 + PUT）
-│       │   └── lib/                  # 第三方库（plupload，已弃用）
-│       ├── templates/                # HTML 模板
-│       │   └── index.html            # MinIO 文件直传测试页面（拖拽/点击上传）
+│       │   ├── address.go            # 地址路由（列表/创建/删除/更新）
+│       │   ├── message.go            # 留言路由（列表/创建）
+│       │   └── user_fav.go           # 用户收藏路由（列表/详情/添加/删除）
 │       ├── utils/                    # 工具函数
-│       │   ├── addr.go               # 动态可用端口获取
+│       │   ├── addr_port.go          # 动态可用端口获取
 │       │   └── register/
 │       │       └── consul/
 │       │           └── register.go   # Consul 服务注册（接口 + 实现）
+│       ├── validator/                # 自定义验证器
 │       ├── config-debug.yaml         # Nacos 连接调试配置（含敏感信息，不提交）
 │       ├── config-pro.yaml           # Nacos 连接生产配置
 │       └── main.go                   # 服务入口（初始化 + Consul 注册 + 启动）
@@ -236,6 +347,7 @@ Python + gRPC 实现的微服务层，每个服务独立目录，共享 `common/
 | `goods_srv/`       | 商品微服务，提供商品/分类/品牌/轮播图/品牌分类等 gRPC 接口         |
 | `order_srv/`       | 订单微服务，提供购物车 CRUD、订单创建/查询/详情等 gRPC 接口        |
 | `inventory_srv/`   | 库存微服务，提供库存设置/查询/扣减/归还，使用 Redis 分布式锁防超卖 |
+| `userop_srv/`      | 用户操作微服务，提供留言、用户收藏、收货地址 CRUD 等 gRPC 接口     |
 
 每个微服务目录结构统一：
 
@@ -254,11 +366,13 @@ xxx_srv/
 
 Go + Gin 实现的 HTTP 接口层，通过 gRPC 调用微服务层。
 
-| 目录         | 说明                                                       |
-| ------------ | ---------------------------------------------------------- |
-| `user_web/`  | 用户 Web 服务（登录/注册/验证码）                          |
-| `goods_web/` | 商品 Web 服务（商品列表/分类/品牌等）                      |
-| `oss-web/`   | 文件存储服务（MinIO 预签名直传、孤儿文件清理、前端测试页） |
+| 目录          | 说明                                                       |
+| ------------- | ---------------------------------------------------------- |
+| `user_web/`   | 用户 Web 服务（登录/注册/验证码）                          |
+| `goods_web/`  | 商品 Web 服务（商品列表/分类/品牌等）                      |
+| `order_web/`  | 订单 Web 服务（订单/购物车管理）                           |
+| `userop_web/` | 用户操作 Web 服务（留言/收藏/地址管理）                    |
+| `oss_web/`    | 文件存储服务（MinIO 预签名直传、孤儿文件清理、前端测试页） |
 
 每个 Web 服务目录结构统一：
 

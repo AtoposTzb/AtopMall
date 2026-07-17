@@ -14,15 +14,18 @@
 
 业务配置（MySQL、Redis、Consul、JWT、邮箱等）统一存放在 Nacos 配置中心：
 
-| 服务          | Data ID            | Group | 说明                                    |
-| ------------- | ------------------ | ----- | --------------------------------------- |
-| user_srv      | user-srv.json      | dev   | 用户微服务业务配置                      |
-| user_web      | user-web.json      | dev   | 用户 Web 服务业务配置                   |
-| goods_srv     | goods-srv.json     | dev   | 商品微服务业务配置                      |
-| goods_web     | goods-web.json     | dev   | 商品 Web 服务业务配置                   |
-| oss-web       | oss-web.json       | dev   | 文件存储服务业务配置（MinIO、Consul）   |
+| 服务          | Data ID            | Group | 说明                                              |
+| ------------- | ------------------ | ----- | ------------------------------------------------- |
+| user_srv      | user-srv.json      | dev   | 用户微服务业务配置                                |
+| user_web      | user-web.json      | dev   | 用户 Web 服务业务配置                             |
+| goods_srv     | goods-srv.json     | dev   | 商品微服务业务配置                                |
+| goods_web     | goods-web.json     | dev   | 商品 Web 服务业务配置                             |
 | order_srv     | order-srv.json     | dev   | 订单微服务业务配置（MySQL、Consul、商品/库存服务名） |
-| inventory_srv | inventory-srv.json | dev   | 库存微服务业务配置（MySQL、Redis、Consul） |
+| order_web     | order-web.json     | dev   | 订单 Web 服务业务配置                             |
+| inventory_srv | inventory-srv.json | dev   | 库存微服务业务配置（MySQL、Redis、Consul）        |
+| userop_srv    | userop-srv.json    | dev   | 用户操作微服务业务配置                            |
+| userop_web    | userop-web.json    | dev   | 用户操作 Web 服务业务配置                         |
+| oss_web       | oss-web.json       | dev   | 文件存储服务业务配置（MinIO、Consul）             |
 
 ## 配置加载流程
 
