@@ -14,7 +14,8 @@ import (
 	"atopmall_web/goods_web/proto"
 )
 
-func List(ctx *gin.Context) {
+func GetBannerList(ctx *gin.Context) {
+	// 获取轮播图列表
 	rsp, err := global.GoodsSrvCli.Banner.BannerList(context.Background(), &empty.Empty{})
 	if err != nil {
 		api.HandleGrpcErrorToHttpError(err, ctx)
@@ -35,7 +36,8 @@ func List(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
-func New(ctx *gin.Context) {
+func NewBanner(ctx *gin.Context) {
+	// 新建轮播图
 	bannerForm := forms.BannerForm{}
 	if err := ctx.ShouldBindJSON(&bannerForm); err != nil {
 		api.HandleValidatorError(ctx, err)
@@ -61,7 +63,8 @@ func New(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
-func Update(ctx *gin.Context) {
+func UpdateBanner(ctx *gin.Context) {
+	// 修改轮播图信息
 	bannerForm := forms.BannerForm{}
 	if err := ctx.ShouldBindJSON(&bannerForm); err != nil {
 		api.HandleValidatorError(ctx, err)
@@ -88,7 +91,8 @@ func Update(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
-func Delete(ctx *gin.Context) {
+func DeleteBanner(ctx *gin.Context) {
+	// 删除轮播图
 	id := ctx.Param("id")
 	i, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
