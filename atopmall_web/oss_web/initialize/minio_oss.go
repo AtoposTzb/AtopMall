@@ -7,7 +7,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
-	"atopmall_web/oss-web/global"
+	"atopmall_web/oss_web/global"
 )
 
 // 直接读取全局 ServerConfig 里的 MinIOInfo

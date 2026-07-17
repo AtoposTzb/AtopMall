@@ -3,7 +3,7 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 
-	"atopmall_web/oss-web/handler"
+	"atopmall_web/oss_web/handler"
 )
 
 func OssRouterInit(Router *gin.RouterGroup) {

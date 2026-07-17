@@ -9,10 +9,10 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/inner/uuid"
 	"go.uber.org/zap"
 
-	"atopmall_web/oss-web/global"
-	"atopmall_web/oss-web/initialize"
-	"atopmall_web/oss-web/utils"
-	"atopmall_web/oss-web/utils/register/consul"
+	"atopmall_web/oss_web/global"
+	"atopmall_web/oss_web/initialize"
+	"atopmall_web/oss_web/utils"
+	"atopmall_web/oss_web/utils/register/consul"
 )
 
 func main() {

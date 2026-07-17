@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"atopmall_web/oss-web/middlewares"
-	"atopmall_web/oss-web/router"
+	"atopmall_web/oss_web/middlewares"
+	"atopmall_web/oss_web/router"
 )
 
 func RoutersInit() *gin.Engine {

@@ -13,7 +13,7 @@ import (
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 	zh_translations "github.com/go-playground/validator/v10/translations/zh"
 
-	"atopmall_web/oss-web/global"
+	"atopmall_web/oss_web/global"
 )
 
 func TransInit(locale string) (err error) {

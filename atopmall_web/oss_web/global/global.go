@@ -4,7 +4,7 @@ import (
 	ut "github.com/go-playground/universal-translator"
 	"github.com/minio/minio-go/v7"
 
-	"atopmall_web/oss-web/config"
+	"atopmall_web/oss_web/config"
 )
 
 var (

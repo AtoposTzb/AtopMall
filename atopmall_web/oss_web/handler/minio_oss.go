@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 
-	"atopmall_web/oss-web/global"
+	"atopmall_web/oss_web/global"
 )
 
 // 统一返回结构体，对齐原阿里云接口返回格式

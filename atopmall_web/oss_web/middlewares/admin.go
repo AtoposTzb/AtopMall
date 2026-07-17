@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"atopmall_web/oss-web/models"
+	"atopmall_web/oss_web/models"
 )
 
 func IsAdminAuth() gin.HandlerFunc {

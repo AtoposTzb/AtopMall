@@ -15,7 +15,7 @@ function send_request() {
   }
 
   if (xmlhttp != null) {
-    // 修改为你自己的 oss-web 服务地址
+    // 修改为你自己的 oss_web 服务地址
     serverUrl = "http://192.168.1.6:8083/oss/v1/oss/token";
 
     xmlhttp.open("GET", serverUrl, false);

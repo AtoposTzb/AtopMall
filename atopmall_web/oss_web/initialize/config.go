@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"atopmall_web/oss-web/global"
+	"atopmall_web/oss_web/global"
 )
 
 // 将线上和线下的配置文件隔离
