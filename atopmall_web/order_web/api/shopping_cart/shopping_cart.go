@@ -55,6 +55,7 @@ func ShoppingCartList(ctx *gin.Context) {
 				tmpMap["goods_id"] = item.GoodsId
 				tmpMap["goods_name"] = goods.Name
 				tmpMap["goods_price"] = goods.ShopPrice
+				tmpMap["goods_image"] = goods.GoodsFrontImage
 				tmpMap["nums"] = item.Nums
 				tmpMap["checked"] = item.Checked
 

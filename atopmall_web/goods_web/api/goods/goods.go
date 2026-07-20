@@ -185,12 +185,24 @@ func DeleteGoods(ctx *gin.Context) {
 
 func Stocks(ctx *gin.Context) {
 	id := ctx.Param("id")
-	_, err := strconv.ParseInt(id, 10, 32)
+	idInt, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
 
+	resp, err := global.InventorySrvCli.InvDetail(context.Background(), &proto.GoodsInvInfo{
+		GoodsId: int32(idInt),
+	})
+	if err != nil {
+		api.HandleGrpcErrorToHttpError(err, ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"goodsId": resp.GoodsId,
+		"num":     resp.Num,
+	})
 }
 
 // 更新部分状态 GoodsStatusForm字段

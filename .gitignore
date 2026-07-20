@@ -30,3 +30,9 @@ docs/design/diagrams/
 
 #忽略nacos缓存文件
 nacos-data/
+
+#忽略前端node_modules文件夹
+node_modules/
+
+#忽略前端代码
+atopmall_frontend/

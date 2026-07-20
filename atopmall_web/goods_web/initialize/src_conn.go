@@ -34,4 +34,16 @@ func GoodsSrcClientInitBL() {
 		CategoryBrand: proto.NewCategoryBrandClient(conn),
 	}
 	zap.S().Infow("[GoodsSrcClientInitBL] 连接【商品服务】成功", "host", consulInfo.Host, "port", consulInfo.Port)
+
+	invConn, err := grpc.NewClient(
+		fmt.Sprintf("consul://%s:%d/%s?wait=14s", consulInfo.Host, consulInfo.Port, global.ServerConfig.InventorySrvInfo.Name),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`),
+	)
+	if err != nil {
+		zap.S().Errorw("[GoodsSrcClientInitBL] 连接【库存服务】失败")
+		return
+	}
+	global.InventorySrvCli = proto.NewInventoryClient(invConn)
+	zap.S().Infow("[GoodsSrcClientInitBL] 连接【库存服务】成功", "host", consulInfo.Host, "port", consulInfo.Port)
 }

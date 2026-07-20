@@ -17,11 +17,12 @@ type GoodsRpcClient struct {
 }
 
 var (
-	ServerConfig *config.ServerConfig = &config.ServerConfig{}
-	Trans        ut.Translator
-	Env          string              = "ATOPMALL_DEBUG"
-	NacosConfig  *config.NacosConfig = &config.NacosConfig{}
-	GoodsSrvCli  *GoodsRpcClient     = &GoodsRpcClient{}
+	ServerConfig    *config.ServerConfig = &config.ServerConfig{}
+	Trans           ut.Translator
+	Env             string              = "ATOPMALL_DEBUG"
+	NacosConfig     *config.NacosConfig = &config.NacosConfig{}
+	GoodsSrvCli     *GoodsRpcClient     = &GoodsRpcClient{}
+	InventorySrvCli proto.InventoryClient
 )
 
 /*
