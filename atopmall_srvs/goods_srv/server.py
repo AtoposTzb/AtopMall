@@ -49,7 +49,7 @@ def server():
     parser.add_argument('--ip',
                         nargs='?',
                         type=str,
-                        default="192.168.1.6",
+                        default="192.168.1.106",
                         help="服务端IP地址"
                         )
     parser.add_argument('--port',

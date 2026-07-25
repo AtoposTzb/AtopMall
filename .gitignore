@@ -36,3 +36,6 @@ node_modules/
 
 #忽略前端代码
 atopmall_frontend/
+
+#忽略python虚拟环境文件夹
+.venv/
