@@ -56,6 +56,14 @@ class Inventory(BaseModel):
     stocks = IntegerField(verbose_name="库存数量",default=0)
     version = IntegerField(verbose_name="版本号",default=0) #分布式锁的乐观锁
 
+
+
+class InventoryOutHistory(BaseModel):
+    #出库历史表
+    order_sn = CharField(verbose_name="订单编号",max_length=32,unique=True)
+    order_inv_detail = CharField(verbose_name="订单详情",max_length=256)
+    status = IntegerField(choices=((1,"已扣减"),(2,"已归还")),verbose_name="状态",default=1) #默认
+
 #根据服务还可以多设计一张表来处理库存的扣减和归还操作
 # class InventoryLog(BaseModel):
 #     #库存日志表
@@ -67,7 +75,7 @@ class Inventory(BaseModel):
 #     is_deleted = BooleanField(default=False,verbose_name="是否删除")
 
 if __name__ == "__main__":
-    DB.create_tables([Inventory])
+    DB.create_tables([Inventory,InventoryOutHistory])
     # for i in range(421,841):
     #     inv = Inventory(goods=i,stocks = 100)
     #     inv.save()

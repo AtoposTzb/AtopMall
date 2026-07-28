@@ -15,7 +15,7 @@ BASE_DIR =  os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0,BASE_DIR)
 
 from order_srv.proto import order_pb2_grpc
-from order_srv.handler.order import OrderServicer
+from order_srv.handler.order import OrderServicer,order_timeout
 from order_srv.handler.shopping_cart import ShoppingCartServicer
 from grpc_health.v1 import health  #使用官方提供的健康检查服务，下载然后直接导入库即可使用
 from grpc_health.v1 import health_pb2
@@ -23,6 +23,7 @@ from grpc_health.v1 import health_pb2_grpc
 from common.register import consul
 from settings import settings
 from functools import partial #偏函数,用于固定参数,返回一个新的函数,新的函数可以少传参数
+from rocketmq.client import PushConsumer
 
 #，注销服务到consul
 def on_exit(sig,frame,service_id):
@@ -92,8 +93,15 @@ def server():
         sys.exit(1) #退出进程,状态码为1,表示失败
     else:
         logger.info("注册服务成功")
-    
+
+    #4.监听延时消息(超时订单消息)
+    consumer = PushConsumer("atopmall_order")
+    consumer.set_name_server_address(f"{settings.ROCKETMQ_HOST}:{settings.ROCKETMQ_PORT}")
+    consumer.subscribe("order_timeout",order_timeout)
+    consumer.start()
+
     server.wait_for_termination() #线程阻塞,等待服务端终止
+    consumer.shutdown()
 
 if __name__ == "__main__":
     #日志信息

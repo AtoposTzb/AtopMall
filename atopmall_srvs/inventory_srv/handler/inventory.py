@@ -1,15 +1,44 @@
 import grpc
 import os
 import sys
+import json
 from loguru import logger
 from peewee import DoesNotExist
 BASE_DIR =  os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0,BASE_DIR)
 from google.protobuf import empty_pb2
-from model.models import Inventory
+from model.models import Inventory,InventoryOutHistory
 from proto import inventory_pb2,inventory_pb2_grpc
 from settings.settings import DB,REDIS_CLIENT
 from redis_lock import Lock
+from rocketmq.client import ConsumeStatus
+
+def reback_inv(msg):
+    #通过msg的body中的oreder_sn来确定库存的归还
+    msg_body_str = msg.body.decode("utf-8")
+    print(f"收到消息:{msg_body_str}")
+    msg_body = json.loads(msg_body_str) #json字符串转换为python字典
+    order_sn = msg_body["orderSn"]
+
+    #为了防止没有扣减库存反而归还库存的情况，这里我们要先查询有没有库存扣减记录
+    #使用事务来完成，查询库存扣减历史记录，并逐渐归还商品库存
+    with DB.atomic() as txn:
+        try:
+            order_inv = InventoryOutHistory.get(InventoryOutHistory.order_sn == order_sn,InventoryOutHistory.status==1)
+            inv_details = json.loads(order_inv.order_inv_detail)
+            for item in inv_details:
+                goods_id = item["goods_id"]
+                num = item["num"]
+                Inventory.update(stocks=Inventory.stocks+num).where(Inventory.goods == goods_id).execute() #归还库存
+            order_inv.status = 2 #2 表示已归还
+            order_inv.save()
+            return ConsumeStatus.CONSUME_SUCCESS #消费成功
+        except DoesNotExist as e:
+            logger.error(f"订单{order_sn}不存在库存扣减记录")
+            return ConsumeStatus.CONSUME_SUCCESS #消费成功
+        except Exception as e:
+            txn.rollback() #回滚事务
+            return ConsumeStatus.RECONSUME_LATER #重试消费
 
 # 库存服务
 class InventoryServicer(inventory_pb2_grpc.InventoryServicer):
@@ -42,6 +71,9 @@ class InventoryServicer(inventory_pb2_grpc.InventoryServicer):
     @logger.catch
     def SellInv(self, request:inventory_pb2.SellInfo, context):
         #扣减库存 超卖问题 事务处理:执行多个sql是原子性的
+        inv_history = InventoryOutHistory(order_sn=request.orderSn)
+        inv_details = [] #记录扣减的库存详情
+
         for item in request.goodsInfo:
             # 分布式锁,防止超卖等问题
             lock = Lock(REDIS_CLIENT,f"lock:goods_{item.goodsId}",auto_renewal=True,expire=15) #auto_renewal=True 自动续期
@@ -63,6 +95,10 @@ class InventoryServicer(inventory_pb2_grpc.InventoryServicer):
                             return empty_pb2.Empty()
                         else:
                             #超卖问题 可能引起数据不一致-分布式锁解决 详解tests文件夹文件
+                            inv_details.append({
+                                "goods_id":item.goodsId,
+                                "num":item.num,
+                            })
                             inv.stocks -= item.num
                             inv.save()
                 finally: #无论try里正常结束、还是抛异常、还是break，都会执行release释放锁
@@ -72,6 +108,8 @@ class InventoryServicer(inventory_pb2_grpc.InventoryServicer):
                 context.set_code(grpc.StatusCode.ABORTED)
                 context.set_details("系统繁忙，请稍后重试")
                 return empty_pb2.Empty()
+            inv_history.order_inv_detail = json.dumps(inv_details)
+            inv_history.save()
             return empty_pb2.Empty()
         
     @logger.catch

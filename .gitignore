@@ -24,6 +24,8 @@ tmp/
 
 # 详细文档(暂不公开)
 docs/design/diagrams/
+docs/notes/
+
 
 #忽略配置文件有邮箱授权码等重要信息，上传git的是配置文件模板
 # config-debug.yaml配置已经移至nacos配置中心，不在忽略config-debug.yaml文件

@@ -39,6 +39,10 @@ def update_config(args):
 CONSUL_HOST = data["consul"]["host"]
 CONSUL_PORT = data["consul"]["port"]
 
+#rocketmq配置
+ROCKETMQ_HOST = data["rocketmq"]["host"]
+ROCKETMQ_PORT = data["rocketmq"]["port"]
+
 #服务配置
 SERVICE_NAME = data["name"]
 SERVICE_ID = data["name"]
