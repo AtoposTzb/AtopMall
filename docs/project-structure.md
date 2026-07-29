@@ -49,7 +49,7 @@ AtopMall/
 │   │
 │   ├── order_srv/                    # 订单服务
 │   │   ├── handler/                  # gRPC 服务实现
-│   │   │   ├── order.py              # 订单服务（创建/列表/详情/更新状态）
+│   │   │   ├── order.py              # 订单服务（创建/列表/详情/更新状态）+ RocketMQ 事务消息 + 超时取消
 │   │   │   └── shopping_cart.py      # 购物车服务（列表/创建/更新/删除）
 │   │   ├── model/                    # Peewee ORM 数据模型
 │   │   │   └── models.py             # ShoppingCart/OrderInfo/OrderGoods 模型
@@ -64,29 +64,29 @@ AtopMall/
 │   │   │   ├── inventory_pb2.py      # 库存消息类
 │   │   │   └── inventory_pb2_grpc.py # 库存 gRPC 服务类
 │   │   ├── settings/                 # 配置管理
-│   │   │   └── settings.py           # Nacos 配置加载 + 配置变更监听
+│   │   │   └── settings.py           # Nacos 配置加载 + RocketMQ 配置 + 配置变更监听
 │   │   ├── tests/                    # gRPC 客户端测试
 │   │   │   └── order_client.py       # 订单服务 gRPC 测试
 │   │   ├── requirements.txt          # Python 依赖
-│   │   └── server.py                 # gRPC 服务入口（含 Consul 注册 + 优雅退出）
+│   │   └── server.py                 # gRPC 服务入口 + RocketMQ 消费者（order_timeout）+ Consul 注册 + 优雅退出
 │   │
 │   ├── inventory_srv/                # 库存服务
 │   │   ├── handler/                  # gRPC 服务实现
-│   │   │   └── inventory.py          # 库存服务（设置/查询/扣减/归还）
+│   │   │   └── inventory.py          # 库存服务（设置/查询/扣减/归还）+ RocketMQ 异步归还消费者
 │   │   ├── model/                    # Peewee ORM 数据模型
-│   │   │   └── models.py             # Inventory 模型（含乐观锁 version 字段）
+│   │   │   └── models.py             # Inventory（含乐观锁 version 字段）/InventoryOutHistory（扣减历史）
 │   │   ├── proto/                    # Protobuf 定义及生成代码
 │   │   │   ├── inventory.proto       # 库存服务 Protobuf 定义
 │   │   │   ├── inventory_pb2.py      # 生成的消息类
 │   │   │   └── inventory_pb2_grpc.py # 生成的 gRPC 服务类
 │   │   ├── settings/                 # 配置管理
-│   │   │   └── settings.py           # Nacos 配置加载 + Redis 连接
+│   │   │   └── settings.py           # Nacos 配置加载 + Redis + RocketMQ 配置
 │   │   ├── tests/                    # 锁机制测试
 │   │   │   ├── inventory.py          # 库存服务 gRPC 测试
 │   │   │   ├── lock_test.py          # 分布式锁并发测试
 │   │   │   └── redis_loc_test.py     # Redis 锁实现测试
 │   │   ├── requirements.txt          # Python 依赖
-│   │   └── server.py                 # gRPC 服务入口（含 Consul 注册 + 优雅退出）
+│   │   └── server.py                 # gRPC 服务入口 + RocketMQ 消费者（order_reback）+ Consul 注册 + 优雅退出
 │   │
 │   └── userop_srv/                   # 用户操作服务
 │       ├── handler/                  # gRPC 服务实现
@@ -234,20 +234,22 @@ AtopMall/
 │   ├── order_web/                    # 订单 Web 服务
 │   │   ├── api/                      # HTTP 接口实现
 │   │   │   ├── order/
-│   │   │   │   └── order.go          # 订单接口（列表/创建/详情）
+│   │   │   │   └── order.go          # 订单接口（列表/创建/详情—含支付宝支付链接生成）
+│   │   │   ├── pay/
+│   │   │   │   └── alipay.go         # 支付宝支付（页面支付 URL 生成/异步回调/同步回调）
 │   │   │   └── shopping_cart/
 │   │   │       └── shopping_cart.go  # 购物车接口（列表/添加/删除/更新）
 │   │   ├── config/                   # 配置结构体定义
-│   │   │   └── config.go             # ServerConfig / ConsulConfig / NacosConfig 等结构体
+│   │   │   └── config.go             # ServerConfig / AlipayConfig / ConsulConfig / NacosConfig 等结构体
 │   │   ├── forms/                    # 请求表单验证
 │   │   │   └── order.go              # 订单表单验证
 │   │   ├── global/                   # 全局变量（配置、翻译器、gRPC 客户端）
-│   │   │   └── global.go             # ServerConfig / Trans / OrderSrvClient / InventorySrvClient
+│   │   │   └── global.go             # ServerConfig / Trans / OrderSrvClient / GoodsSrvClient / InventorySrvClient
 │   │   ├── initialize/               # 初始化（配置加载、路由、日志、Consul 服务发现）
 │   │   │   ├── config.go             # Viper + Nacos 配置加载
 │   │   │   ├── logger.go             # Zap 日志初始化
 │   │   │   ├── router.go             # Gin 路由注册（含 /health 健康检查）
-│   │   │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡）
+│   │   │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡、连接订单/商品/库存服务）
 │   │   │   └── validator_trans.go    # 表单验证器中文翻译
 │   │   ├── middlewares/              # 中间件（JWT、CORS）
 │   │   │   ├── cors.go               # CORS 跨域中间件
@@ -257,9 +259,16 @@ AtopMall/
 │   │   ├── proto/                    # Protobuf 定义及生成代码
 │   │   │   ├── order.proto           # 订单服务 Protobuf 定义（与 order_srv 共享）
 │   │   │   ├── order.pb.go           # 生成的 Go 消息类
-│   │   │   └── order_grpc.pb.go      # 生成的 Go gRPC 服务类
+│   │   │   ├── order_grpc.pb.go      # 生成的 Go gRPC 服务类
+│   │   │   ├── goods.proto           # 商品服务 proto
+│   │   │   ├── goods.pb.go           # 商品消息类
+│   │   │   ├── goods_grpc.pb.go      # 商品 gRPC 服务类
+│   │   │   ├── inventory.proto       # 库存服务 proto
+│   │   │   ├── inventory.pb.go       # 库存消息类
+│   │   │   └── inventory_grpc.pb.go  # 库存 gRPC 服务类
 │   │   ├── router/                   # 路由分组
 │   │   │   ├── order.go              # 订单路由（列表/创建/详情）
+│   │   │   ├── pay.go                # 支付宝支付路由（notify/return）
 │   │   │   └── shopping_cart.go      # 购物车路由（列表/添加/删除/更新）
 │   │   ├── utils/                    # 工具函数
 │   │   │   ├── addr_port.go          # 动态可用端口获取
@@ -267,6 +276,7 @@ AtopMall/
 │   │   │       └── consul/
 │   │   │           └── register.go   # Consul 服务注册（接口 + 实现）
 │   │   ├── validator/                # 自定义验证器
+│   │   ├── config-debug_templ.yaml   # 调试配置模板（可提交）
 │   │   ├── config-debug.yaml         # Nacos 连接调试配置（含敏感信息，不提交）
 │   │   ├── config-pro.yaml           # Nacos 连接生产配置
 │   │   └── main.go                   # 服务入口（初始化 + Consul 注册 + 启动）
@@ -327,11 +337,15 @@ AtopMall/
 │   ├── configuration.md              # 配置说明
 │   ├── design/                       # 设计文档
 │   │   └── diagrams/                 # 设计图（drawio）
-│   ── image/                        # 文档配图
+│   └── image/                        # 文档配图
 │
 ├── .gitignore                        # Git 忽略配置
 ├── README.md                         # 项目主文档
-└── go.work                           # Go 工作区配置
+├── go.work                           # Go 工作区配置
+├── start-all.sh                      # 一键启动所有微服务（Linux）
+├── stop-all.sh                       # 一键停止所有微服务（Linux）
+├── start-all.ps1                     # 一键启动所有微服务（Windows PowerShell）
+└── stop-all.ps1                      # 一键停止所有微服务（Windows PowerShell）
 ```
 
 ## 二、目录说明
@@ -340,14 +354,14 @@ AtopMall/
 
 Python + gRPC 实现的微服务层，每个服务独立目录，共享 `common/` 公共模块。
 
-| 目录               | 说明                                                               |
-| ------------------ | ------------------------------------------------------------------ |
-| `common/register/` | Consul 服务注册公共模块，提供抽象基类和 Consul 实现                |
-| `user_srv/`        | 用户微服务，提供用户 CRUD、密码校验等 gRPC 接口                    |
-| `goods_srv/`       | 商品微服务，提供商品/分类/品牌/轮播图/品牌分类等 gRPC 接口         |
-| `order_srv/`       | 订单微服务，提供购物车 CRUD、订单创建/查询/详情等 gRPC 接口        |
-| `inventory_srv/`   | 库存微服务，提供库存设置/查询/扣减/归还，使用 Redis 分布式锁防超卖 |
-| `userop_srv/`      | 用户操作微服务，提供留言、用户收藏、收货地址 CRUD 等 gRPC 接口     |
+| 目录               | 说明                                                                            |
+| ------------------ | ------------------------------------------------------------------------------- |
+| `common/register/` | Consul 服务注册公共模块，提供抽象基类和 Consul 实现                             |
+| `user_srv/`        | 用户微服务，提供用户 CRUD、密码校验等 gRPC 接口                                 |
+| `goods_srv/`       | 商品微服务，提供商品/分类/品牌/轮播图/品牌分类等 gRPC 接口                      |
+| `order_srv/`       | 订单微服务，提供购物车 CRUD、订单创建/查询/详情，RocketMQ 事务消息+超时自动取消 |
+| `inventory_srv/`   | 库存微服务，提供库存设置/查询/扣减/归还，Redis 分布式锁 + RocketMQ 异步归还     |
+| `userop_srv/`      | 用户操作微服务，提供留言、用户收藏、收货地址 CRUD 等 gRPC 接口                  |
 
 每个微服务目录结构统一：
 
@@ -370,7 +384,7 @@ Go + Gin 实现的 HTTP 接口层，通过 gRPC 调用微服务层。
 | ------------- | ---------------------------------------------------------- |
 | `user_web/`   | 用户 Web 服务（登录/注册/验证码）                          |
 | `goods_web/`  | 商品 Web 服务（商品列表/分类/品牌等）                      |
-| `order_web/`  | 订单 Web 服务（订单/购物车管理）                           |
+| `order_web/`  | 订单 Web 服务（订单/购物车管理 + 支付宝支付）              |
 | `userop_web/` | 用户操作 Web 服务（留言/收藏/地址管理）                    |
 | `oss_web/`    | 文件存储服务（MinIO 预签名直传、孤儿文件清理、前端测试页） |
 
@@ -411,9 +425,9 @@ xxx_web/
 | 文件                   | 说明                                                                  |
 | ---------------------- | --------------------------------------------------------------------- |
 | `server.py`            | 服务入口，包含 gRPC 服务器启动、Consul 注册、优雅退出、Nacos 配置监听 |
-| `settings/settings.py` | Nacos 配置加载，解析 MySQL、Consul 等服务配置                         |
+| `settings/settings.py` | Nacos 配置加载，解析 MySQL、Consul、RocketMQ 等服务配置               |
 | `model/models.py`      | Peewee ORM 模型定义，BaseModel 提供逻辑删除、连接池、断线重连         |
-| `handler/*.py`         | gRPC 服务实现，包含业务逻辑和错误处理                                 |
+| `handler/*.py`         | gRPC 服务实现，包含业务逻辑和 RocketMQ 事务消息/消费者处理            |
 
 ### Web API 层关键文件
 
@@ -436,3 +450,35 @@ xxx_web/
 | `static/js/upload.js`     | 前端上传逻辑（原生 HTML5 + XMLHttpRequest，替代 plupload） |
 | `templates/index.html`    | 文件上传测试页面（支持拖拽上传、点击上传、进度条显示）     |
 | `global/global.go`        | 全局变量定义，包含 MinioCli 客户端实例                     |
+
+### 订单服务关键文件（RocketMQ 相关）
+
+| 文件               | 说明                                                                      |
+| ------------------ | ------------------------------------------------------------------------- |
+| `handler/order.py` | `local_execute` 本地事务 + `check_callback` 回查 + `order_timeout` 消费者 |
+| `server.py`        | 启动 RocketMQ 事务消息生产者 + 延时消息消费者                             |
+
+### 库存服务关键文件（RocketMQ 相关）
+
+| 文件                   | 说明                                                     |
+| ---------------------- | -------------------------------------------------------- |
+| `handler/inventory.py` | `reback_inv` 消费者，订阅 `order_reback` topic，归还库存 |
+| `model/models.py`      | `InventoryOutHistory` 扣减历史模型，用于归还时校验       |
+| `server.py`            | 启动 RocketMQ 消费者（`order_reback`）                   |
+
+### 支付服务关键文件（支付宝相关）
+
+| 文件                | 说明                                                           |
+| ------------------- | -------------------------------------------------------------- |
+| `api/pay/alipay.go` | 支付宝页面支付 URL 生成、异步回调验签、同步回调跳转            |
+| `router/pay.go`     | 支付路由 `/o/v1/pay/alipay/notify` + `/o/v1/pay/alipay/return` |
+| `config/config.go`  | `AlipayConfig` 配置结构体定义                                  |
+
+### 启停脚本
+
+| 文件            | 说明                                       |
+| --------------- | ------------------------------------------ |
+| `start-all.sh`  | tmux 会话管理，一键启动所有微服务（Linux） |
+| `stop-all.sh`   | 销毁 tmux 会话 + 兜底清理残留进程（Linux） |
+| `start-all.ps1` | PowerShell 多窗口启动所有微服务（Windows） |
+| `stop-all.ps1`  | 关闭所有微服务窗口及其子进程（Windows）    |

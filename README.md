@@ -1,6 +1,6 @@
 # AtopMall 电商微服务项目
 
-基于 Go + Python 双语言混合开发的电商微服务项目。微服务层使用 Python + gRPC 实现业务逻辑，Web API 层使用 Go + Gin 对外提供 HTTP 接口，通过 gRPC 进行服务间通信，使用 Consul 实现服务注册与发现，使用 Nacos 作为配置中心统一管理配置。
+基于 Go + Python 双语言混合开发的电商微服务项目。微服务层使用 Python + gRPC 实现业务逻辑，Web API 层使用 Go + Gin 对外提供 HTTP 接口，通过 gRPC 进行服务间通信，使用 Consul 实现服务注册与发现，使用 Nacos 作为配置中心，使用 RocketMQ 实现分布式事务与异步解耦。
 
 ## 一、项目结构
 
@@ -38,6 +38,8 @@
 | 缓存         | Redis                     | 验证码存储、会话管理、分布式锁             |
 | 分布式锁     | Redis + python-redis-lock | 防止超卖等并发问题                         |
 | 乐观锁       | MySQL version 字段        | 库存扣减并发控制                           |
+| 消息队列     | RocketMQ                  | 事务消息、延时消息、库存归还异步解耦       |
+| 支付         | 支付宝 v3                 | 网页支付、支付回调、订单状态同步           |
 | JWT 认证     | golang-jwt/v5             | Token 生成与验证                           |
 | 图片验证码   | base64Captcha             | 登录防暴力破解                             |
 | 邮件服务     | jordan-wright/email       | SMTP 邮箱验证码发送                        |
@@ -46,18 +48,18 @@
 
 ## 三、已完成功能
 
-| 服务              | 语言        | 核心能力                                              |
-| ----------------- | ----------- | ----------------------------------------------------- |
-| 用户微服务        | Python gRPC | 用户 CRUD、密码校验、Nacos 配置管理                   |
-| 商品微服务        | Python gRPC | 商品/分类/品牌/轮播图/品牌分类管理（23 个 gRPC 接口） |
-| 订单微服务        | Python gRPC | 购物车 CRUD、订单创建/查询、跨服务调用（商品+库存）   |
-| 库存微服务        | Python gRPC | 库存设置/查询/扣减/归还、Redis 分布式锁防超卖         |
-| 用户操作微服务    | Python gRPC | 留言管理、用户收藏、收货地址 CRUD                     |
-| 用户 Web 服务     | Go Gin      | 图片验证码、邮箱验证码、登录注册、JWT 认证            |
-| 商品 Web 服务     | Go Gin      | 商品列表查询（多条件过滤）、gRPC 负载均衡连接         |
-| 订单 Web 服务     | Go Gin      | 订单创建/查询、购物车管理、JWT 认证                   |
-| 用户操作 Web 服务 | Go Gin      | 留言、收藏、地址管理、JWT 认证                        |
-| 文件存储服务      | Go Gin      | MinIO 预签名直传、拖拽上传、孤儿文件清理              |
+| 服务              | 语言        | 核心能力                                                    |
+| ----------------- | ----------- | ----------------------------------------------------------- |
+| 用户微服务        | Python gRPC | 用户 CRUD、密码校验、Nacos 配置管理                         |
+| 商品微服务        | Python gRPC | 商品/分类/品牌/轮播图/品牌分类管理（23 个 gRPC 接口）       |
+| 订单微服务        | Python gRPC | 购物车 CRUD、订单创建/查询、RocketMQ 事务消息、超时自动取消 |
+| 库存微服务        | Python gRPC | 库存设置/查询/扣减/归还、Redis 分布式锁、RocketMQ 异步归还  |
+| 用户操作微服务    | Python gRPC | 留言管理、用户收藏、收货地址 CRUD                           |
+| 用户 Web 服务     | Go Gin      | 图片验证码、邮箱验证码、登录注册、JWT 认证                  |
+| 商品 Web 服务     | Go Gin      | 商品列表查询（多条件过滤）、gRPC 负载均衡连接               |
+| 订单 Web 服务     | Go Gin      | 订单创建/查询、购物车管理、支付宝支付、JWT 认证             |
+| 用户操作 Web 服务 | Go Gin      | 留言、收藏、地址管理、JWT 认证                              |
+| 文件存储服务      | Go Gin      | MinIO 预签名直传、拖拽上传、孤儿文件清理                    |
 
 **通用能力**：Consul 服务注册、gRPC 健康检查、优雅退出、Nacos 配置热更新、动态端口分配、逻辑删除
 
@@ -89,7 +91,10 @@
 
 /o/v1/                             # 订单服务（端口 8084）
 ├── order/                         # 订单（列表/创建/详情）
-└── shoppingcart/                  # 购物车（列表/添加/删除/更新）
+├── shoppingcart/                  # 购物车（列表/添加/删除/更新）
+└── pay/                           # 支付（支付宝）
+    ├── GET  alipay/notify         # 支付宝异步回调通知
+    └── GET  alipay/return         # 支付宝同步回调通知
 
 /op/v1/                            # 用户操作服务（端口 8085）
 ├── message/                       # 留言（列表/创建）
@@ -105,6 +110,8 @@
 | `air`                                | Go 代码热重载                          |
 | `grpcio-tools`                       | Python gRPC 代码生成                   |
 | `python-consul` / `nacos-sdk-python` | 服务注册与配置中心客户端               |
+| `rocketmq-client-python`             | RocketMQ 消息队列客户端                |
+| `tmux`                               | Linux 终端复用器（一键启停脚本依赖）   |
 
 **Proto 生成命令**（在 proto 文件所在目录下执行）：
 
@@ -129,27 +136,28 @@ python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. xxx.proto
 5. 本地启动 Redis 服务
 6. 本地启动 Consul 服务（服务注册与发现）
 7. Docker 启动 Nacos 服务（配置中心），并在 Nacos 中创建对应的配置
+8. 启动 RocketMQ NameServer 和 Broker（消息队列，订单和库存服务依赖）
 
 > 没有开发经验的可以参考我的有道云笔记:
 > 【有道云笔记】项目前期准备
-> https://share.note.youdao.com/s/QJFUWhau
+https://share.note.youdao.com/s/RA68Zm9P
 
 ### 2. Nacos 配置中心准备
 
 在 Nacos 控制台中创建以下配置：
 
-| 服务          | Data ID            | Group | 配置内容                              |
-| ------------- | ------------------ | ----- | ------------------------------------- |
-| user_srv      | user-srv.json      | dev   | MySQL、Consul、服务名称等配置         |
-| user_web      | user-web.json      | dev   | MySQL、Redis、Consul、JWT、邮箱等配置 |
-| goods_srv     | goods-srv.json     | dev   | MySQL、Consul、服务名称等配置         |
-| goods_web     | goods-web.json     | dev   | Consul、JWT、商品服务地址等配置       |
-| order_srv     | order-srv.json     | dev   | MySQL、Consul、商品/库存服务名等配置  |
-| order_web     | order-web.json     | dev   | Consul、JWT、订单服务地址等配置       |
-| inventory_srv | inventory-srv.json | dev   | MySQL、Redis、Consul 等配置           |
-| userop_srv    | userop-srv.json    | dev   | MySQL、Consul、服务名称等配置         |
-| userop_web    | userop-web.json    | dev   | Consul、JWT、用户操作服务地址等配置   |
-| oss_web       | oss-web.json       | dev   | MinIO、Consul 等配置                  |
+| 服务          | Data ID            | Group | 配置内容                                       |
+| ------------- | ------------------ | ----- | ---------------------------------------------- |
+| user_srv      | user-srv.json      | dev   | MySQL、Consul、服务名称等配置                  |
+| user_web      | user-web.json      | dev   | MySQL、Redis、Consul、JWT、邮箱等配置          |
+| goods_srv     | goods-srv.json     | dev   | MySQL、Consul、服务名称等配置                  |
+| goods_web     | goods-web.json     | dev   | Consul、JWT、商品服务地址等配置                |
+| order_srv     | order-srv.json     | dev   | MySQL、Consul、RocketMQ、商品/库存服务名等配置 |
+| order_web     | order-web.json     | dev   | Consul、JWT、支付宝、订单服务地址等配置        |
+| inventory_srv | inventory-srv.json | dev   | MySQL、Redis、RocketMQ、Consul 等配置          |
+| userop_srv    | userop-srv.json    | dev   | MySQL、Consul、服务名称等配置                  |
+| userop_web    | userop-web.json    | dev   | Consul、JWT、用户操作服务地址等配置            |
+| oss_web       | oss-web.json       | dev   | MinIO、Consul 等配置                           |
 
 > user_web / goods_web 的 nacos 配置可参考 `config-debug_templ.yaml` 文件
 
@@ -161,7 +169,7 @@ pip install -r requirements.txt
 python -m server
 ```
 
-> 默认监听端口：50051，启动后自动注册到 Consul，配置从 Nacos 拉取
+> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取
 
 ### 4. 启动商品微服务（Python gRPC）
 
@@ -183,7 +191,7 @@ go mod tidy
 go run main.go
 ```
 
-> 默认监听端口：8081，启动后从 Nacos 拉取业务配置，从 Consul 发现用户服务地址
+> 默认监听端口：18081，启动后从 Nacos 拉取业务配置，从 Consul 发现用户服务地址
 
 ### 6. 启动商品 Web 服务（Go Gin）
 
@@ -195,7 +203,7 @@ go mod tidy
 go run main.go
 ```
 
-> 默认监听端口：8082，启动后从 Nacos 拉取业务配置，从 Consul 发现商品服务地址，自动注册到 Consul
+> 默认监听端口：18082，启动后从 Nacos 拉取业务配置，从 Consul 发现商品服务地址，自动注册到 Consul
 
 ### 7. 启动文件存储服务（Go Gin）
 
@@ -207,7 +215,7 @@ go mod tidy
 go run main.go
 ```
 
-> 默认监听端口：8083，启动后从 Nacos 拉取业务配置，初始化 MinIO 客户端，自动注册到 Consul
+> 默认监听端口：18083，启动后从 Nacos 拉取业务配置，初始化 MinIO 客户端，自动注册到 Consul
 
 ### 8. 启动订单微服务（Python gRPC）
 
@@ -217,7 +225,7 @@ pip install -r requirements.txt
 python -m server
 ```
 
-> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，需先启动商品服务和库存服务
+> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，需先启动 RocketMQ、商品服务和库存服务
 
 ### 9. 启动库存微服务（Python gRPC）
 
@@ -227,7 +235,7 @@ pip install -r requirements.txt
 python -m server
 ```
 
-> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，需要 Redis 支持分布式锁
+> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，需要 Redis 支持分布式锁，需要 RocketMQ 支持库存异步归还
 
 ### 10. 启动用户操作微服务（Python gRPC）
 
@@ -249,7 +257,7 @@ go mod tidy
 go run main.go
 ```
 
-> 默认监听端口：8084，启动后从 Nacos 拉取业务配置，从 Consul 发现订单服务地址
+> 默认监听端口：18084，启动后从 Nacos 拉取业务配置，从 Consul 发现订单服务地址
 
 ### 12. 启动用户操作 Web 服务（Go Gin）
 
@@ -261,7 +269,7 @@ go mod tidy
 go run main.go
 ```
 
-> 默认监听端口：8085，启动后从 Nacos 拉取业务配置，从 Consul 发现用户操作服务地址
+> 默认监听端口：18085，启动后从 Nacos 拉取业务配置，从 Consul 发现用户操作服务地址
 
 ## 七、配置说明
 
@@ -271,7 +279,7 @@ go run main.go
 
 ```
 启动 → Viper 读取本地 config-debug.yaml（Nacos 连接信息）
-     → 连接 Nacos → 拉取业务配置（MySQL、Redis、Consul 等）
+     → 连接 Nacos → 拉取业务配置（MySQL、Redis、Consul、RocketMQ 等）
      → 解析到全局变量 → 注册配置变更监听（实时生效）
 ```
 
@@ -288,10 +296,12 @@ go run main.go
 ![alt text](docs/image/consul注册服务简单图示.png)
 
 1. **Python 微服务**（user_srv / goods_srv / order_srv / inventory_srv / userop_srv）启动时通过 `python-consul` 注册到 Consul，包含 GRPC 健康检查
-2. **Go Web 服务**启动时从 Consul 查询对应微服务的地址和端口
-3. **Go Web 服务**建立 gRPC 长连接（支持负载均衡策略），后续请求复用该连接
-4. **Go Web 服务**（user_web / goods_web / order_web / userop_web / oss_web）启动时自动注册到 Consul（HTTP 健康检查），供前端或其他服务发现
-5. 微服务异常退出时，Consul 自动注销该服务实例
+2. **order_srv** 启动后订阅 RocketMQ 延时消息 topic（`order_timeout`），用于订单超时自动取消
+3. **inventory_srv** 启动后订阅 RocketMQ 消息 topic（`order_reback`），用于订单取消时异步归还库存
+4. **Go Web 服务**启动时从 Consul 查询对应微服务的地址和端口
+5. **Go Web 服务**建立 gRPC 长连接（支持负载均衡策略），后续请求复用该连接
+6. **Go Web 服务**（user_web / goods_web / order_web / userop_web / oss_web）启动时自动注册到 Consul（HTTP 健康检查），供前端或其他服务发现
+7. 微服务异常退出时，Consul 自动注销该服务实例
 
 ## 九、用户注册流程
 
@@ -303,28 +313,62 @@ go run main.go
      → 调用 gRPC CreateUser 创建用户 → 生成 JWT Token 返回
 ```
 
-## 十、配置中心架构图
+## 十、订单创建与支付流程
 
 ```
-Nacos 配置中心
-├── user-srv.json      (Python) → user_srv      (Python gRPC)
-├── user-web.json      (Go)     → user_web      (Go Gin)
-├── goods-srv.json     (Python) → goods_srv     (Python gRPC)
-├── goods-web.json     (Go)     → goods_web     (Go Gin)
-├── order-srv.json     (Python) → order_srv     (Python gRPC)
-├── order-web.json     (Go)     → order_web     (Go Gin)
-├── inventory-srv.json (Python) → inventory_srv (Python gRPC)
-├── userop-srv.json    (Python) → userop_srv    (Python gRPC)
-├── userop-web.json    (Go)     → userop_web    (Go Gin)
-└── oss-web.json       (Go)     → oss_web       (Go Gin + MinIO)
+前端 → 选中购物车商品 → 填写收货信息 → 提交订单
+     → order_web 调用 gRPC CreateOrder → order_srv 发送 RocketMQ 事务消息（半消息）
+     → 本地事务执行：查询商品价格 → 扣减库存 → 创建订单 → 删除购物车
+     → 事务成功 → 提交半消息 → 返回订单号 + 支付宝支付链接
+     → 事务失败 → 回滚半消息 → 库存服务消费回滚消息，归还库存
+     → 发送延时消息（1分钟）→ 超时未支付 → 自动取消订单 + 归还库存
+     → 用户支付成功 → 支付宝异步通知 → 更新订单状态为已支付
+```
+
+## 十一、一键启停脚本
+
+项目提供一键启停脚本，方便本地开发和测试：
+(不熟悉脚本使用的，请勿使用)
+
+| 脚本            | 平台    | 说明                                       |
+| --------------- | ------- | ------------------------------------------ |
+| `start-all.sh`  | Linux   | 使用 tmux 会话管理，一键启动所有微服务     |
+| `stop-all.sh`   | Linux   | 销毁 tmux 会话 + 兜底清理残留进程          |
+| `start-all.ps1` | Windows | 使用 PowerShell 多窗口，一键启动所有微服务 |
+| `stop-all.ps1`  | Windows | 关闭所有微服务窗口及其子进程               |
+
+```bash
+# Linux
+./start-all.sh   # 一键启动（需先安装 tmux）
+./stop-all.sh    # 一键停止
+
+# Windows PowerShell
+.\start-all.ps1  # 一键启动
+.\stop-all.ps1   # 一键停止
+```
+
+## 十二、配置中心与消息架构图
+
+```
+Nacos 配置中心                         RocketMQ 消息队列
+├── user-srv.json      (Python)        ├── Topic: order_reback     → inventory_srv 订阅（库存归还）
+├── user-web.json      (Go)            ├── Topic: order_timeout    → order_srv 订阅（超时取消）
+├── goods-srv.json     (Python)        └── Topic: order_srv        → 事务消息（订单创建+库存扣减）
+├── goods-web.json     (Go)
+├── order-srv.json     (Python)
+├── order-web.json     (Go)
+├── inventory-srv.json (Python)
+├── userop-srv.json    (Python)
+├── userop-web.json    (Go)
+└── oss-web.json       (Go + MinIO)
 
 各服务启动流程：
-  Python 微服务: Nacos 拉取配置 → 初始化 DB → Consul 注册 → gRPC 健康检查 → 优雅退出
+  Python 微服务: Nacos 拉取配置 → 初始化 DB → Consul 注册 → RocketMQ 订阅 → gRPC 健康检查 → 优雅退出
   Go Web 服务:   Nacos 拉取配置 → 初始化各组件 → Consul 发现微服务 → gRPC 长连接(负载均衡) → Consul 注册(HTTP 健康检查)
   Go 文件服务:   Nacos 拉取配置 → 初始化 MinIO 客户端 → Consul 注册(HTTP 健康检查)
 ```
 
-## 十一、各服务 README
+## 十三、各服务 README
 
 > 每个微服务将拥有独立的 README 文档，开发中...
 
