@@ -1,7 +1,6 @@
 package order
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 
@@ -33,7 +32,7 @@ func OrderList(ctx *gin.Context) {
 	perNumsInt, _ := strconv.Atoi(perNums)
 	request.PagePerNums = int32(perNumsInt)
 
-	orderRspList, err := global.OrderSrvCli.Order.OrderList(context.Background(), &request)
+	orderRspList, err := global.OrderSrvCli.Order.OrderList(ctx.Request.Context(), &request)
 	if err != nil {
 		zap.S().Errorw("[OrderList] 调用【订单列表查询】接口失败")
 		api.HandleGrpcErrorToHttpError(err, ctx)
@@ -88,7 +87,7 @@ func OrderDetail(ctx *gin.Context) {
 		request.UserId = int32(userId.(uint))
 	}
 
-	rsp, err := global.OrderSrvCli.Order.OrderDetail(context.Background(), &request)
+	rsp, err := global.OrderSrvCli.Order.OrderDetail(ctx.Request.Context(), &request)
 	if err != nil {
 		zap.S().Errorw("[OrderDetail] 调用【订单详情查询】接口失败")
 		api.HandleGrpcErrorToHttpError(err, ctx)
@@ -136,7 +135,7 @@ func OrderCreate(ctx *gin.Context) {
 		return
 	}
 	user_id, _ := ctx.Get("userId")
-	orderRsp, err := global.OrderSrvCli.Order.CreateOrder(context.Background(), &proto.OrderRequest{
+	orderRsp, err := global.OrderSrvCli.Order.CreateOrder(ctx.Request.Context(), &proto.OrderRequest{
 		UserId:  int32(user_id.(uint)),
 		Name:    orderForm.Name,
 		Mobile:  orderForm.Mobile,

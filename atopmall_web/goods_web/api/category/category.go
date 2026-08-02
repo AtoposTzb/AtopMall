@@ -1,7 +1,6 @@
 package category
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -18,7 +17,7 @@ import (
 
 func GetCategoryList(ctx *gin.Context) {
 	//获取所有分类列表
-	r, err := global.GoodsSrvCli.Category.GetAllCategorysList(context.Background(), &empty.Empty{})
+	r, err := global.GoodsSrvCli.Category.GetAllCategorysList(ctx.Request.Context(), &empty.Empty{})
 	if err != nil {
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
@@ -44,7 +43,7 @@ func GetCategoryDetail(ctx *gin.Context) {
 
 	reMap := make(map[string]interface{})
 	subCategorys := make([]interface{}, 0)
-	if r, err := global.GoodsSrvCli.Category.GetSubCategory(context.Background(), &proto.CategoryListRequest{
+	if r, err := global.GoodsSrvCli.Category.GetSubCategory(ctx.Request.Context(), &proto.CategoryListRequest{
 		Id: int32(i),
 	}); err != nil {
 		api.HandleGrpcErrorToHttpError(err, ctx)
@@ -79,7 +78,7 @@ func NewCategory(ctx *gin.Context) {
 		return
 	}
 
-	rsp, err := global.GoodsSrvCli.Category.CreateCategory(context.Background(), &proto.CategoryInfoRequest{
+	rsp, err := global.GoodsSrvCli.Category.CreateCategory(ctx.Request.Context(), &proto.CategoryInfoRequest{
 		Name:           categoryForm.Name,
 		IsTab:          *categoryForm.IsTab,
 		Level:          categoryForm.Level,
@@ -112,7 +111,7 @@ func DeleteCategory(ctx *gin.Context) {
 	//1. 先查询出该分类写的所有子分类
 	//2. 将所有的分类全部逻辑删除
 	//3. 将该分类下的所有的商品逻辑删除
-	_, err = global.GoodsSrvCli.Category.DeleteCategory(context.Background(), &proto.DeleteCategoryRequest{Id: int32(i)})
+	_, err = global.GoodsSrvCli.Category.DeleteCategory(ctx.Request.Context(), &proto.DeleteCategoryRequest{Id: int32(i)})
 	if err != nil {
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
@@ -143,7 +142,7 @@ func UpdateCategory(ctx *gin.Context) {
 	if categoryForm.IsTab != nil {
 		request.IsTab = *categoryForm.IsTab
 	}
-	_, err = global.GoodsSrvCli.Category.UpdateCategory(context.Background(), request)
+	_, err = global.GoodsSrvCli.Category.UpdateCategory(ctx.Request.Context(), request)
 	if err != nil {
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return

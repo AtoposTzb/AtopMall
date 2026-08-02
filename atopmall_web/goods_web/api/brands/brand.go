@@ -1,7 +1,6 @@
 package brands
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 
@@ -20,7 +19,7 @@ func BrandList(ctx *gin.Context) {
 	pSize := ctx.DefaultQuery("psize", "10")
 	pSizeInt, _ := strconv.Atoi(pSize)
 
-	rsp, err := global.GoodsSrvCli.Brand.BrandList(context.Background(), &proto.BrandFilterRequest{
+	rsp, err := global.GoodsSrvCli.Brand.BrandList(ctx.Request.Context(), &proto.BrandFilterRequest{
 		Pages:       int32(pnInt),
 		PagePerNums: int32(pSizeInt),
 	})
@@ -55,7 +54,7 @@ func NewBrand(ctx *gin.Context) {
 		return
 	}
 
-	rsp, err := global.GoodsSrvCli.Brand.CreateBrand(context.Background(), &proto.BrandRequest{
+	rsp, err := global.GoodsSrvCli.Brand.CreateBrand(ctx.Request.Context(), &proto.BrandRequest{
 		Name: brandForm.Name,
 		Logo: brandForm.Logo,
 	})
@@ -80,7 +79,7 @@ func DeleteBrand(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
-	_, err = global.GoodsSrvCli.Brand.DeleteBrand(context.Background(), &proto.BrandRequest{Id: int32(i)})
+	_, err = global.GoodsSrvCli.Brand.DeleteBrand(ctx.Request.Context(), &proto.BrandRequest{Id: int32(i)})
 	if err != nil {
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
@@ -104,7 +103,7 @@ func UpdateBrand(ctx *gin.Context) {
 		return
 	}
 
-	_, err = global.GoodsSrvCli.Brand.UpdateBrand(context.Background(), &proto.BrandRequest{
+	_, err = global.GoodsSrvCli.Brand.UpdateBrand(ctx.Request.Context(), &proto.BrandRequest{
 		Id:   int32(i),
 		Name: brandForm.Name,
 		Logo: brandForm.Logo,

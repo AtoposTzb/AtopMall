@@ -1,7 +1,6 @@
 package userfav
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 
@@ -17,7 +16,7 @@ import (
 func GetUserFavList(ctx *gin.Context) {
 	// 获取收藏列表
 	userId, _ := ctx.Get("userId")
-	userFavRsp, err := global.UserFavSrvCli.GetFavList(context.Background(), &proto.UserFavRequest{
+	userFavRsp, err := global.UserFavSrvCli.GetFavList(ctx.Request.Context(), &proto.UserFavRequest{
 		UserId: int32(userId.(uint)),
 	})
 	if err != nil {
@@ -39,7 +38,7 @@ func GetUserFavList(ctx *gin.Context) {
 	}
 
 	//请求商品服务
-	goods, err := global.GoodsSrvCli.Goods.BatchGetGoods(context.Background(), &proto.BatchGoodsIdInfo{
+	goods, err := global.GoodsSrvCli.Goods.BatchGetGoods(ctx.Request.Context(), &proto.BatchGoodsIdInfo{
 		Id: ids,
 	})
 	if err != nil {
@@ -78,7 +77,7 @@ func NewUserFav(ctx *gin.Context) {
 	}
 
 	// 校验商品是否存在
-	_, err := global.GoodsSrvCli.Goods.GetGoodsDetail(context.Background(), &proto.GoodInfoRequest{
+	_, err := global.GoodsSrvCli.Goods.GetGoodsDetail(ctx.Request.Context(), &proto.GoodInfoRequest{
 		Id: userFavForm.GoodsId,
 	})
 	if err != nil {
@@ -88,7 +87,7 @@ func NewUserFav(ctx *gin.Context) {
 	}
 	// 校验用户是否存在
 	userId, _ := ctx.Get("userId")
-	_, err = global.UserFavSrvCli.AddUserFav(context.Background(), &proto.UserFavRequest{
+	_, err = global.UserFavSrvCli.AddUserFav(ctx.Request.Context(), &proto.UserFavRequest{
 		UserId:  int32(userId.(uint)),
 		GoodsId: userFavForm.GoodsId,
 	})
@@ -111,7 +110,7 @@ func DeleteUserFav(ctx *gin.Context) {
 	}
 
 	userId, _ := ctx.Get("userId")
-	_, err = global.UserFavSrvCli.DeleteUserFav(context.Background(), &proto.UserFavRequest{
+	_, err = global.UserFavSrvCli.DeleteUserFav(ctx.Request.Context(), &proto.UserFavRequest{
 		UserId:  int32(userId.(uint)),
 		GoodsId: int32(i),
 	})
@@ -135,7 +134,7 @@ func GetUserFavDetail(ctx *gin.Context) {
 		return
 	}
 	userId, _ := ctx.Get("userId")
-	_, err = global.UserFavSrvCli.GetUserFavDetail(context.Background(), &proto.UserFavRequest{
+	_, err = global.UserFavSrvCli.GetUserFavDetail(ctx.Request.Context(), &proto.UserFavRequest{
 		UserId:  int32(userId.(uint)),
 		GoodsId: int32(goodsIdInt),
 	})

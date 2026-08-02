@@ -1,7 +1,6 @@
 package pay
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 
@@ -71,7 +70,7 @@ func Notify(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{})
 		return
 	}
-	_, err = global.OrderSrvCli.Order.UpdateOrderStatus(context.Background(), &proto.OrderStatus{
+	_, err = global.OrderSrvCli.Order.UpdateOrderStatus(ctx.Request.Context(), &proto.OrderStatus{
 		OrderSn: noti.OutTradeNo,
 		Status:  string(noti.TradeStatus),
 	})

@@ -24,6 +24,8 @@ from common.register import consul
 from settings import settings
 from functools import partial #偏函数,用于固定参数,返回一个新的函数,新的函数可以少传参数
 from rocketmq.client import PushConsumer
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer,GrpcInstrumentorClient
+from common.jaeger_trace.trace import init_tracer
 
 #，注销服务到consul
 def on_exit(sig,frame,service_id):
@@ -63,7 +65,18 @@ def server():
         args.port = get_free_port()
 
     logger.add("logs/order_srv_{time}.log") #将日志写入到文件夹logs下
+
+    # ========== 新增：挂载 gRPC 服务端追踪拦截器 ==========
+    # 1.初始化链路追踪
+    init_tracer(service_name=settings.SERVICE_NAME, jaeger_endpoint=settings.JAEGER_ENDPOINT)
+    # 2.给 server 挂载服务端拦截器，自动处理所有 gRPC 方法的追踪
+    GrpcInstrumentorServer().instrument()  # 给服务端挂载拦截器，自动处理所有 gRPC 方法的追踪
+    # 先 monkey-patch grpc.server
+    # 再创建 server（此时 grpc.server 已是带拦截器的版本）
+    GrpcInstrumentorClient().instrument()  # 给客户端挂载拦截器，自动处理所有 gRPC 方法的追踪
+
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10)) #创建一个grpc服务器,并指定最大线程数为10
+
     #1.注册订单相关的服务(订单服务)
     order_pb2_grpc.add_OrderServicer_to_server(OrderServicer(),server)
     #2.注册购物车相关的服务(购物车服务)

@@ -60,3 +60,6 @@ MYSQL_PASSWORD = data["mysql"]["password"]
 DB = ReconnectMysqlDatebase(database=MYSQL_DB,host=MYSQL_HOST,port=MYSQL_PORT,user=MYSQL_USER,password=MYSQL_PASSWORD)
 # pool = redis.ConnectionPool(host=REDIS_HOST,port=REDIS_PORT,db=REDIS_DB)
 # REDIS_CLIENT = redis.StrictRedis(connection_pool=pool)
+
+# jaeger链路追踪配置,SERVICE_NAME同上
+JAEGER_ENDPOINT = data["jaeger"]["endpoint"]

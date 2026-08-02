@@ -1,7 +1,6 @@
 package shoppingcart
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 
@@ -17,7 +16,7 @@ import (
 func ShoppingCartList(ctx *gin.Context) {
 	userId, _ := ctx.Get("userId")
 	//调用订单服务的购物车接口列表
-	resp, err := global.OrderSrvCli.ShoppingCart.CartItemList(context.Background(), &proto.UserInfo{
+	resp, err := global.OrderSrvCli.ShoppingCart.CartItemList(ctx.Request.Context(), &proto.UserInfo{
 		Id: int32(userId.(uint)),
 	})
 	if err != nil {
@@ -37,7 +36,7 @@ func ShoppingCartList(ctx *gin.Context) {
 		return
 	}
 	//调用商品服务的商品列表接口
-	goodsResp, err := global.GoodsSrvCli.Goods.BatchGetGoods(context.Background(), &proto.BatchGoodsIdInfo{
+	goodsResp, err := global.GoodsSrvCli.Goods.BatchGetGoods(ctx.Request.Context(), &proto.BatchGoodsIdInfo{
 		Id: ids,
 	})
 	if err != nil {
@@ -78,7 +77,7 @@ func NewShoppingCart(ctx *gin.Context) {
 		return
 	}
 	//先判断商品是否存在
-	_, err := global.GoodsSrvCli.Goods.GetGoodsDetail(context.Background(), &proto.GoodInfoRequest{
+	_, err := global.GoodsSrvCli.Goods.GetGoodsDetail(ctx.Request.Context(), &proto.GoodInfoRequest{
 		Id: itemForm.GoodsId,
 	})
 	if err != nil {
@@ -87,7 +86,7 @@ func NewShoppingCart(ctx *gin.Context) {
 		return
 	}
 	//检查商品库存是否足够
-	invResp, err := global.InventorySrvCli.InvDetail(context.Background(), &proto.GoodsInvInfo{
+	invResp, err := global.InventorySrvCli.InvDetail(ctx.Request.Context(), &proto.GoodsInvInfo{
 		GoodsId: itemForm.GoodsId,
 	})
 	if err != nil {
@@ -103,7 +102,7 @@ func NewShoppingCart(ctx *gin.Context) {
 		return
 	}
 	userId, _ := ctx.Get("userId")
-	orederRsp, err := global.OrderSrvCli.ShoppingCart.CreateCartItem(context.Background(), &proto.CartItemRequest{
+	orederRsp, err := global.OrderSrvCli.ShoppingCart.CreateCartItem(ctx.Request.Context(), &proto.CartItemRequest{
 		UserId:  int32(userId.(uint)),
 		GoodsId: itemForm.GoodsId,
 		Nums:    itemForm.Nums,
@@ -131,7 +130,7 @@ func DeleteShoppingCart(ctx *gin.Context) {
 		return
 	}
 	userId, _ := ctx.Get("userId")
-	_, err = global.OrderSrvCli.ShoppingCart.DeleteCartItem(context.Background(), &proto.CartItemRequest{
+	_, err = global.OrderSrvCli.ShoppingCart.DeleteCartItem(ctx.Request.Context(), &proto.CartItemRequest{
 		UserId:  int32(userId.(uint)),
 		GoodsId: int32(i),
 	})
@@ -172,7 +171,7 @@ func UpdateShoppingCart(ctx *gin.Context) {
 		request.Checked = *itemForm.Check
 	}
 
-	_, err = global.OrderSrvCli.ShoppingCart.UpdateCartItem(context.Background(), request)
+	_, err = global.OrderSrvCli.ShoppingCart.UpdateCartItem(ctx.Request.Context(), request)
 	if err != nil {
 		zap.S().Errorw("[UpdateShoppingCart] 调用【购物车更新】接口失败")
 		api.HandleGrpcErrorToHttpError(err, ctx)

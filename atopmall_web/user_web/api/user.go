@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -83,7 +82,9 @@ func GetUserList(ctx *gin.Context) {
 
 	pnInt, _ := strconv.Atoi(ctx.DefaultQuery("pn", "0"))
 	pnSizeInt, _ := strconv.Atoi(ctx.DefaultQuery("psize", "10"))
-	rsp, err := global.UserSrvClient.GetUserList(context.Background(), &proto.PageInfo{
+
+	//从请求中获取携带追踪上下文的标准 Context,这样 gRPC 拦截器才能拿到父 Span，实现链路串联
+	rsp, err := global.UserSrvClient.GetUserList(ctx.Request.Context(), &proto.PageInfo{
 		PageNum:  uint32(pnInt),
 		PageSize: uint32(pnSizeInt),
 	})
@@ -136,7 +137,7 @@ func PasswordLogin(ctx *gin.Context) {
 	}
 
 	//登录的逻辑：查询用户是否存在，如果存在，判断密码是否正确
-	rsp, err := global.UserSrvClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
+	rsp, err := global.UserSrvClient.GetUserByMobile(ctx.Request.Context(), &proto.MobileRequest{
 		Mobile: passwordLoginForm.Mobile,
 	})
 	if err != nil {
@@ -157,7 +158,7 @@ func PasswordLogin(ctx *gin.Context) {
 		return
 	} else {
 		//检查密码是否正确
-		if passRep, passErr := global.UserSrvClient.CheckPassWord(context.Background(), &proto.PasswordCheckInfo{
+		if passRep, passErr := global.UserSrvClient.CheckPassWord(ctx.Request.Context(), &proto.PasswordCheckInfo{
 			Password:          passwordLoginForm.Password,
 			EncryptedPassword: rsp.Password,
 		}); passErr != nil {
@@ -212,7 +213,7 @@ func Register(ctx *gin.Context) {
 		return
 	}
 	//通过唯一的手机号查询用户是否存在
-	if user, err := global.UserSrvClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
+	if user, err := global.UserSrvClient.GetUserByMobile(ctx.Request.Context(), &proto.MobileRequest{
 		Mobile: registerForm.Mobile,
 	}); err == nil {
 		ctx.JSON(http.StatusOK, gin.H{
@@ -223,7 +224,7 @@ func Register(ctx *gin.Context) {
 	} else {
 		//用户不存在，继续注册,通过邮箱验证码注册用户
 		//邮箱验证码检查
-		value, err := global.RDB.Get(context.Background(), registerForm.Email).Result()
+		value, err := global.RDB.Get(ctx.Request.Context(), registerForm.Email).Result()
 		if err == redis.Nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"email": "邮箱验证码错误",
@@ -245,7 +246,7 @@ func Register(ctx *gin.Context) {
 			return
 		}
 		//验证码正确，注册用户
-		user, err := global.UserSrvClient.CreateUser(context.Background(), &proto.CreateUserInfo{
+		user, err := global.UserSrvClient.CreateUser(ctx.Request.Context(), &proto.CreateUserInfo{
 			NickName: registerForm.Mobile,
 			Password: registerForm.Password,
 			Mobile:   registerForm.Mobile,
@@ -291,7 +292,7 @@ func Register(ctx *gin.Context) {
 func GetUserDetail(ctx *gin.Context) {
 	// 从token中获取用户ID
 	userId, _ := ctx.Get("userId")
-	userRsp, err := global.UserSrvClient.GetUserById(context.Background(), &proto.IdRequest{
+	userRsp, err := global.UserSrvClient.GetUserById(ctx.Request.Context(), &proto.IdRequest{
 		Id: int32(userId.(uint)),
 	})
 	if err != nil {
@@ -325,7 +326,7 @@ func UpdateUser(ctx *gin.Context) {
 		return
 	}
 	//更新用户信息
-	_, err = global.UserSrvClient.UpdateUser(context.Background(), &proto.UpdateUserInfo{
+	_, err = global.UserSrvClient.UpdateUser(ctx.Request.Context(), &proto.UpdateUserInfo{
 		Id:       int32(userId.(uint)),
 		NickName: userUpdateForm.Name,
 		Gender:   userUpdateForm.Gender,

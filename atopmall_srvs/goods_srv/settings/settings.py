@@ -43,3 +43,6 @@ CONSUL_PORT = data["consul"]["port"]
 SERVICE_NAME = data["name"]
 SERVICE_ID = data["name"]
 SERVICE_TAGS = data["tags"]
+
+# jaeger链路追踪配置,SERVICE_NAME同上
+JAEGER_ENDPOINT = data["jaeger"]["endpoint"]

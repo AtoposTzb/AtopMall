@@ -1,0 +1,49 @@
+# ============================================================
+# AtopMall 微服务统一依赖文件
+# 涵盖 5 个 srv 服务：user_srv / order_srv / inventory_srv / goods_srv / userop_srv
+# 所有依赖均在同一虚拟环境中运行，统一版本避免冲突
+# 安装方式：pip install -r requirements.txt
+# ============================================================
+
+# ---------- 数据库 ORM ----------
+peewee>=3.17.0,<4.0.0
+
+# ---------- 数据库驱动 ----------
+pymysql>=1.1.0,<2.0.0
+
+# ---------- 密码哈希 ----------
+passlib==1.7.4
+
+# ---------- gRPC 核心（版本与 pb2 文件的 GRPC_GENERATED_VERSION 匹配） ----------
+grpcio==1.83.0
+grpcio-tools==1.83.0
+grpcio-health-checking==1.83.0
+
+# ---------- Protobuf（由 grpcio 1.83.0 决定） ----------
+protobuf==7.35.1
+
+# ---------- 日志 ----------
+loguru>=0.7.0,<1.0.0
+
+# ---------- 服务注册与发现 ----------
+py-consul>=1.1.0,<2.0.0
+nacos-sdk-python<3.0.0
+
+# ---------- 缓存（order_srv / inventory_srv / userop_srv） ----------
+redis>=4.0.0,<6.0.0
+python-redis-lock>=3.7.0,<4.0.0
+
+# ---------- DNS 解析（order_srv） ----------
+dnspython>=2.6.0,<3.0.0
+
+# ---------- 消息队列（order_srv / inventory_srv） ----------
+rocketmq-client-python==2.0.0
+
+# ---------- 链路追踪 OpenTelemetry（所有服务） ----------
+opentelemetry-api==1.44.0
+opentelemetry-sdk==1.44.0
+opentelemetry-exporter-otlp-proto-grpc==1.44.0
+opentelemetry-instrumentation-grpc==0.65b0
+
+# ---------- 构建工具 ----------
+setuptools>=68.0.0

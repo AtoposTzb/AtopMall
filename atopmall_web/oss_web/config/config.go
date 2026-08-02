@@ -20,6 +20,12 @@ type MinIOOssConfig struct {
 	PublicPrefix string `mapstructure:"publicPrefix" json:"publicPrefix"`
 }
 
+type JaegerConfig struct {
+	Host string `mapstructure:"host" json:"host"`
+	Port int    `mapstructure:"port" json:"port"`
+	Name string `mapstructure:"name" json:"name"`
+}
+
 type ServerConfig struct {
 	Name       string         `mapstructure:"name" json:"name"`
 	Host       string         `mapstructure:"host" json:"host"`
@@ -28,6 +34,7 @@ type ServerConfig struct {
 	JWTInfo    JWTConfig      `mapstructure:"jwt" json:"jwt"`
 	ConsulInfo ConsulConfig   `mapstructure:"consul" json:"consul"`
 	MinIOInfo  MinIOOssConfig `mapstructure:"miniooss" json:"miniooss"`
+	JaegerInfo JaegerConfig   `mapstructure:"jaeger" json:"jaeger"`
 }
 
 type NacosConfig struct {

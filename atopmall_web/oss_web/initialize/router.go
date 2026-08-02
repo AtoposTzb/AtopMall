@@ -4,7 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
+	"atopmall_web/oss_web/global"
 	"atopmall_web/oss_web/middlewares"
 	"atopmall_web/oss_web/router"
 )
@@ -20,6 +22,12 @@ func RoutersInit() *gin.Engine {
 			"success": true,
 		})
 	})
+
+	// ========== 新增：OpenTelemetry 追踪中间件 ==========
+	// 放在健康检查路由之后，避免健康检查产生大量无意义 Span
+	// 参数 "" 会和 Nacos 配置中的 jaeger.name 保持一致
+
+	r.Use(otelgin.Middleware(global.ServerConfig.JaegerInfo.Name))
 
 	r.LoadHTMLGlob("templates/*")
 	// 配置静态文件夹路径 第一个参数是api，第二个是文件夹路径

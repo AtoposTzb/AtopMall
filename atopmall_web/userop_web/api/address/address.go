@@ -1,7 +1,6 @@
 package address
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 
@@ -27,7 +26,7 @@ func GetAddressList(ctx *gin.Context) {
 		request.UserId = int32(userId.(uint))
 	}
 
-	rsp, err := global.AddressSrvCli.GetAddressList(context.Background(), request)
+	rsp, err := global.AddressSrvCli.GetAddressList(ctx.Request.Context(), request)
 	if err != nil {
 		zap.S().Errorw("获取地址列表失败")
 		api.HandleGrpcErrorToHttpError(err, ctx)
@@ -64,7 +63,7 @@ func NewAddress(ctx *gin.Context) {
 	}
 
 	userId, _ := ctx.Get("userId")
-	rsp, err := global.AddressSrvCli.CreateAddress(context.Background(), &proto.AddressRequest{
+	rsp, err := global.AddressSrvCli.CreateAddress(ctx.Request.Context(), &proto.AddressRequest{
 		UserId:       int32(userId.(uint)),
 		Province:     addressForm.Province,
 		City:         addressForm.City,
@@ -93,7 +92,7 @@ func DeleteAddress(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
-	_, err = global.AddressSrvCli.DeleteAddress(context.Background(), &proto.AddressRequest{Id: int32(i)})
+	_, err = global.AddressSrvCli.DeleteAddress(ctx.Request.Context(), &proto.AddressRequest{Id: int32(i)})
 	if err != nil {
 		zap.S().Errorw("删除地址失败")
 		api.HandleGrpcErrorToHttpError(err, ctx)
@@ -120,7 +119,7 @@ func UpdateAddress(ctx *gin.Context) {
 		return
 	}
 
-	_, err = global.AddressSrvCli.UpdateAddress(context.Background(), &proto.AddressRequest{
+	_, err = global.AddressSrvCli.UpdateAddress(ctx.Request.Context(), &proto.AddressRequest{
 		Id:           int32(i),
 		Province:     addressForm.Province,
 		City:         addressForm.City,

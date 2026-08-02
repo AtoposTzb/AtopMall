@@ -1,7 +1,6 @@
 package categorybrand
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 
@@ -22,7 +21,7 @@ func GetCategoryBrandList(ctx *gin.Context) {
 		return
 	}
 
-	rsp, err := global.GoodsSrvCli.CategoryBrand.GetCategoryBrandList(context.Background(), &proto.CategoryInfoRequest{
+	rsp, err := global.GoodsSrvCli.CategoryBrand.GetCategoryBrandList(ctx.Request.Context(), &proto.CategoryInfoRequest{
 		Id: int32(i),
 	})
 	if err != nil {
@@ -52,7 +51,7 @@ func CategoryBrandList(ctx *gin.Context) {
 			"data":[{},{}]
 		}
 	*/
-	rsp, err := global.GoodsSrvCli.CategoryBrand.CategoryBrandList(context.Background(), &proto.CategoryBrandFilterRequest{})
+	rsp, err := global.GoodsSrvCli.CategoryBrand.CategoryBrandList(ctx.Request.Context(), &proto.CategoryBrandFilterRequest{})
 	if err != nil {
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
@@ -90,7 +89,7 @@ func NewCategoryBrand(ctx *gin.Context) {
 		return
 	}
 
-	rsp, err := global.GoodsSrvCli.CategoryBrand.CreateCategoryBrand(context.Background(), &proto.CategoryBrandRequest{
+	rsp, err := global.GoodsSrvCli.CategoryBrand.CreateCategoryBrand(ctx.Request.Context(), &proto.CategoryBrandRequest{
 		CategoryId: int32(categoryBrandForm.CategoryId),
 		BrandId:    int32(categoryBrandForm.BrandId),
 	})
@@ -120,7 +119,7 @@ func UpdateCategoryBrand(ctx *gin.Context) {
 		return
 	}
 
-	_, err = global.GoodsSrvCli.CategoryBrand.UpdateCategoryBrand(context.Background(), &proto.CategoryBrandRequest{
+	_, err = global.GoodsSrvCli.CategoryBrand.UpdateCategoryBrand(ctx.Request.Context(), &proto.CategoryBrandRequest{
 		Id:         int32(i),
 		CategoryId: int32(categoryBrandForm.CategoryId),
 		BrandId:    int32(categoryBrandForm.BrandId),
@@ -140,7 +139,7 @@ func DeleteCategoryBrand(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
-	_, err = global.GoodsSrvCli.CategoryBrand.DeleteCategoryBrand(context.Background(), &proto.CategoryBrandRequest{Id: int32(i)})
+	_, err = global.GoodsSrvCli.CategoryBrand.DeleteCategoryBrand(ctx.Request.Context(), &proto.CategoryBrandRequest{Id: int32(i)})
 	if err != nil {
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return

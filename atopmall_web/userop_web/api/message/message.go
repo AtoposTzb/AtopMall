@@ -1,7 +1,6 @@
 package message
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,7 +24,7 @@ func GetMessageList(ctx *gin.Context) {
 		request.UserId = int32(userId.(uint))
 	}
 
-	rsp, err := global.MessageSrvCli.MessageList(context.Background(), request)
+	rsp, err := global.MessageSrvCli.MessageList(ctx.Request.Context(), request)
 	if err != nil {
 		zap.S().Errorw("获取留言失败")
 		api.HandleGrpcErrorToHttpError(err, ctx)
@@ -61,7 +60,7 @@ func NewMessage(ctx *gin.Context) {
 		return
 	}
 
-	rsp, err := global.MessageSrvCli.CreateMessage(context.Background(), &proto.MessageRequest{
+	rsp, err := global.MessageSrvCli.CreateMessage(ctx.Request.Context(), &proto.MessageRequest{
 		UserId:      int32(userId.(uint)),
 		MessageType: messageForm.MessageType,
 		Subject:     messageForm.Subject,

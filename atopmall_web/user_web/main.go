@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"strconv"
@@ -24,6 +25,14 @@ func main() {
 	initialize.LoggerInit()
 	//2.初始化配置
 	initialize.ConfigInit()
+	//3.初始化Jaeger追踪器
+	tp, err := initialize.JaegerTracerInit()
+	if err != nil {
+		zap.S().Fatalf("初始化追踪器失败: %v", err)
+	}
+	//程序退出时刷新剩余数据
+	defer tp.Shutdown(context.Background())
+
 	//3.初始化Redis
 	global.RDB = initialize.RedisInit()
 	//4.初始化路由

@@ -1,7 +1,6 @@
 package goods
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 
@@ -55,7 +54,7 @@ func GetGoodsList(ctx *gin.Context) {
 	req.Brand = int32(brandIdInt)
 
 	//grpc 请求商品的service服务
-	r, err := global.GoodsSrvCli.Goods.GoodsList(context.WithValue(context.Background(), "ginContext", ctx), req)
+	r, err := global.GoodsSrvCli.Goods.GoodsList(ctx.Request.Context(), req)
 	if err != nil {
 		zap.S().Errorw("[GetGoodsList] 查询 【商品列表】失败")
 		api.HandleGrpcErrorToHttpError(err, ctx)
@@ -105,7 +104,7 @@ func NewGoods(ctx *gin.Context) {
 		return
 	}
 	//通过grpc调用商品的service服务
-	rsp, err := global.GoodsSrvCli.Goods.CreateGoods(context.Background(), &proto.CreateGoodsInfo{
+	rsp, err := global.GoodsSrvCli.Goods.CreateGoods(ctx.Request.Context(), &proto.CreateGoodsInfo{
 		Name:            goodsForm.Name,
 		GoodsSn:         goodsForm.GoodsSn,
 		Stocks:          goodsForm.Stocks,
@@ -134,7 +133,7 @@ func GetGoodsDetail(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
-	rsp, err := global.GoodsSrvCli.Goods.GetGoodsDetail(context.Background(), &proto.GoodInfoRequest{
+	rsp, err := global.GoodsSrvCli.Goods.GetGoodsDetail(ctx.Request.Context(), &proto.GoodInfoRequest{
 		Id: int32(idINt),
 	})
 	if err != nil {
@@ -174,7 +173,7 @@ func DeleteGoods(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
-	_, err = global.GoodsSrvCli.Goods.DeleteGoods(context.Background(), &proto.DeleteGoodsInfo{Id: int32(i)})
+	_, err = global.GoodsSrvCli.Goods.DeleteGoods(ctx.Request.Context(), &proto.DeleteGoodsInfo{Id: int32(i)})
 	if err != nil {
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
@@ -191,7 +190,7 @@ func Stocks(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := global.InventorySrvCli.InvDetail(context.Background(), &proto.GoodsInvInfo{
+	resp, err := global.InventorySrvCli.InvDetail(ctx.Request.Context(), &proto.GoodsInvInfo{
 		GoodsId: int32(idInt),
 	})
 	if err != nil {
@@ -215,7 +214,7 @@ func UpdateGoodsStatus(ctx *gin.Context) {
 
 	id := ctx.Param("id")
 	i, err := strconv.ParseInt(id, 10, 32)
-	if _, err = global.GoodsSrvCli.Goods.UpdateGoodsStatus(context.Background(), &proto.GoodsStatusRequest{
+	if _, err = global.GoodsSrvCli.Goods.UpdateGoodsStatus(ctx.Request.Context(), &proto.GoodsStatusRequest{
 		Id:     int32(i),
 		IsHot:  *goodsStatusForm.IsHot,
 		IsNew:  *goodsStatusForm.IsNew,
@@ -239,7 +238,7 @@ func UpdateGoods(ctx *gin.Context) {
 
 	id := ctx.Param("id")
 	i, err := strconv.ParseInt(id, 10, 32)
-	if _, err = global.GoodsSrvCli.Goods.UpdateGoods(context.Background(), &proto.CreateGoodsInfo{
+	if _, err = global.GoodsSrvCli.Goods.UpdateGoods(ctx.Request.Context(), &proto.CreateGoodsInfo{
 		Id:              int32(i),
 		Name:            goodsForm.Name,
 		GoodsSn:         goodsForm.GoodsSn,
