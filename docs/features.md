@@ -2,20 +2,21 @@
 
 ## 用户微服务（Python gRPC）
 
-| 功能             | 接口            | 说明                                     |
-| ---------------- | --------------- | ---------------------------------------- |
-| 获取用户列表     | GetUserList     | 支持分页查询                             |
-| 通过 id 查询用户 | GetUserById     | 验证用户是否存在                         |
-| 通过 email 查询  | GetUserByEmail  | 验证用户是否存在                         |
-| 根据 mobile 查询 | GetUserByMobile | 登录/注册时验证用户是否存在              |
-| 创建用户         | CreateUser      | 注册新用户，密码使用 PBKDF2 加密         |
-| 更新用户信息     | UpdateUser      | 检查用户是否存在后更新                   |
-| 密码校验         | CheckPassWord   | 使用 passlib 验证 PBKDF2 哈希            |
-| Consul 服务注册  | -               | 启动时自动注册到 Consul                  |
-| gRPC 健康检查    | -               | 注册健康检查服务，Consul 定期探测        |
-| 优雅退出         | -               | 监听 SIGINT/SIGTERM 信号，退出时注销服务 |
-| Nacos 配置管理   | -               | 从 Nacos 拉取配置，支持配置变更监听      |
-| 动态端口分配     | -               | 默认端口为 0 时自动获取可用端口          |
+| 功能                     | 接口            | 说明                                                           |
+| ------------------------ | --------------- | -------------------------------------------------------------- |
+| 获取用户列表             | GetUserList     | 支持分页查询                                                   |
+| 通过 id 查询用户         | GetUserById     | 验证用户是否存在                                               |
+| 通过 email 查询          | GetUserByEmail  | 验证用户是否存在                                               |
+| 根据 mobile 查询         | GetUserByMobile | 登录/注册时验证用户是否存在                                    |
+| 创建用户                 | CreateUser      | 注册新用户，密码使用 PBKDF2 加密                               |
+| 更新用户信息             | UpdateUser      | 检查用户是否存在后更新                                         |
+| 密码校验                 | CheckPassWord   | 使用 passlib 验证 PBKDF2 哈希                                  |
+| Consul 服务注册          | -               | 启动时自动注册到 Consul                                        |
+| gRPC 健康检查            | -               | 注册健康检查服务，Consul 定期探测                              |
+| 优雅退出                 | -               | 监听 SIGINT/SIGTERM 信号，退出时注销服务                       |
+| Nacos 配置管理           | -               | 从 Nacos 拉取配置，支持配置变更监听                            |
+| 动态端口分配             | -               | 默认端口为 0 时自动获取可用端口                                |
+| OpenTelemetry 全链路追踪 | -               | 启动时自动初始化 Jaeger Tracer，gRPC 调用自动传递 TraceContext |
 
 ## 商品微服务（Python gRPC）
 
@@ -71,15 +72,16 @@
 
 ### 商品服务通用能力
 
-| 功能            | 说明                                               |
-| --------------- | -------------------------------------------------- |
-| Consul 服务注册 | 启动时自动注册到 Consul                            |
-| gRPC 健康检查   | 注册健康检查服务，Consul 定期探测                  |
-| 优雅退出        | 监听 SIGINT/SIGTERM 信号，退出时注销服务           |
-| Nacos 配置管理  | 从 Nacos 拉取配置，支持配置变更监听                |
-| 动态端口分配    | 默认端口为 0 时自动获取可用端口                    |
-| 逻辑删除        | BaseModel 拦截删除操作，使用 is_deleted 字段软删除 |
-| JSON 字段支持   | 商品图片、详情图使用 MySQL JSONField 存储          |
+| 功能                     | 说明                                                           |
+| ------------------------ | -------------------------------------------------------------- |
+| Consul 服务注册          | 启动时自动注册到 Consul                                        |
+| gRPC 健康检查            | 注册健康检查服务，Consul 定期探测                              |
+| 优雅退出                 | 监听 SIGINT/SIGTERM 信号，退出时注销服务                       |
+| Nacos 配置管理           | 从 Nacos 拉取配置，支持配置变更监听                            |
+| 动态端口分配             | 默认端口为 0 时自动获取可用端口                                |
+| OpenTelemetry 全链路追踪 | 启动时自动初始化 Jaeger Tracer，gRPC 调用自动传递 TraceContext |
+| 逻辑删除                 | BaseModel 拦截删除操作，使用 is_deleted 字段软删除             |
+| JSON 字段支持            | 商品图片、详情图使用 MySQL JSONField 存储                      |
 
 ## 订单微服务（Python gRPC）
 
@@ -105,22 +107,23 @@
 
 ### 订单服务核心能力
 
-| 功能              | 说明                                                                 |
-| ----------------- | -------------------------------------------------------------------- |
-| 跨服务调用        | 通过 Consul 发现商品服务和库存服务，gRPC 调用获取商品信息和扣减库存  |
-| RocketMQ 事务消息 | 半消息机制保证订单创建与库存扣减的最终一致性                         |
-| RocketMQ 延时消息 | 订单创建后发送 1 分钟延时消息，超时未支付自动取消订单并通知库存归还  |
-| RocketMQ 消息回查 | `check_callback` 回调检查本地事务执行状态，决定半消息提交或回滚      |
-| 事务管理          | 使用 Peewee 的 `atomic()` 确保订单创建、库存扣减、购物车清理的原子性 |
-| 订单号生成        | 基于时间戳 + 用户 ID + 随机数生成唯一订单号                          |
-| 分布式锁          | 库存扣减使用 Redis 分布式锁防止超卖                                  |
-| 乐观锁            | Inventory 模型包含 version 字段，支持并发控制                        |
-| Consul 服务注册   | 启动时自动注册到 Consul                                              |
-| gRPC 健康检查     | 注册健康检查服务，Consul 定期探测                                    |
-| 优雅退出          | 监听 SIGINT/SIGTERM 信号，退出时注销服务                             |
-| Nacos 配置管理    | 从 Nacos 拉取配置，支持配置变更监听                                  |
-| 动态端口分配      | 默认端口为 0 时自动获取可用端口                                      |
-| 逻辑删除          | BaseModel 拦截删除操作，使用 is_deleted 字段软删除                   |
+| 功能                     | 说明                                                                 |
+| ------------------------ | -------------------------------------------------------------------- |
+| 跨服务调用               | 通过 Consul 发现商品服务和库存服务，gRPC 调用获取商品信息和扣减库存  |
+| RocketMQ 事务消息        | 半消息机制保证订单创建与库存扣减的最终一致性                         |
+| RocketMQ 延时消息        | 订单创建后发送 1 分钟延时消息，超时未支付自动取消订单并通知库存归还  |
+| RocketMQ 消息回查        | `check_callback` 回调检查本地事务执行状态，决定半消息提交或回滚      |
+| 事务管理                 | 使用 Peewee 的 `atomic()` 确保订单创建、库存扣减、购物车清理的原子性 |
+| 订单号生成               | 基于时间戳 + 用户 ID + 随机数生成唯一订单号                          |
+| 分布式锁                 | 库存扣减使用 Redis 分布式锁防止超卖                                  |
+| 乐观锁                   | Inventory 模型包含 version 字段，支持并发控制                        |
+| Consul 服务注册          | 启动时自动注册到 Consul                                              |
+| gRPC 健康检查            | 注册健康检查服务，Consul 定期探测                                    |
+| 优雅退出                 | 监听 SIGINT/SIGTERM 信号，退出时注销服务                             |
+| Nacos 配置管理           | 从 Nacos 拉取配置，支持配置变更监听                                  |
+| 动态端口分配             | 默认端口为 0 时自动获取可用端口                                      |
+| OpenTelemetry 全链路追踪 | 启动时自动初始化 Jaeger Tracer，gRPC 调用自动传递 TraceContext       |
+| 逻辑删除                 | BaseModel 拦截删除操作，使用 is_deleted 字段软删除                   |
 
 ## 库存微服务（Python gRPC）
 
@@ -135,21 +138,22 @@
 
 ### 库存服务核心能力
 
-| 功能              | 说明                                                         |
-| ----------------- | ------------------------------------------------------------ |
-| Redis 分布式锁    | 使用 `python-redis-lock` 实现，防止并发扣减导致的超卖问题    |
-| 锁自动续期        | `auto_renewal=True` 防止长事务执行期间锁过期                 |
-| RocketMQ 异步归还 | 启动时订阅 `order_reback` topic，订单取消时消费消息归还库存  |
-| 扣减历史记录      | `InventoryOutHistory` 表记录每次扣减明细，归还时校验防止重复 |
-| 事务管理          | 使用 Peewee 的 `atomic()` 确保库存操作的原子性               |
-| 乐观锁支持        | Inventory 模型包含 version 字段，可用于并发控制              |
-| 锁释放保证        | 使用 `try/finally` 确保锁在任何情况下都能正确释放            |
-| Consul 服务注册   | 启动时自动注册到 Consul                                      |
-| gRPC 健康检查     | 注册健康检查服务，Consul 定期探测                            |
-| 优雅退出          | 监听 SIGINT/SIGTERM 信号，退出时注销服务                     |
-| Nacos 配置管理    | 从 Nacos 拉取配置，支持配置变更监听                          |
-| 动态端口分配      | 默认端口为 0 时自动获取可用端口                              |
-| 逻辑删除          | BaseModel 拦截删除操作，使用 is_deleted 字段软删除           |
+| 功能                     | 说明                                                           |
+| ------------------------ | -------------------------------------------------------------- |
+| Redis 分布式锁           | 使用 `python-redis-lock` 实现，防止并发扣减导致的超卖问题      |
+| 锁自动续期               | `auto_renewal=True` 防止长事务执行期间锁过期                   |
+| RocketMQ 异步归还        | 启动时订阅 `order_reback` topic，订单取消时消费消息归还库存    |
+| 扣减历史记录             | `InventoryOutHistory` 表记录每次扣减明细，归还时校验防止重复   |
+| 事务管理                 | 使用 Peewee 的 `atomic()` 确保库存操作的原子性                 |
+| 乐观锁支持               | Inventory 模型包含 version 字段，可用于并发控制                |
+| 锁释放保证               | 使用 `try/finally` 确保锁在任何情况下都能正确释放              |
+| Consul 服务注册          | 启动时自动注册到 Consul                                        |
+| gRPC 健康检查            | 注册健康检查服务，Consul 定期探测                              |
+| 优雅退出                 | 监听 SIGINT/SIGTERM 信号，退出时注销服务                       |
+| Nacos 配置管理           | 从 Nacos 拉取配置，支持配置变更监听                            |
+| 动态端口分配             | 默认端口为 0 时自动获取可用端口                                |
+| OpenTelemetry 全链路追踪 | 启动时自动初始化 Jaeger Tracer，gRPC 调用自动传递 TraceContext |
+| 逻辑删除                 | BaseModel 拦截删除操作，使用 is_deleted 字段软删除             |
 
 ## 用户操作微服务（Python gRPC）
 
@@ -180,14 +184,15 @@
 
 ### 用户操作服务通用能力
 
-| 功能            | 说明                                               |
-| --------------- | -------------------------------------------------- |
-| Consul 服务注册 | 启动时自动注册到 Consul                            |
-| gRPC 健康检查   | 注册健康检查服务，Consul 定期探测                  |
-| 优雅退出        | 监听 SIGINT/SIGTERM 信号，退出时注销服务           |
-| Nacos 配置管理  | 从 Nacos 拉取配置，支持配置变更监听                |
-| 动态端口分配    | 默认端口为 0 时自动获取可用端口                    |
-| 逻辑删除        | BaseModel 拦截删除操作，使用 is_deleted 字段软删除 |
+| 功能                     | 说明                                                           |
+| ------------------------ | -------------------------------------------------------------- |
+| Consul 服务注册          | 启动时自动注册到 Consul                                        |
+| gRPC 健康检查            | 注册健康检查服务，Consul 定期探测                              |
+| 优雅退出                 | 监听 SIGINT/SIGTERM 信号，退出时注销服务                       |
+| Nacos 配置管理           | 从 Nacos 拉取配置，支持配置变更监听                            |
+| 动态端口分配             | 默认端口为 0 时自动获取可用端口                                |
+| OpenTelemetry 全链路追踪 | 启动时自动初始化 Jaeger Tracer，gRPC 调用自动传递 TraceContext |
+| 逻辑删除                 | BaseModel 拦截删除操作，使用 is_deleted 字段软删除             |
 
 ## 用户 Web 服务（Go Gin）
 
@@ -211,12 +216,13 @@
 
 ### 工具模块
 
-| 模块               | 说明                                     |
-| ------------------ | ---------------------------------------- |
-| 动态端口获取       | `utils/addr_port.go` 获取系统可用端口    |
-| Redis 测试工具     | `api/redis_test/` 独立测试 Redis 连接    |
-| 响应结构体         | `global/responselist/` 统一 API 响应格式 |
-| 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略  |
+| 模块               | 说明                                                                                |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| 动态端口获取       | `utils/addr_port.go` 获取系统可用端口                                               |
+| Redis 测试工具     | `api/redis_test/` 独立测试 Redis 连接                                               |
+| 响应结构体         | `global/responselist/` 统一 API 响应格式                                            |
+| 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略                                             |
+| Jaeger 链路追踪    | `initialize/jaeger_trace.go` 初始化 TracerProvider，`router.go` 挂载 otelgin 中间件 |
 
 ## 商品 Web 服务（Go Gin）
 
@@ -291,6 +297,7 @@
 | 动态端口获取       | `utils/addr_port.go` 获取系统可用端口                                                                             |
 | Consul 服务注册    | `utils/register/consul/register.go` 接口化注册实现                                                                |
 | 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略，单连接共享 5 个子服务客户端（Goods/Brand/Category/Banner/CategoryBrand） |
+| Jaeger 链路追踪    | `initialize/jaeger_trace.go` 初始化 TracerProvider，`router.go` 挂载 otelgin 中间件                               |
 
 ## 文件存储服务（Go Gin + MinIO）
 
@@ -310,11 +317,12 @@
 
 ### 工具模块
 
-| 模块               | 说明                                                |
-| ------------------ | --------------------------------------------------- |
-| 动态端口获取       | `utils/addr_port.go` 获取系统可用端口               |
-| MinIO 客户端初始化 | `initialize/miniooss.go` 自动创建桶、存储全局客户端 |
-| Consul 服务注册    | `utils/register/consul/register.go` 接口化注册实现  |
+| 模块               | 说明                                                                                |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| 动态端口获取       | `utils/addr_port.go` 获取系统可用端口                                               |
+| MinIO 客户端初始化 | `initialize/miniooss.go` 自动创建桶、存储全局客户端                                 |
+| Consul 服务注册    | `utils/register/consul/register.go` 接口化注册实现                                  |
+| Jaeger 链路追踪    | `initialize/jaeger_trace.go` 初始化 TracerProvider，`router.go` 挂载 otelgin 中间件 |
 
 ### 前端页面
 
@@ -364,12 +372,13 @@
 
 ### 工具模块
 
-| 模块               | 说明                                                                      |
-| ------------------ | ------------------------------------------------------------------------- |
-| 动态端口获取       | `utils/addr_port.go` 获取系统可用端口                                     |
-| Consul 服务注册    | `utils/register/consul/register.go` 接口化注册实现                        |
-| 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略，连接订单服务、商品服务和库存服务 |
-| 支付宝 SDK 集成    | `api/pay/alipay.go` 使用 `smartwalle/alipay/v3` 生成支付链接和回调处理    |
+| 模块               | 说明                                                                                |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| 动态端口获取       | `utils/addr_port.go` 获取系统可用端口                                               |
+| Consul 服务注册    | `utils/register/consul/register.go` 接口化注册实现                                  |
+| 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略，连接订单服务、商品服务和库存服务           |
+| 支付宝 SDK 集成    | `api/pay/alipay.go` 使用 `smartwalle/alipay/v3` 生成支付链接和回调处理              |
+| Jaeger 链路追踪    | `initialize/jaeger_trace.go` 初始化 TracerProvider，`router.go` 挂载 otelgin 中间件 |
 
 ## 用户操作 Web 服务（Go Gin）
 
@@ -413,8 +422,9 @@
 
 ### 工具模块
 
-| 模块               | 说明                                                      |
-| ------------------ | --------------------------------------------------------- |
-| 动态端口获取       | `utils/addr_port.go` 获取系统可用端口                     |
-| Consul 服务注册    | `utils/register/consul/register.go` 接口化注册实现        |
-| 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略，连接用户操作服务 |
+| 模块               | 说明                                                                                |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| 动态端口获取       | `utils/addr_port.go` 获取系统可用端口                                               |
+| Consul 服务注册    | `utils/register/consul/register.go` 接口化注册实现                                  |
+| 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略，连接用户操作服务                           |
+| Jaeger 链路追踪    | `initialize/jaeger_trace.go` 初始化 TracerProvider，`router.go` 挂载 otelgin 中间件 |

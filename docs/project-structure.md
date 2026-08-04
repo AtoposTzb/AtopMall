@@ -6,9 +6,11 @@
 AtopMall/
 ├── atopmall_srvs/                    # 微服务层（Python + gRPC）
 │   ├── common/                       # 公共模块
-│   │   └── register/                 # 服务注册（Consul）
-│   │       ├── base.py               # 注册接口抽象基类
-│   │       └── consul.py             # Consul 注册实现
+│   │   ├── register/                 # 服务注册（Consul）
+│   │   │   ├── base.py               # 注册接口抽象基类
+│   │   │   └── consul.py             # Consul 注册实现
+│   │   └── jaeger_trace/             # 链路追踪公共模块
+│   │       └── trace.py              # 统一 init_tracer() + 健康检查 Span 过滤
 │   │
 │   ├── user_srv/                     # 用户服务
 │   │   ├── handler/                  # gRPC 服务实现
@@ -25,7 +27,7 @@ AtopMall/
 │   │   ├── tests/                    # gRPC 客户端测试
 │   │   │   └── user.py               # 用户服务 gRPC 测试
 │   │   ├── requirements.txt          # Python 依赖
-│   │   └── server.py                 # gRPC 服务入口（含 Consul 注册 + 优雅退出）
+│   │   └── server.py                 # gRPC 服务入口（含 Consul 注册 + Jaeger 初始化 + 优雅退出）
 │   │
 │   └── goods_srv/                    # 商品服务
 │       ├── handler/                  # gRPC 服务实现
@@ -45,7 +47,7 @@ AtopMall/
 │       ├── tests/                    # gRPC 客户端测试
 │       │   └── goods.py              # 商品服务 gRPC 测试
 │       ├── requirements.txt          # Python 依赖
-│   │   └── server.py                 # gRPC 服务入口（含 Consul 注册 + 优雅退出）
+│   │   └── server.py                 # gRPC 服务入口（含 Consul 注册 + Jaeger 初始化 + 优雅退出）
 │   │
 │   ├── order_srv/                    # 订单服务
 │   │   ├── handler/                  # gRPC 服务实现
@@ -68,7 +70,7 @@ AtopMall/
 │   │   ├── tests/                    # gRPC 客户端测试
 │   │   │   └── order_client.py       # 订单服务 gRPC 测试
 │   │   ├── requirements.txt          # Python 依赖
-│   │   └── server.py                 # gRPC 服务入口 + RocketMQ 消费者（order_timeout）+ Consul 注册 + 优雅退出
+│   │   └── server.py                 # gRPC 服务入口 + RocketMQ 消费者（order_timeout）+ Consul 注册 + Jaeger 初始化 + 优雅退出
 │   │
 │   ├── inventory_srv/                # 库存服务
 │   │   ├── handler/                  # gRPC 服务实现
@@ -86,7 +88,7 @@ AtopMall/
 │   │   │   ├── lock_test.py          # 分布式锁并发测试
 │   │   │   └── redis_loc_test.py     # Redis 锁实现测试
 │   │   ├── requirements.txt          # Python 依赖
-│   │   └── server.py                 # gRPC 服务入口 + RocketMQ 消费者（order_reback）+ Consul 注册 + 优雅退出
+│   │   └── server.py                 # gRPC 服务入口 + RocketMQ 消费者（order_reback）+ Consul 注册 + Jaeger 初始化 + 优雅退出
 │   │
 │   └── userop_srv/                   # 用户操作服务
 │       ├── handler/                  # gRPC 服务实现
@@ -108,7 +110,7 @@ AtopMall/
 │       ├── settings/                 # 配置管理
 │       │   └── settings.py           # Nacos 配置加载 + 配置变更监听
 │       ├── requirements.txt          # Python 依赖
-│       └── server.py                 # gRPC 服务入口（含 Consul 注册 + 优雅退出）
+│       └── server.py                 # gRPC 服务入口（含 Consul 注册 + Jaeger 初始化 + 优雅退出）
 │
 ├── atopmall_web/                     # Web API 层（Go + Gin）
 │   ├── user_web/                     # 用户 Web 服务
@@ -129,10 +131,11 @@ AtopMall/
 │   │   │       └── user.go           # UserResponse 等响应结构体
 │   │   ├── initialize/               # 初始化（配置加载、路由、日志、Redis、Consul 服务发现）
 │   │   │   ├── config.go             # Viper + Nacos 配置加载
+│   │   │   ├── jaeger_trace.go       # Jaeger TracerProvider + Propagator 初始化
 │   │   │   ├── logger.go             # Zap 日志初始化
 │   │   │   ├── redis.go              # Redis 客户端初始化
-│   │   │   ├── router.go             # Gin 路由注册
-│   │   │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡）
+│   │   │   ├── router.go             # Gin 路由注册（含 /health 健康检查 + otelgin 中间件）
+│   │   │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡 + otelgrpc 链路追踪）
 │   │   │   └── validator_trans.go    # 表单验证器中文翻译
 │   │   ├── middlewares/              # 中间件（JWT、CORS、权限）
 │   │   │   ├── admin.go              # 管理员权限中间件
@@ -167,9 +170,10 @@ AtopMall/
 │       │   └── global.go             # ServerConfig / Trans / GoodsSrvClient
 │       ├── initialize/               # 初始化（配置加载、路由、日志、Consul 服务发现）
 │       │   ├── config.go             # Viper + Nacos 配置加载
+│       │   ├── jaeger_trace.go       # Jaeger TracerProvider + Propagator 初始化
 │       │   ├── logger.go             # Zap 日志初始化
-│       │   ├── router.go             # Gin 路由注册（含 /health 健康检查）
-│       │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡）
+│       │   ├── router.go             # Gin 路由注册（含 /health 健康检查 + otelgin 中间件）
+│       │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡 + otelgrpc 链路追踪）
 │       │   └── validator_trans.go    # 表单验证器中文翻译
 │       ├── middlewares/              # 中间件（JWT、CORS、权限）
 │       │   ├── admin.go              # 管理员权限中间件
@@ -202,9 +206,10 @@ AtopMall/
 │   │   │   └── global.go             # ServerConfig / Trans / MinioCli
 │   │   ├── initialize/               # 初始化（配置加载、路由、日志、MinIO 客户端）
 │   │   │   ├── config.go             # Viper + Nacos 配置加载
+│   │   │   ├── jaeger_trace.go       # Jaeger TracerProvider + Propagator 初始化
 │   │   │   ├── logger.go             # Zap 日志初始化
 │   │   │   ├── minio_oss.go          # MinIO 客户端初始化（自动创建桶）
-│   │   │   ├── router.go             # Gin 路由注册（含 /health 健康检查）
+│   │   │   ├── router.go             # Gin 路由注册（含 /health 健康检查 + otelgin 中间件）
 │   │   │   └── validator.go          # 表单验证器中文翻译
 │   │   ├── middlewares/              # 中间件（JWT、CORS、权限）
 │   │   │   ├── admin.go              # 管理员权限中间件
@@ -247,9 +252,10 @@ AtopMall/
 │   │   │   └── global.go             # ServerConfig / Trans / OrderSrvClient / GoodsSrvClient / InventorySrvClient
 │   │   ├── initialize/               # 初始化（配置加载、路由、日志、Consul 服务发现）
 │   │   │   ├── config.go             # Viper + Nacos 配置加载
+│   │   │   ├── jaeger_trace.go       # Jaeger TracerProvider + Propagator 初始化
 │   │   │   ├── logger.go             # Zap 日志初始化
-│   │   │   ├── router.go             # Gin 路由注册（含 /health 健康检查）
-│   │   │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡、连接订单/商品/库存服务）
+│   │   │   ├── router.go             # Gin 路由注册（含 /health 健康检查 + otelgin 中间件）
+│   │   │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡 + otelgrpc 链路追踪、连接订单/商品/库存服务）
 │   │   │   └── validator_trans.go    # 表单验证器中文翻译
 │   │   ├── middlewares/              # 中间件（JWT、CORS）
 │   │   │   ├── cors.go               # CORS 跨域中间件
@@ -297,9 +303,10 @@ AtopMall/
 │       │   └── global.go             # ServerConfig / Trans / UseropSrvClient
 │       ├── initialize/               # 初始化（配置加载、路由、日志、Consul 服务发现）
 │       │   ├── config.go             # Viper + Nacos 配置加载
+│       │   ├── jaeger_trace.go       # Jaeger TracerProvider + Propagator 初始化
 │       │   ├── logger.go             # Zap 日志初始化
-│       │   ├── router.go             # Gin 路由注册（含 /health 健康检查）
-│       │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡）
+│       │   ├── router.go             # Gin 路由注册（含 /health 健康检查 + otelgin 中间件）
+│       │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡 + otelgrpc 链路追踪）
 │       │   └── validator_trans.go    # 表单验证器中文翻译
 │       ├── middlewares/              # 中间件（JWT、CORS）
 │       │   ├── cors.go               # CORS 跨域中间件
@@ -354,14 +361,15 @@ AtopMall/
 
 Python + gRPC 实现的微服务层，每个服务独立目录，共享 `common/` 公共模块。
 
-| 目录               | 说明                                                                            |
-| ------------------ | ------------------------------------------------------------------------------- |
-| `common/register/` | Consul 服务注册公共模块，提供抽象基类和 Consul 实现                             |
-| `user_srv/`        | 用户微服务，提供用户 CRUD、密码校验等 gRPC 接口                                 |
-| `goods_srv/`       | 商品微服务，提供商品/分类/品牌/轮播图/品牌分类等 gRPC 接口                      |
-| `order_srv/`       | 订单微服务，提供购物车 CRUD、订单创建/查询/详情，RocketMQ 事务消息+超时自动取消 |
-| `inventory_srv/`   | 库存微服务，提供库存设置/查询/扣减/归还，Redis 分布式锁 + RocketMQ 异步归还     |
-| `userop_srv/`      | 用户操作微服务，提供留言、用户收藏、收货地址 CRUD 等 gRPC 接口                  |
+| 目录                   | 说明                                                                             |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| `common/register/`     | Consul 服务注册公共模块，提供抽象基类和 Consul 实现                              |
+| `common/jaeger_trace/` | OpenTelemetry + Jaeger 链路追踪公共模块，统一 Tracer 初始化 + 健康检查 Span 过滤 |
+| `user_srv/`            | 用户微服务，提供用户 CRUD、密码校验等 gRPC 接口                                  |
+| `goods_srv/`           | 商品微服务，提供商品/分类/品牌/轮播图/品牌分类等 gRPC 接口                       |
+| `order_srv/`           | 订单微服务，提供购物车 CRUD、订单创建/查询/详情，RocketMQ 事务消息+超时自动取消  |
+| `inventory_srv/`       | 库存微服务，提供库存设置/查询/扣减/归还，Redis 分布式锁 + RocketMQ 异步归还      |
+| `userop_srv/`          | 用户操作微服务，提供留言、用户收藏、收货地址 CRUD 等 gRPC 接口                   |
 
 每个微服务目录结构统一：
 
@@ -422,24 +430,25 @@ xxx_web/
 
 ### 微服务层关键文件
 
-| 文件                   | 说明                                                                  |
-| ---------------------- | --------------------------------------------------------------------- |
-| `server.py`            | 服务入口，包含 gRPC 服务器启动、Consul 注册、优雅退出、Nacos 配置监听 |
-| `settings/settings.py` | Nacos 配置加载，解析 MySQL、Consul、RocketMQ 等服务配置               |
-| `model/models.py`      | Peewee ORM 模型定义，BaseModel 提供逻辑删除、连接池、断线重连         |
-| `handler/*.py`         | gRPC 服务实现，包含业务逻辑和 RocketMQ 事务消息/消费者处理            |
+| 文件                   | 说明                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| `server.py`            | 服务入口，包含 gRPC 服务器启动、Consul 注册、Jaeger 初始化、优雅退出、Nacos 配置监听 |
+| `settings/settings.py` | Nacos 配置加载，解析 MySQL、Consul、RocketMQ 等服务配置                              |
+| `model/models.py`      | Peewee ORM 模型定义，BaseModel 提供逻辑删除、连接池、断线重连                        |
+| `handler/*.py`         | gRPC 服务实现，包含业务逻辑和 RocketMQ 事务消息/消费者处理                           |
 
 ### Web API 层关键文件
 
-| 文件                                | 说明                                                        |
-| ----------------------------------- | ----------------------------------------------------------- |
-| `main.go`                           | 服务入口，包含初始化流程、路由注册、Consul 注册、服务器启动 |
-| `initialize/config.go`              | Viper + Nacos 配置加载，支持配置变更监听                    |
-| `initialize/src_conn.go`            | Consul 服务发现 + gRPC 客户端初始化（含负载均衡）           |
-| `initialize/router.go`              | Gin 路由注册，含 `/health` 健康检查端点                     |
-| `middlewares/jwt.go`                | JWT 认证中间件，解析 x-token 头部                           |
-| `router/*.go`                       | 路由分组，定义 API 路径和中间件挂载                         |
-| `utils/register/consul/register.go` | Consul 服务注册（接口定义 + 实现），支持 HTTP 健康检查      |
+| 文件                                | 说明                                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------------- |
+| `main.go`                           | 服务入口，包含初始化流程（ConfigInit → JaegerTracerInit → Router）、Consul 注册、服务器启动 |
+| `initialize/config.go`              | Viper + Nacos 配置加载，支持配置变更监听                                                    |
+| `initialize/jaeger_trace.go`        | Jaeger TracerProvider + Propagator 初始化，OTLP gRPC 上报                                   |
+| `initialize/src_conn.go`            | Consul 服务发现 + gRPC 客户端初始化（含负载均衡 + otelgrpc 链路追踪）                       |
+| `initialize/router.go`              | Gin 路由注册，含 `/health` 健康检查端点 + otelgin 中间件                                    |
+| `middlewares/jwt.go`                | JWT 认证中间件，解析 x-token 头部                                                           |
+| `router/*.go`                       | 路由分组，定义 API 路径和中间件挂载                                                         |
+| `utils/register/consul/register.go` | Consul 服务注册（接口定义 + 实现），支持 HTTP 健康检查                                      |
 
 ### 文件存储服务关键文件（oss-web）
 
@@ -482,3 +491,13 @@ xxx_web/
 | `stop-all.sh`   | 销毁 tmux 会话 + 兜底清理残留进程（Linux） |
 | `start-all.ps1` | PowerShell 多窗口启动所有微服务（Windows） |
 | `stop-all.ps1`  | 关闭所有微服务窗口及其子进程（Windows）    |
+
+### 链路追踪关键文件（Jaeger 相关）
+
+| 文件                           | 说明                                                                         |
+| ------------------------------ | ---------------------------------------------------------------------------- |
+| `common/jaeger_trace/trace.py` | Python 统一 init_tracer()，过滤健康检查 Span，OTLP gRPC 上报到 Jaeger        |
+| `initialize/jaeger_trace.go`   | Go TracerProvider + Propagator 初始化，OTLP gRPC 上报到 Jaeger               |
+| `initialize/router.go`         | 挂载 otelgin 中间件，健康检查路由置于中间件之前                              |
+| `initialize/src_conn.go`       | 所有 gRPC 连接添加 otelgrpc.NewClientHandler()，实现跨服务 TraceContext 传递 |
+| `server.py`                    | 启动时调用 init_tracer() 初始化 Jaeger Tracer                                |

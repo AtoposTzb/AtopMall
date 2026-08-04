@@ -1,6 +1,6 @@
 # AtopMall 电商微服务项目
 
-基于 Go + Python 双语言混合开发的电商微服务项目。微服务层使用 Python + gRPC 实现业务逻辑，Web API 层使用 Go + Gin 对外提供 HTTP 接口，通过 gRPC 进行服务间通信，使用 Consul 实现服务注册与发现，使用 Nacos 作为配置中心，使用 RocketMQ 实现分布式事务与异步解耦。
+基于 Go + Python 双语言混合开发的电商微服务项目。微服务层使用 Python + gRPC 实现业务逻辑，Web API 层使用 Go + Gin 对外提供 HTTP 接口，通过 gRPC 进行服务间通信，使用 Consul 实现服务注册与发现，使用 Nacos 作为配置中心，使用 RocketMQ 实现分布式事务与异步解耦，使用 OpenTelemetry + Jaeger 实现全链路追踪。
 
 ## 一、项目结构
 
@@ -22,29 +22,30 @@
 
 ## 二、技术栈总览
 
-| 分类         | 技术选型                  | 说明                                       |
-| ------------ | ------------------------- | ------------------------------------------ |
-| 开发语言     | Go 1.22+ / Python 3.13+   | Go 负责 Web API 层，Python 负责微服务层    |
-| 微服务通信   | gRPC + Protobuf           | 服务间远程调用                             |
-| 服务注册发现 | Consul                    | 微服务注册与健康检查                       |
-| 配置中心     | Nacos                     | 统一配置管理，支持配置变更实时推送         |
-| Web 框架     | Gin                       | Go HTTP 接口层开发                         |
-| Python ORM   | Peewee                    | Python 数据库操作（含连接池 + 断线重连）   |
-| Go ORM       | GORM（待集成）            | Go 数据库操作                              |
-| Python 日志  | Loguru                    | Python 端日志组件                          |
-| Go 日志      | Zap                       | Go 端高性能结构化日志                      |
-| 配置管理     | Viper                     | YAML 配置文件加载与管理（本地 Nacos 连接） |
-| 数据库       | MySQL                     | 数据存储                                   |
-| 缓存         | Redis                     | 验证码存储、会话管理、分布式锁             |
-| 分布式锁     | Redis + python-redis-lock | 防止超卖等并发问题                         |
-| 乐观锁       | MySQL version 字段        | 库存扣减并发控制                           |
-| 消息队列     | RocketMQ                  | 事务消息、延时消息、库存归还异步解耦       |
-| 支付         | 支付宝 v3                 | 网页支付、支付回调、订单状态同步           |
-| JWT 认证     | golang-jwt/v5             | Token 生成与验证                           |
-| 图片验证码   | base64Captcha             | 登录防暴力破解                             |
-| 邮件服务     | jordan-wright/email       | SMTP 邮箱验证码发送                        |
-| 表单验证     | go-playground/validator   | 请求参数校验                               |
-| 对象存储     | MinIO                     | 文件存储（预签名 PUT 直传、孤儿文件清理）  |
+| 分类         | 技术选型                  | 说明                                              |
+| ------------ | ------------------------- | ------------------------------------------------- |
+| 开发语言     | Go 1.22+ / Python 3.13+   | Go 负责 Web API 层，Python 负责微服务层           |
+| 微服务通信   | gRPC + Protobuf           | 服务间远程调用                                    |
+| 服务注册发现 | Consul                    | 微服务注册与健康检查                              |
+| 配置中心     | Nacos                     | 统一配置管理，支持配置变更实时推送                |
+| Web 框架     | Gin                       | Go HTTP 接口层开发                                |
+| Python ORM   | Peewee                    | Python 数据库操作（含连接池 + 断线重连）          |
+| Go ORM       | GORM（待集成）            | Go 数据库操作                                     |
+| Python 日志  | Loguru                    | Python 端日志组件                                 |
+| Go 日志      | Zap                       | Go 端高性能结构化日志                             |
+| 配置管理     | Viper                     | YAML 配置文件加载与管理（本地 Nacos 连接）        |
+| 数据库       | MySQL                     | 数据存储                                          |
+| 缓存         | Redis                     | 验证码存储、会话管理、分布式锁                    |
+| 分布式锁     | Redis + python-redis-lock | 防止超卖等并发问题                                |
+| 乐观锁       | MySQL version 字段        | 库存扣减并发控制                                  |
+| 消息队列     | RocketMQ                  | 事务消息、延时消息、库存归还异步解耦              |
+| 支付         | 支付宝 v3                 | 网页支付、支付回调、订单状态同步                  |
+| JWT 认证     | golang-jwt/v5             | Token 生成与验证                                  |
+| 图片验证码   | base64Captcha             | 登录防暴力破解                                    |
+| 邮件服务     | jordan-wright/email       | SMTP 邮箱验证码发送                               |
+| 表单验证     | go-playground/validator   | 请求参数校验                                      |
+| 对象存储     | MinIO                     | 文件存储（预签名 PUT 直传、孤儿文件清理）         |
+| 链路追踪     | OpenTelemetry + Jaeger    | 全链路追踪（Go Gin + Python gRPC），OTLP 协议上报 |
 
 ## 三、已完成功能
 
@@ -61,7 +62,7 @@
 | 用户操作 Web 服务 | Go Gin      | 留言、收藏、地址管理、JWT 认证                              |
 | 文件存储服务      | Go Gin      | MinIO 预签名直传、拖拽上传、孤儿文件清理                    |
 
-**通用能力**：Consul 服务注册、gRPC 健康检查、优雅退出、Nacos 配置热更新、动态端口分配、逻辑删除
+**通用能力**：Consul 服务注册、gRPC 健康检查、优雅退出、Nacos 配置热更新、动态端口分配、逻辑删除、OpenTelemetry 全链路追踪
 
 详细功能清单和接口说明请参见 [已完成功能文档](docs/features.md)
 
@@ -111,6 +112,7 @@
 | `grpcio-tools`                       | Python gRPC 代码生成                   |
 | `python-consul` / `nacos-sdk-python` | 服务注册与配置中心客户端               |
 | `rocketmq-client-python`             | RocketMQ 消息队列客户端                |
+| `opentelemetry-api/sdk`              | OpenTelemetry 链路追踪（Go + Python）  |
 | `tmux`                               | Linux 终端复用器（一键启停脚本依赖）   |
 
 **Proto 生成命令**（在 proto 文件所在目录下执行）：
@@ -137,6 +139,7 @@ python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. xxx.proto
 6. 本地启动 Consul 服务（服务注册与发现）
 7. Docker 启动 Nacos 服务（配置中心），并在 Nacos 中创建对应的配置
 8. 启动 RocketMQ NameServer 和 Broker（消息队列，订单和库存服务依赖）
+9. 启动 Jaeger（链路追踪，可选），推荐使用 Docker 一键启动
 
 > 没有开发经验的可以参考我的有道云笔记:
 > 【有道云笔记】项目前期准备
@@ -146,22 +149,37 @@ https://share.note.youdao.com/s/RA68Zm9P
 
 在 Nacos 控制台中创建以下配置：
 
-| 服务          | Data ID            | Group | 配置内容                                       |
-| ------------- | ------------------ | ----- | ---------------------------------------------- |
-| user_srv      | user-srv.json      | dev   | MySQL、Consul、服务名称等配置                  |
-| user_web      | user-web.json      | dev   | MySQL、Redis、Consul、JWT、邮箱等配置          |
-| goods_srv     | goods-srv.json     | dev   | MySQL、Consul、服务名称等配置                  |
-| goods_web     | goods-web.json     | dev   | Consul、JWT、商品服务地址等配置                |
-| order_srv     | order-srv.json     | dev   | MySQL、Consul、RocketMQ、商品/库存服务名等配置 |
-| order_web     | order-web.json     | dev   | Consul、JWT、支付宝、订单服务地址等配置        |
-| inventory_srv | inventory-srv.json | dev   | MySQL、Redis、RocketMQ、Consul 等配置          |
-| userop_srv    | userop-srv.json    | dev   | MySQL、Consul、服务名称等配置                  |
-| userop_web    | userop-web.json    | dev   | Consul、JWT、用户操作服务地址等配置            |
-| oss_web       | oss-web.json       | dev   | MinIO、Consul 等配置                           |
+| 服务          | Data ID            | Group | 配置内容                                               |
+| ------------- | ------------------ | ----- | ------------------------------------------------------ |
+| user_srv      | user-srv.json      | dev   | MySQL、Consul、Jaeger、服务名称等配置                  |
+| user_web      | user-web.json      | dev   | MySQL、Redis、Consul、JWT、Jaeger、邮箱等配置          |
+| goods_srv     | goods-srv.json     | dev   | MySQL、Consul、Jaeger、服务名称等配置                  |
+| goods_web     | goods-web.json     | dev   | Consul、JWT、Jaeger、商品服务地址等配置                |
+| order_srv     | order-srv.json     | dev   | MySQL、Consul、RocketMQ、Jaeger、商品/库存服务名等配置 |
+| order_web     | order-web.json     | dev   | Consul、JWT、支付宝、Jaeger、订单服务地址等配置        |
+| inventory_srv | inventory-srv.json | dev   | MySQL、Redis、RocketMQ、Jaeger、Consul 等配置          |
+| userop_srv    | userop-srv.json    | dev   | MySQL、Consul、Jaeger、服务名称等配置                  |
+| userop_web    | userop-web.json    | dev   | Consul、JWT、Jaeger、用户操作服务地址等配置            |
+| oss_web       | oss-web.json       | dev   | MinIO、Consul、Jaeger 等配置                           |
 
 > user_web / goods_web 的 nacos 配置可参考 `config-debug_templ.yaml` 文件
 
-### 3. 启动用户微服务（Python gRPC）
+### 3. 启动 Jaeger（可选，用于链路追踪）
+
+```bash
+# Docker 一键启动 Jaeger（集成了 Collector + Query UI + In-Memory Storage）
+docker run -d --name jaeger \
+  -p 16686:16686 \
+  -p 4317:4317 \
+  -p 4318:4318 \
+  jaegertracing/all-in-one:latest
+```
+
+> Jaeger UI 访问地址：http://localhost:16686
+> OTLP gRPC 上报端口：4317
+> 各服务启动后自动上报 Trace 数据到 Jaeger，在 Jaeger UI 中可查看全链路调用链
+
+### 4. 启动用户微服务（Python gRPC）
 
 ```bash
 cd atopmall_srvs/user_srv
@@ -169,9 +187,9 @@ pip install -r requirements.txt
 python -m server
 ```
 
-> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取
+> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，自动初始化 Jaeger 链路追踪
 
-### 4. 启动商品微服务（Python gRPC）
+### 5. 启动商品微服务（Python gRPC）
 
 ```bash
 cd atopmall_srvs/goods_srv
@@ -179,9 +197,9 @@ pip install -r requirements.txt
 python -m server
 ```
 
-> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取
+> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，自动初始化 Jaeger 链路追踪
 
-### 5. 启动用户 Web 服务（Go Gin）
+### 6. 启动用户 Web 服务（Go Gin）
 
 ```bash
 cd atopmall_web/user_web
@@ -191,9 +209,9 @@ go mod tidy
 go run main.go
 ```
 
-> 默认监听端口：18081，启动后从 Nacos 拉取业务配置，从 Consul 发现用户服务地址
+> 默认监听端口：18081，启动后从 Nacos 拉取业务配置，从 Consul 发现用户服务地址，自动初始化 Jaeger 链路追踪，Gin 路由挂载 otelgin 中间件
 
-### 6. 启动商品 Web 服务（Go Gin）
+### 7. 启动商品 Web 服务（Go Gin）
 
 ```bash
 cd atopmall_web/goods_web
@@ -203,9 +221,9 @@ go mod tidy
 go run main.go
 ```
 
-> 默认监听端口：18082，启动后从 Nacos 拉取业务配置，从 Consul 发现商品服务地址，自动注册到 Consul
+> 默认监听端口：18082，启动后从 Nacos 拉取业务配置，从 Consul 发现商品服务地址，自动注册到 Consul，自动初始化 Jaeger 链路追踪
 
-### 7. 启动文件存储服务（Go Gin）
+### 8. 启动文件存储服务（Go Gin）
 
 ```bash
 cd atopmall_web/oss-web
@@ -215,9 +233,9 @@ go mod tidy
 go run main.go
 ```
 
-> 默认监听端口：18083，启动后从 Nacos 拉取业务配置，初始化 MinIO 客户端，自动注册到 Consul
+> 默认监听端口：18083，启动后从 Nacos 拉取业务配置，初始化 MinIO 客户端，自动注册到 Consul，自动初始化 Jaeger 链路追踪
 
-### 8. 启动订单微服务（Python gRPC）
+### 9. 启动订单微服务（Python gRPC）
 
 ```bash
 cd atopmall_srvs/order_srv
@@ -225,9 +243,9 @@ pip install -r requirements.txt
 python -m server
 ```
 
-> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，需先启动 RocketMQ、商品服务和库存服务
+> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，需先启动 RocketMQ、商品服务和库存服务，自动初始化 Jaeger 链路追踪
 
-### 9. 启动库存微服务（Python gRPC）
+### 10. 启动库存微服务（Python gRPC）
 
 ```bash
 cd atopmall_srvs/inventory_srv
@@ -235,9 +253,9 @@ pip install -r requirements.txt
 python -m server
 ```
 
-> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，需要 Redis 支持分布式锁，需要 RocketMQ 支持库存异步归还
+> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，需要 Redis 支持分布式锁，需要 RocketMQ 支持库存异步归还，自动初始化 Jaeger 链路追踪
 
-### 10. 启动用户操作微服务（Python gRPC）
+### 11. 启动用户操作微服务（Python gRPC）
 
 ```bash
 cd atopmall_srvs/userop_srv
@@ -245,9 +263,9 @@ pip install -r requirements.txt
 python -m server
 ```
 
-> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取
+> 默认使用动态端口，启动后自动注册到 Consul，配置从 Nacos 拉取，自动初始化 Jaeger 链路追踪
 
-### 11. 启动订单 Web 服务（Go Gin）
+### 12. 启动订单 Web 服务（Go Gin）
 
 ```bash
 cd atopmall_web/order_web
@@ -257,9 +275,9 @@ go mod tidy
 go run main.go
 ```
 
-> 默认监听端口：18084，启动后从 Nacos 拉取业务配置，从 Consul 发现订单服务地址
+> 默认监听端口：18084，启动后从 Nacos 拉取业务配置，从 Consul 发现订单服务地址，自动初始化 Jaeger 链路追踪
 
-### 12. 启动用户操作 Web 服务（Go Gin）
+### 13. 启动用户操作 Web 服务（Go Gin）
 
 ```bash
 cd atopmall_web/userop_web
@@ -269,7 +287,7 @@ go mod tidy
 go run main.go
 ```
 
-> 默认监听端口：18085，启动后从 Nacos 拉取业务配置，从 Consul 发现用户操作服务地址
+> 默认监听端口：18085，启动后从 Nacos 拉取业务配置，从 Consul 发现用户操作服务地址，自动初始化 Jaeger 链路追踪
 
 ## 七、配置说明
 
@@ -279,8 +297,9 @@ go run main.go
 
 ```
 启动 → Viper 读取本地 config-debug.yaml（Nacos 连接信息）
-     → 连接 Nacos → 拉取业务配置（MySQL、Redis、Consul、RocketMQ 等）
+     → 连接 Nacos → 拉取业务配置（MySQL、Redis、Consul、RocketMQ、Jaeger 等）
      → 解析到全局变量 → 注册配置变更监听（实时生效）
+     → 初始化 Jaeger TracerProvider（Go）/ init_tracer（Python）
 ```
 
 | 本地配置文件              | 用途                         |
@@ -295,13 +314,14 @@ go run main.go
 
 ![alt text](docs/image/consul注册服务简单图示.png)
 
-1. **Python 微服务**（user_srv / goods_srv / order_srv / inventory_srv / userop_srv）启动时通过 `python-consul` 注册到 Consul，包含 GRPC 健康检查
+1. **Python 微服务**（user_srv / goods_srv / order_srv / inventory_srv / userop_srv）启动时通过 `python-consul` 注册到 Consul，包含 GRPC 健康检查，同时初始化 Jaeger TracerProvider
 2. **order_srv** 启动后订阅 RocketMQ 延时消息 topic（`order_timeout`），用于订单超时自动取消
 3. **inventory_srv** 启动后订阅 RocketMQ 消息 topic（`order_reback`），用于订单取消时异步归还库存
 4. **Go Web 服务**启动时从 Consul 查询对应微服务的地址和端口
-5. **Go Web 服务**建立 gRPC 长连接（支持负载均衡策略），后续请求复用该连接
+5. **Go Web 服务**建立 gRPC 长连接（支持负载均衡策略 + otelgrpc 链路追踪拦截器），后续请求复用该连接
 6. **Go Web 服务**（user_web / goods_web / order_web / userop_web / oss_web）启动时自动注册到 Consul（HTTP 健康检查），供前端或其他服务发现
 7. 微服务异常退出时，Consul 自动注销该服务实例
+8. **全链路追踪**：所有 HTTP 请求通过 otelgin 中间件产生 Span，gRPC 调用通过 otelgrpc 拦截器传递 TraceContext，Python gRPC 服务端通过 OpenTelemetry 拦截器接收并生成 Span，最终所有 Span 上报到 Jaeger
 
 ## 九、用户注册流程
 
@@ -362,10 +382,10 @@ Nacos 配置中心                         RocketMQ 消息队列
 ├── userop-web.json    (Go)
 └── oss-web.json       (Go + MinIO)
 
-各服务启动流程：
-  Python 微服务: Nacos 拉取配置 → 初始化 DB → Consul 注册 → RocketMQ 订阅 → gRPC 健康检查 → 优雅退出
-  Go Web 服务:   Nacos 拉取配置 → 初始化各组件 → Consul 发现微服务 → gRPC 长连接(负载均衡) → Consul 注册(HTTP 健康检查)
-  Go 文件服务:   Nacos 拉取配置 → 初始化 MinIO 客户端 → Consul 注册(HTTP 健康检查)
+Jaeger 链路追踪                         各服务启动流程：
+├── OTLP gRPC (4317) ← Go Web 服务      Python 微服务: Nacos 拉取配置 → 初始化 DB → Jaeger Tracer → Consul 注册 → RocketMQ 订阅 → gRPC 健康检查 → 优雅退出
+├── OTLP gRPC (4317) ← Python 微服务    Go Web 服务:   Nacos 拉取配置 → 初始化各组件 → Jaeger Tracer → Consul 发现微服务 → gRPC 长连接(负载均衡+otelgrpc) → Consul 注册(HTTP 健康检查)
+└── Jaeger UI (16686) 查询调用链         Go 文件服务:   Nacos 拉取配置 → 初始化 MinIO 客户端 → Jaeger Tracer → Consul 注册(HTTP 健康检查)
 ```
 
 ## 十三、各服务 README

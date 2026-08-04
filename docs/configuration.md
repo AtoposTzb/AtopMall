@@ -32,9 +32,11 @@
 ```
 启动 → Viper 读取本地 config-debug.yaml（Nacos 连接信息）
      → 连接 Nacos 配置中心
-     → 拉取业务配置（MySQL、Redis、Consul、RocketMQ、支付宝 等）
+     → 拉取业务配置（MySQL、Redis、Consul、RocketMQ、Jaeger、支付宝 等）
      → 解析配置到全局变量
      → 注册配置变更监听（配置修改后实时生效）
+     → （Go Web 服务）初始化 Jaeger TracerProvider
+     → （Python 微服务）初始化 Jaeger Tracer（init_tracer）
      → （Python 微服务）初始化 RocketMQ Producer/Consumer 客户端
 ```
 
@@ -97,3 +99,38 @@ order_web 集成支付宝网页支付，配置从 Nacos 的 `alipay` 字段拉�
 | `alipay.return_url`     | 同步回调跳转地址（用户支付完成后跳转）                      |
 | `alipay.is_production`  | 是否生产环境（`false` 为沙箱环境）                          |
 | `alipay.product_code`   | 销售产品码，固定为 `FAST_INSTANT_TRADE_PAY`（电脑网站支付） |
+
+## Jaeger 配置
+
+所有服务（Go Web 和 Python 微服务）均支持 OpenTelemetry + Jaeger 全链路追踪，配置从 Nacos 的 `jaeger` 字段拉取。
+
+**配置字段**（在 Nacos 的各服务配置文件中）：
+
+```json
+{
+  "jaeger": {
+    "host": "192.168.1.106",
+    "port": 4317,
+    "name": "user_web"
+  }
+}
+```
+
+| 字段          | 说明                               | 默认值     |
+| ------------- | ---------------------------------- | ---------- |
+| `jaeger.host` | Jaeger OTLP gRPC 地址              | 无（必填） |
+| `jaeger.port` | OTLP gRPC 端口（Jaeger 默认 4317） | 4317       |
+| `jaeger.name` | 服务名称，在 Jaeger UI 中显示      | 无（必填） |
+
+**实现机制**：
+
+| 层级               | 实现方式                                                                                             |
+| ------------------ | ---------------------------------------------------------------------------------------------------- |
+| Go Web 服务（Gin） | `initialize/jaeger_trace.go` 初始化 TracerProvider + Propagator，`router.go` 挂载 `otelgin` 中间件   |
+| Go gRPC 客户端     | `src_conn.go` 中所有 gRPC 连接添加 `otelgrpc.NewClientHandler()`，API 层透传 `ctx.Request.Context()` |
+| Python 微服务      | `common/jaeger_trace/trace.py` 统一 `init_tracer()` 函数，`server.py` 启动时调用                     |
+| Python gRPC 服务端 | `grpc.aio` 框架自动集成 OpenTelemetry 拦截器，过滤健康检查 Span                                      |
+
+**健康检查 Span 过滤**：Consul 每 5 秒触发一次 gRPC 健康检查，会产生大量无意义的 trace 数据。Python 端通过 `_FilterHealthExporter` 过滤 `/grpc.health.v1.Health/Check` 的 Span；Go 端将健康检查路由放在 `otelgin` 中间件之前，避免产生 Span。
+
+**启动依赖**：Jaeger 为可选组件，不启动不影响业务功能。启动后所有服务的请求链路自动上报。
