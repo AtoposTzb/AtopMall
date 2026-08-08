@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -54,12 +56,26 @@ func GetGoodsList(ctx *gin.Context) {
 	req.Brand = int32(brandIdInt)
 
 	//grpc 请求商品的service服务
+	// 限流
+	e, b := sentinel.Entry("goods-list", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
 	r, err := global.GoodsSrvCli.Goods.GoodsList(ctx.Request.Context(), req)
 	if err != nil {
 		zap.S().Errorw("[GetGoodsList] 查询 【商品列表】失败")
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
+	// 退出限流
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 
 	reMap := map[string]interface{}{
 		"total": r.Total,

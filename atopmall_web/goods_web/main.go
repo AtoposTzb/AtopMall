@@ -54,6 +54,10 @@ func main() {
 	}
 
 	zap.S().Debugf("启动服务器,端口:%d", global.ServerConfig.Port)
+
+	//9.初始化sentinel限流
+	initialize.SentinelInit()
+
 	// 启动服务器
 	//处理优雅的退出信号
 	go func() {
