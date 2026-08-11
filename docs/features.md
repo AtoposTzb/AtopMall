@@ -216,13 +216,14 @@
 
 ### 工具模块
 
-| 模块               | 说明                                                                                |
-| ------------------ | ----------------------------------------------------------------------------------- |
-| 动态端口获取       | `utils/addr_port.go` 获取系统可用端口                                               |
-| Redis 测试工具     | `api/redis_test/` 独立测试 Redis 连接                                               |
-| 响应结构体         | `global/responselist/` 统一 API 响应格式                                            |
-| 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略                                             |
-| Jaeger 链路追踪    | `initialize/jaeger_trace.go` 初始化 TracerProvider，`router.go` 挂载 otelgin 中间件 |
+| 模块               | 说明                                                                                      |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| 动态端口获取       | `utils/addr_port.go` 获取系统可用端口                                                     |
+| Redis 测试工具     | `api/redis_test/` 独立测试 Redis 连接                                                     |
+| 响应结构体         | `global/responselist/` 统一 API 响应格式                                                  |
+| 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略                                                   |
+| Jaeger 链路追踪    | `initialize/jaeger_trace.go` 初始化 TracerProvider，`router.go` 挂载 otelgin 中间件       |
+| Sentinel 限流熔断  | `initialize/sentinel.go` 7 条限流规则 + 7 条熔断规则，保护登录/注册/验证码/用户列表等接口 |
 
 ## 商品 Web 服务（Go Gin）
 
@@ -298,6 +299,7 @@
 | Consul 服务注册    | `utils/register/consul/register.go` 接口化注册实现                                                                |
 | 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略，单连接共享 5 个子服务客户端（Goods/Brand/Category/Banner/CategoryBrand） |
 | Jaeger 链路追踪    | `initialize/jaeger_trace.go` 初始化 TracerProvider，`router.go` 挂载 otelgin 中间件                               |
+| Sentinel 限流熔断  | `initialize/sentinel.go` 25 条限流规则 + 25 条熔断规则，保护商品/分类/品牌/轮播图/品牌分类全部接口                |
 
 ## 文件存储服务（Go Gin + MinIO）
 
@@ -323,6 +325,7 @@
 | MinIO 客户端初始化 | `initialize/miniooss.go` 自动创建桶、存储全局客户端                                 |
 | Consul 服务注册    | `utils/register/consul/register.go` 接口化注册实现                                  |
 | Jaeger 链路追踪    | `initialize/jaeger_trace.go` 初始化 TracerProvider，`router.go` 挂载 otelgin 中间件 |
+| Sentinel 限流熔断  | `initialize/sentinel.go` 3 条限流规则 + 3 条熔断规则，保护上传 Token 和文件清理接口 |
 
 ### 前端页面
 
@@ -372,13 +375,14 @@
 
 ### 工具模块
 
-| 模块               | 说明                                                                                |
-| ------------------ | ----------------------------------------------------------------------------------- |
-| 动态端口获取       | `utils/addr_port.go` 获取系统可用端口                                               |
-| Consul 服务注册    | `utils/register/consul/register.go` 接口化注册实现                                  |
-| 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略，连接订单服务、商品服务和库存服务           |
-| 支付宝 SDK 集成    | `api/pay/alipay.go` 使用 `smartwalle/alipay/v3` 生成支付链接和回调处理              |
-| Jaeger 链路追踪    | `initialize/jaeger_trace.go` 初始化 TracerProvider，`router.go` 挂载 otelgin 中间件 |
+| 模块               | 说明                                                                                   |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| 动态端口获取       | `utils/addr_port.go` 获取系统可用端口                                                  |
+| Consul 服务注册    | `utils/register/consul/register.go` 接口化注册实现                                     |
+| 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略，连接订单服务、商品服务和库存服务              |
+| 支付宝 SDK 集成    | `api/pay/alipay.go` 使用 `smartwalle/alipay/v3` 生成支付链接和回调处理                 |
+| Jaeger 链路追踪    | `initialize/jaeger_trace.go` 初始化 TracerProvider，`router.go` 挂载 otelgin 中间件    |
+| Sentinel 限流熔断  | `initialize/sentinel.go` 8 条限流规则 + 8 条熔断规则，保护订单/购物车/支付回调全部接口 |
 
 ## 用户操作 Web 服务（Go Gin）
 
@@ -428,3 +432,35 @@
 | Consul 服务注册    | `utils/register/consul/register.go` 接口化注册实现                                  |
 | 负载均衡 gRPC 连接 | `initialize/src_conn.go` 带负载均衡策略，连接用户操作服务                           |
 | Jaeger 链路追踪    | `initialize/jaeger_trace.go` 初始化 TracerProvider，`router.go` 挂载 otelgin 中间件 |
+| Sentinel 限流熔断  | `initialize/sentinel.go` 10 条限流规则 + 10 条熔断规则，保护留言/收藏/地址全部接口  |
+
+## 全局能力
+
+### Kong API 网关
+
+| 功能       | 说明                                                                     |
+| ---------- | ------------------------------------------------------------------------ |
+| 统一入口   | 前端请求统一通过 Kong 网关（端口 8000），不直接暴露 Web 服务端口         |
+| 路由分发   | 通过 Path 前缀（`/g`、`/u`、`/o`、`/op`、`/oss`）区分并转发到各 Web 服务 |
+| JWT 认证   | JWT 插件自动验证 Token 有效性，认证失败直接返回 401，不进入业务层        |
+| strip_path | 剥离 Path 前缀后转发，代码路由统一为 `/v1`                               |
+| 可视化管理 | 通过 Konga 面板管理路由、服务和 JWT 插件                                 |
+
+### Sentinel 限流熔断（全局）
+
+| 功能       | 说明                                                                 |
+| ---------- | -------------------------------------------------------------------- |
+| 接口级限流 | 53 条规则覆盖 5 个 Web 服务所有接口，查询类 10次/6s，操作类 3-5次/6s |
+| 熔断降级   | 53 条熔断规则，错误率 > 50% 自动熔断，5s 后半开试探恢复              |
+| 共享资源名 | 限流和熔断共用同一资源名，一个 `sentinel.Entry()` 同时检查两者       |
+| 错误追踪   | 59 处 `sentinel.TraceError` 覆盖所有 gRPC 调用错误路径               |
+| 快速失败   | 下游服务故障时立即返回 429，不等待 gRPC 超时，防止雪崩效应           |
+
+### JWT Token 兼容
+
+| 场景       | Token 格式          | 处理方式                               |
+| ---------- | ------------------- | -------------------------------------- |
+| 通过 Kong  | `Bearer <token>`    | `strings.HasPrefix` 判断，有前缀则剥离 |
+| 直连微服务 | `<token>`（无前缀） | 直接使用，不剥离                       |
+
+> 所有 Web 服务 `middlewares/jwt.go` 统一使用 `strings.HasPrefix` 兼容两种场景，避免直连微服务时 `strings.Split` 索引越界 panic。

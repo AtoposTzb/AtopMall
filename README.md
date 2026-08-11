@@ -26,6 +26,7 @@
 | ------------ | ------------------------- | ------------------------------------------------- |
 | 开发语言     | Go 1.22+ / Python 3.13+   | Go 负责 Web API 层，Python 负责微服务层           |
 | 微服务通信   | gRPC + Protobuf           | 服务间远程调用                                    |
+| API 网关     | Kong                      | 统一入口、路由分发、JWT 认证                      |
 | 服务注册发现 | Consul                    | 微服务注册与健康检查                              |
 | 配置中心     | Nacos                     | 统一配置管理，支持配置变更实时推送                |
 | Web 框架     | Gin                       | Go HTTP 接口层开发                                |
@@ -40,7 +41,8 @@
 | 乐观锁       | MySQL version 字段        | 库存扣减并发控制                                  |
 | 消息队列     | RocketMQ                  | 事务消息、延时消息、库存归还异步解耦              |
 | 支付         | 支付宝 v3                 | 网页支付、支付回调、订单状态同步                  |
-| JWT 认证     | golang-jwt/v5             | Token 生成与验证                                  |
+| JWT 认证     | golang-jwt/v5             | Token 生成与验证，兼容 Kong 前缀                  |
+| 限流熔断     | Sentinel (Go)             | 接口级限流（53 条规则）+ 熔断降级（53 条规则）    |
 | 图片验证码   | base64Captcha             | 登录防暴力破解                                    |
 | 邮件服务     | jordan-wright/email       | SMTP 邮箱验证码发送                               |
 | 表单验证     | go-playground/validator   | 请求参数校验                                      |
@@ -62,7 +64,7 @@
 | 用户操作 Web 服务 | Go Gin      | 留言、收藏、地址管理、JWT 认证                              |
 | 文件存储服务      | Go Gin      | MinIO 预签名直传、拖拽上传、孤儿文件清理                    |
 
-**通用能力**：Consul 服务注册、gRPC 健康检查、优雅退出、Nacos 配置热更新、动态端口分配、逻辑删除、OpenTelemetry 全链路追踪
+**通用能力**：Consul 服务注册、gRPC 健康检查、优雅退出、Nacos 配置热更新、动态端口分配、逻辑删除、OpenTelemetry 全链路追踪、Sentinel 限流熔断（53 条规则）
 
 详细功能清单和接口说明请参见 [已完成功能文档](docs/features.md)
 
@@ -101,9 +103,46 @@
 ├── message/                       # 留言（列表/创建）
 ├── userfavs/                      # 收藏（列表/详情/添加/删除）
 └── address/                       # 地址（列表/创建/删除/更新）
+
+> 路由统一为 `/v1`，Kong API 网关通过 Path 前缀（`/g`、`/u`、`/o`、`/op`、`/oss`）区分服务并 `strip_path=true` 剥离前缀转发
+
+## 五、Sentinel 限流熔断
+
+所有 Web 服务已集成 Sentinel 限流与熔断保护，使用共享资源名策略：限流规则和熔断规则共用同一资源名，一个 `sentinel.Entry()` 调用同时检查两者。
+
+### 限流策略
+
+| 服务       | 规则数 | 阈值说明                                                           |
+| ---------- | ------ | ------------------------------------------------------------------ |
+| goods_web  | 25 条  | 商品/分类/品牌/轮播图/分类品牌 CRUD，查询类 10次/6s，操作类 3次/6s |
+| order_web  | 8 条   | 订单/购物车/支付回调，查询类 10次/6s，操作类 3-5次/6s              |
+| user_web   | 7 条   | 用户列表/登录/注册/详情/更新/验证码，验证码 1次/60s                |
+| userop_web | 10 条  | 地址/收藏/留言 CRUD，查询类 10次/6s，操作类 3-5次/6s               |
+| oss_web    | 3 条   | 上传 Token 5次/6s，清理 1次/60s                                    |
+
+### 熔断策略
+
+| 参数     | 值         | 说明                    |
+| -------- | ---------- | ----------------------- |
+| 策略     | ErrorRatio | 错误比例触发            |
+| 阈值     | 50%        | 错误率超过 50% 打开熔断 |
+| 最小请求 | 5          | 统计窗口内至少 5 个请求 |
+| 统计窗口 | 10s        | 滑动窗口统计            |
+| 恢复时间 | 5s         | 熔断后半开试探间隔      |
+
+**工作流程**：
+```
+请求 → sentinel.Entry() → 检查限流规则 → 检查熔断状态
+  ↓ 通过                    ↓ 限流/熔断
+gRPC 调用 → 成功: e.Exit()  返回 429 "请求频率过快"
+  ↓ 失败
+sentinel.TraceError(e, err) → 错误率 > 50% → 熔断打开 → 快速失败
+  5s 后半开试探 → 成功则恢复，失败则继续熔断
 ```
 
-## 五、开发工具清单
+**优势**：下游服务（gRPC Srv 层）故障时，Web 层不再等待超时，直接快速失败，防止连接池耗尽和雪崩效应。
+
+## 六、开发工具清单
 
 | 工具                                 | 用途                                   |
 | ------------------------------------ | -------------------------------------- |
@@ -127,7 +166,7 @@ python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. xxx.proto
 
 详细工具清单和安装方式请参见 [开发工具文档](docs/dev-tools.md)
 
-## 六、快速开始
+## 七、快速开始
 
 ### 1. 环境准备
 
@@ -289,7 +328,7 @@ go run main.go
 
 > 默认监听端口：18085，启动后从 Nacos 拉取业务配置，从 Consul 发现用户操作服务地址，自动初始化 Jaeger 链路追踪
 
-## 七、配置说明
+## 八、配置说明
 
 项目使用 **Viper** 管理本地配置，业务配置统一存放在 **Nacos 配置中心**。
 
@@ -310,7 +349,7 @@ go run main.go
 
 详细配置说明请参见 [配置说明文档](docs/configuration.md)
 
-## 八、服务注册与发现流程
+## 九、服务注册与发现流程
 
 ![alt text](docs/image/consul注册服务简单图示.png)
 
@@ -323,7 +362,7 @@ go run main.go
 7. 微服务异常退出时，Consul 自动注销该服务实例
 8. **全链路追踪**：所有 HTTP 请求通过 otelgin 中间件产生 Span，gRPC 调用通过 otelgrpc 拦截器传递 TraceContext，Python gRPC 服务端通过 OpenTelemetry 拦截器接收并生成 Span，最终所有 Span 上报到 Jaeger
 
-## 九、用户注册流程
+## 十、用户注册流程
 
 ```
 前端 → 获取图片验证码 → 填写注册信息（手机号、密码、邮箱）
@@ -333,7 +372,7 @@ go run main.go
      → 调用 gRPC CreateUser 创建用户 → 生成 JWT Token 返回
 ```
 
-## 十、订单创建与支付流程
+## 十一、订单创建与支付流程
 
 ```
 前端 → 选中购物车商品 → 填写收货信息 → 提交订单
@@ -345,7 +384,7 @@ go run main.go
      → 用户支付成功 → 支付宝异步通知 → 更新订单状态为已支付
 ```
 
-## 十一、一键启停脚本
+## 十二、一键启停脚本
 
 项目提供一键启停脚本，方便本地开发和测试：
 (不熟悉脚本使用的，请勿使用)
@@ -367,7 +406,7 @@ go run main.go
 .\stop-all.ps1   # 一键停止
 ```
 
-## 十二、配置中心与消息架构图
+## 十三、配置中心与消息架构图
 
 ```
 Nacos 配置中心                         RocketMQ 消息队列
@@ -384,11 +423,18 @@ Nacos 配置中心                         RocketMQ 消息队列
 
 Jaeger 链路追踪                         各服务启动流程：
 ├── OTLP gRPC (4317) ← Go Web 服务      Python 微服务: Nacos 拉取配置 → 初始化 DB → Jaeger Tracer → Consul 注册 → RocketMQ 订阅 → gRPC 健康检查 → 优雅退出
-├── OTLP gRPC (4317) ← Python 微服务    Go Web 服务:   Nacos 拉取配置 → 初始化各组件 → Jaeger Tracer → Consul 发现微服务 → gRPC 长连接(负载均衡+otelgrpc) → Consul 注册(HTTP 健康检查)
+├── OTLP gRPC (4317) ← Python 微服务    Go Web 服务:   Nacos 拉取配置 → 初始化各组件 → Sentinel 限流熔断 → Jaeger Tracer → Consul 发现微服务 → gRPC 长连接(负载均衡+otelgrpc) → Consul 注册(HTTP 健康检查)
 └── Jaeger UI (16686) 查询调用链         Go 文件服务:   Nacos 拉取配置 → 初始化 MinIO 客户端 → Jaeger Tracer → Consul 注册(HTTP 健康检查)
+
+Kong API 网关							Sentinel 限流熔断
+├── /g   → goods_web  (8082)			├── 限流: 53 条规则 (阈值 1-10次/6s)
+├── /u   → user_web   (8081)			├── 熔断: 53 条规则 (ErrorRatio 50%, 5s恢复)
+├── /o   → order_web  (8084)			└── 覆盖: 5 个 Web 服务 × 13 个 handler 文件
+├── /op  → userop_web (8085)
+└── /oss → oss_web    (8083)
 ```
 
-## 十三、各服务 README
+## 十四、各服务 README
 
 > 每个微服务将拥有独立的 README 文档，开发中...
 

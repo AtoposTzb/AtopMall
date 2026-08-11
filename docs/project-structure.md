@@ -136,6 +136,7 @@ AtopMall/
 │   │   │   ├── redis.go              # Redis 客户端初始化
 │   │   │   ├── router.go             # Gin 路由注册（含 /health 健康检查 + otelgin 中间件）
 │   │   │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡 + otelgrpc 链路追踪）
+│   │   │   ├── sentinel.go            # Sentinel 限流熔断规则初始化（7 条规则）
 │   │   │   └── validator_trans.go    # 表单验证器中文翻译
 │   │   ├── middlewares/              # 中间件（JWT、CORS、权限）
 │   │   │   ├── admin.go              # 管理员权限中间件
@@ -174,6 +175,7 @@ AtopMall/
 │       │   ├── logger.go             # Zap 日志初始化
 │       │   ├── router.go             # Gin 路由注册（含 /health 健康检查 + otelgin 中间件）
 │       │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡 + otelgrpc 链路追踪）
+│       │   ├── sentinel.go            # Sentinel 限流熔断规则初始化（25 条规则）
 │       │   └── validator_trans.go    # 表单验证器中文翻译
 │       ├── middlewares/              # 中间件（JWT、CORS、权限）
 │       │   ├── admin.go              # 管理员权限中间件
@@ -209,6 +211,7 @@ AtopMall/
 │   │   │   ├── jaeger_trace.go       # Jaeger TracerProvider + Propagator 初始化
 │   │   │   ├── logger.go             # Zap 日志初始化
 │   │   │   ├── minio_oss.go          # MinIO 客户端初始化（自动创建桶）
+│   │   │   ├── sentinel.go            # Sentinel 限流熔断规则初始化（3 条规则）
 │   │   │   ├── router.go             # Gin 路由注册（含 /health 健康检查 + otelgin 中间件）
 │   │   │   └── validator.go          # 表单验证器中文翻译
 │   │   ├── middlewares/              # 中间件（JWT、CORS、权限）
@@ -256,6 +259,7 @@ AtopMall/
 │   │   │   ├── logger.go             # Zap 日志初始化
 │   │   │   ├── router.go             # Gin 路由注册（含 /health 健康检查 + otelgin 中间件）
 │   │   │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡 + otelgrpc 链路追踪、连接订单/商品/库存服务）
+│   │   │   ├── sentinel.go            # Sentinel 限流熔断规则初始化（8 条规则）
 │   │   │   └── validator_trans.go    # 表单验证器中文翻译
 │   │   ├── middlewares/              # 中间件（JWT、CORS）
 │   │   │   ├── cors.go               # CORS 跨域中间件
@@ -307,6 +311,7 @@ AtopMall/
 │       │   ├── logger.go             # Zap 日志初始化
 │       │   ├── router.go             # Gin 路由注册（含 /health 健康检查 + otelgin 中间件）
 │       │   ├── src_conn.go           # Consul 服务发现 + gRPC 客户端初始化（含负载均衡 + otelgrpc 链路追踪）
+│       │   ├── sentinel.go            # Sentinel 限流熔断规则初始化（10 条规则）
 │       │   └── validator_trans.go    # 表单验证器中文翻译
 │       ├── middlewares/              # 中间件（JWT、CORS）
 │       │   ├── cors.go               # CORS 跨域中间件
@@ -501,3 +506,44 @@ xxx_web/
 | `initialize/router.go`         | 挂载 otelgin 中间件，健康检查路由置于中间件之前                              |
 | `initialize/src_conn.go`       | 所有 gRPC 连接添加 otelgrpc.NewClientHandler()，实现跨服务 TraceContext 传递 |
 | `server.py`                    | 启动时调用 init_tracer() 初始化 Jaeger Tracer                                |
+
+### 限流熔断关键文件（Sentinel 相关）
+
+| 文件                             | 说明                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------ |
+| `initialize/sentinel.go`（5 个） | 各 Web 服务 Sentinel 规则初始化，限流规则 + 熔断规则，在 `main.go` 中调用      |
+| `api/*/*.go`（12 个 handler）    | 所有 HTTP 接口：`sentinel.Entry()` 限流入口 + `sentinel.TraceError()` 熔断追踪 |
+| `main.go`                        | 启动时调用 `initialize.InitSentinel()` 加载规则                                |
+
+**Sentinel 工作流程**：
+
+```
+请求进入 → sentinel.Entry() → 检查限流规则 → 检查熔断状态
+               ↓ 限流触发              ↓ 熔断打开
+           返回 429                 返回 429
+               ↓ 通过                  ↓ 通过
+         调用 gRPC 服务           调用 gRPC 服务
+               ↓ 失败                  ↓ 失败
+         sentinel.TraceError()    sentinel.TraceError()
+               ↓ 错误率 > 50%
+            熔断打开 → 5s 后半开试探
+```
+
+### API 网关关键文件（Kong 相关）
+
+| 组件                 | 说明                                                              |
+| -------------------- | ----------------------------------------------------------------- |
+| Kong Gateway         | 统一入口（端口 8000），路由分发 + JWT 认证，Konga 面板可化管理    |
+| `middlewares/jwt.go` | JWT 中间件，兼容 Kong 自动添加 `Bearer ` 前缀与直连无前缀两种场景 |
+
+**Kong 路由映射**：
+
+| Kong Path | 目标服务   | 端口 |
+| --------- | ---------- | ---- |
+| `/g`      | goods_web  | 8082 |
+| `/u`      | user_web   | 8081 |
+| `/o`      | order_web  | 8084 |
+| `/op`     | userop_web | 8085 |
+| `/oss`    | oss_web    | 8083 |
+
+> 所有 Path 设置 `strip_path=true`，代码路由统一为 `/v1`。例如 `/g/v1/goods` → 剥离 `/g` → 转发到 goods_web 的 `/v1/goods`。

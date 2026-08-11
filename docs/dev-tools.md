@@ -19,6 +19,7 @@
 | `go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin` | Gin OpenTelemetry 中间件  | `go get go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin@latest` |
 | `go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc`  | gRPC OpenTelemetry 拦截器 | `go get go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc@latest`  |
 | `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc`              | OTLP gRPC 导出器          | `go get go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc@latest`              |
+| `github.com/alibaba/sentinel-golang`                                           | Sentinel 限流熔断         | `go get github.com/alibaba/sentinel-golang@latest`                                           |
 
 ## Python 工具
 
@@ -90,5 +91,7 @@ Docker 部署的步骤和方法详见我的:【有道云笔记】0.前期准备h
 | MinIO    | 对象存储        | 9000/9001       | `docker run -d --name minio -p 9000:9000 -p 9001:9001 minio/minio server /data`                        |
 | Jaeger   | 分布式链路追踪  | 16686/4317/4318 | `docker run -d --name jaeger -p 16686:16686 -p 4317:4317 -p 4318:4318 jaegertracing/all-in-one:latest` |
 | RocketMQ | 消息队列        | 9876            | 需启动 NameServer + Broker，详见 RocketMQ 官方文档                                                     |
+| Kong     | API 网关        | 8000/8001/8443  | 统一入口、路由分发、JWT 认证，Konga 可视化面板管理                                                     |
 
 > RocketMQ 需要同时启动 NameServer（默认 9876 端口）和 Broker，order_srv 和 inventory_srv 依赖 RocketMQ 进行分布式事务和异步消息处理。
+> Kong 推荐使用 Docker 部署，通过 Konga（管理面板，默认端口 1337）可视化管理路由和 JWT 插件。Sentinel 限流熔断规则在代码中硬编码，无需外部控制台。
