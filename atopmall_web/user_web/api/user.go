@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
@@ -83,6 +85,20 @@ func GetUserList(ctx *gin.Context) {
 	pnInt, _ := strconv.Atoi(ctx.DefaultQuery("pn", "0"))
 	pnSizeInt, _ := strconv.Atoi(ctx.DefaultQuery("psize", "10"))
 
+	// 限流
+	e, b := sentinel.Entry("user-list", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	//从请求中获取携带追踪上下文的标准 Context,这样 gRPC 拦截器才能拿到父 Span，实现链路串联
 	rsp, err := global.UserSrvClient.GetUserList(ctx.Request.Context(), &proto.PageInfo{
 		PageNum:  uint32(pnInt),
@@ -90,6 +106,7 @@ func GetUserList(ctx *gin.Context) {
 	})
 	if err != nil {
 		zap.S().Errorw("[GetUserList] 查询 【用户列表】 失败")
+		sentinel.TraceError(e, err)
 		HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -136,11 +153,26 @@ func PasswordLogin(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("password-login", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	//登录的逻辑：查询用户是否存在，如果存在，判断密码是否正确
 	rsp, err := global.UserSrvClient.GetUserByMobile(ctx.Request.Context(), &proto.MobileRequest{
 		Mobile: passwordLoginForm.Mobile,
 	})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		if e, ok := status.FromError(err); ok {
 			switch e.Code() {
 			case codes.NotFound:
@@ -162,6 +194,7 @@ func PasswordLogin(ctx *gin.Context) {
 			Password:          passwordLoginForm.Password,
 			EncryptedPassword: rsp.Password,
 		}); passErr != nil {
+			sentinel.TraceError(e, passErr)
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"mobile": "登录失败",
 			})
@@ -245,6 +278,19 @@ func Register(ctx *gin.Context) {
 			})
 			return
 		}
+		// 限流
+		e, b := sentinel.Entry("register", sentinel.WithTrafficType(base.Inbound))
+		if b != nil {
+			ctx.JSON(http.StatusTooManyRequests, gin.H{
+				"msg": "请求频率过快,请稍后重试",
+			})
+			return
+		}
+		defer func() {
+			if e != nil {
+				e.Exit()
+			}
+		}()
 		//验证码正确，注册用户
 		user, err := global.UserSrvClient.CreateUser(ctx.Request.Context(), &proto.CreateUserInfo{
 			NickName: registerForm.Mobile,
@@ -254,6 +300,7 @@ func Register(ctx *gin.Context) {
 		})
 		if err != nil {
 			zap.S().Errorw("[Register] 注册用户失败")
+			sentinel.TraceError(e, err)
 			HandleGrpcErrorToHttpError(err, ctx)
 			return
 		}
@@ -290,6 +337,19 @@ func Register(ctx *gin.Context) {
 
 // 获取用户详情
 func GetUserDetail(ctx *gin.Context) {
+	// 限流
+	e, b := sentinel.Entry("user-detail", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	// 从token中获取用户ID
 	userId, _ := ctx.Get("userId")
 	userRsp, err := global.UserSrvClient.GetUserById(ctx.Request.Context(), &proto.IdRequest{
@@ -297,6 +357,7 @@ func GetUserDetail(ctx *gin.Context) {
 	})
 	if err != nil {
 		zap.S().Errorw("查询用户详情失败")
+		sentinel.TraceError(e, err)
 		HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -311,6 +372,19 @@ func GetUserDetail(ctx *gin.Context) {
 
 // 更新用户信息
 func UpdateUser(ctx *gin.Context) {
+	// 限流
+	e, b := sentinel.Entry("update-user", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	// 从token中获取用户ID
 	userId, _ := ctx.Get("userId")
 	//表单验证
@@ -334,6 +408,7 @@ func UpdateUser(ctx *gin.Context) {
 	})
 	if err != nil {
 		zap.S().Errorw("更新用户信息失败")
+		sentinel.TraceError(e, err)
 		HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}

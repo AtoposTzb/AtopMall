@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 	"github.com/jordan-wright/email"
 
@@ -51,6 +53,19 @@ func SendCode(ctx *gin.Context) {
 		})
 		return
 	}
+	// 限流
+	e, b := sentinel.Entry("send-code", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	code := CreateCode() //随机生成验证码
 
 	//连接redis 写入验证码

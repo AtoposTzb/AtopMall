@@ -3,8 +3,11 @@ package handler
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
@@ -20,6 +23,19 @@ type OssTokenResp struct {
 
 // Token 对应路由 GET /oss/token
 func Token(c *gin.Context) {
+	// 限流
+	e, b := sentinel.Entry("oss-token", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		c.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	conf := global.ServerConfig.MinIOInfo
 	cli := global.MinioCli
 
@@ -30,6 +46,7 @@ func Token(c *gin.Context) {
 	// 生成前端直传PUT预签名URL
 	putUrlObj, err := cli.PresignedPutObject(context.Background(), conf.BucketName, objPath, expireTime)
 	if err != nil {
+		sentinel.TraceError(e, err)
 		c.JSON(500, gin.H{
 			"code": 500,
 			"msg":  "获取上传凭证失败",
@@ -51,6 +68,19 @@ func Token(c *gin.Context) {
 
 // HandlerRequest 阿里云专属回调接口，MinIO无服务端回调，保留空兼容（前端直传后主动提交url，此接口可注释删除）
 func HandlerRequest(c *gin.Context) {
+	// 限流
+	e, b := sentinel.Entry("oss-callback", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		c.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	c.JSON(200, gin.H{
 		"msg": "MinIO无OSS服务端回调，前端上传成功后主动携带url调用商品保存接口",
 	})
@@ -60,6 +90,19 @@ func HandlerRequest(c *gin.Context) {
 // 前端上传文件到 MinIO 后，如果业务服务没有将 URL 存入数据库，该文件即为孤儿文件
 // 此接口扫描 MinIO 中超过过期时间的文件并删除
 func CleanupOrphanFiles(c *gin.Context) {
+	// 限流
+	e, b := sentinel.Entry("oss-cleanup", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		c.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	conf := global.ServerConfig.MinIOInfo
 	cli := global.MinioCli
 	ctx := context.Background()
@@ -85,6 +128,7 @@ func CleanupOrphanFiles(c *gin.Context) {
 
 	for obj := range objectCh {
 		if obj.Err != nil {
+			sentinel.TraceError(e, obj.Err)
 			c.JSON(500, gin.H{"code": 500, "msg": "列出对象失败", "err": obj.Err.Error()})
 			return
 		}

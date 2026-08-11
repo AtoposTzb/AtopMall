@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 	"github.com/smartwalle/alipay/v3"
 	"go.uber.org/zap"
@@ -64,9 +66,23 @@ func AlipayUrl(ctx *gin.Context, orderInfo OrderInfo) string {
 
 // 支付宝回调通知
 func Notify(ctx *gin.Context) {
+	// 限流
+	e, b := sentinel.Entry("pay-notify", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	client := AlipayClient(ctx)
 	noti, err := client.GetTradeNotification(ctx.Request)
 	if err != nil {
+		sentinel.TraceError(e, err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{})
 		return
 	}
@@ -75,6 +91,7 @@ func Notify(ctx *gin.Context) {
 		Status:  string(noti.TradeStatus),
 	})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{})
 		return
 	}

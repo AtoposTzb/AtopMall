@@ -67,6 +67,7 @@ func GetGoodsList(ctx *gin.Context) {
 	r, err := global.GoodsSrvCli.Goods.GoodsList(ctx.Request.Context(), req)
 	if err != nil {
 		zap.S().Errorw("[GetGoodsList] 查询 【商品列表】失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -119,6 +120,19 @@ func NewGoods(ctx *gin.Context) {
 		api.HandleValidatorError(ctx, err)
 		return
 	}
+	// 限流
+	e, b := sentinel.Entry("create-goods", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	//通过grpc调用商品的service服务
 	rsp, err := global.GoodsSrvCli.Goods.CreateGoods(ctx.Request.Context(), &proto.CreateGoodsInfo{
 		Name:            goodsForm.Name,
@@ -135,6 +149,7 @@ func NewGoods(ctx *gin.Context) {
 		BrandId:         goodsForm.Brand,
 	})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -149,10 +164,24 @@ func GetGoodsDetail(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
+	// 限流
+	e, b := sentinel.Entry("goods-detail", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	rsp, err := global.GoodsSrvCli.Goods.GetGoodsDetail(ctx.Request.Context(), &proto.GoodInfoRequest{
 		Id: int32(idINt),
 	})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -189,8 +218,22 @@ func DeleteGoods(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
+	// 限流
+	e, b := sentinel.Entry("delete-goods", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	_, err = global.GoodsSrvCli.Goods.DeleteGoods(ctx.Request.Context(), &proto.DeleteGoodsInfo{Id: int32(i)})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -206,10 +249,25 @@ func Stocks(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("goods-stocks", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	resp, err := global.InventorySrvCli.InvDetail(ctx.Request.Context(), &proto.GoodsInvInfo{
 		GoodsId: int32(idInt),
 	})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -230,12 +288,26 @@ func UpdateGoodsStatus(ctx *gin.Context) {
 
 	id := ctx.Param("id")
 	i, err := strconv.ParseInt(id, 10, 32)
+	// 限流
+	e, b := sentinel.Entry("update-goods-status", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	if _, err = global.GoodsSrvCli.Goods.UpdateGoodsStatus(ctx.Request.Context(), &proto.GoodsStatusRequest{
 		Id:     int32(i),
 		IsHot:  *goodsStatusForm.IsHot,
 		IsNew:  *goodsStatusForm.IsNew,
 		OnSale: *goodsStatusForm.OnSale,
 	}); err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -254,6 +326,19 @@ func UpdateGoods(ctx *gin.Context) {
 
 	id := ctx.Param("id")
 	i, err := strconv.ParseInt(id, 10, 32)
+	// 限流
+	e, b := sentinel.Entry("update-goods", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	if _, err = global.GoodsSrvCli.Goods.UpdateGoods(ctx.Request.Context(), &proto.CreateGoodsInfo{
 		Id:              int32(i),
 		Name:            goodsForm.Name,
@@ -269,6 +354,7 @@ func UpdateGoods(ctx *gin.Context) {
 		CategoryId:      goodsForm.CategoryId,
 		BrandId:         goodsForm.Brand,
 	}); err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}

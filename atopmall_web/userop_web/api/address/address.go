@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -26,9 +28,24 @@ func GetAddressList(ctx *gin.Context) {
 		request.UserId = int32(userId.(uint))
 	}
 
+	// 限流
+	e, b := sentinel.Entry("address-list", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	rsp, err := global.AddressSrvCli.GetAddressList(ctx.Request.Context(), request)
 	if err != nil {
 		zap.S().Errorw("获取地址列表失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -63,6 +80,19 @@ func NewAddress(ctx *gin.Context) {
 	}
 
 	userId, _ := ctx.Get("userId")
+	// 限流
+	e, b := sentinel.Entry("address-create", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	rsp, err := global.AddressSrvCli.CreateAddress(ctx.Request.Context(), &proto.AddressRequest{
 		UserId:       int32(userId.(uint)),
 		Province:     addressForm.Province,
@@ -75,6 +105,7 @@ func NewAddress(ctx *gin.Context) {
 
 	if err != nil {
 		zap.S().Errorw("新建地址失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -92,9 +123,23 @@ func DeleteAddress(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
+	// 限流
+	e, b := sentinel.Entry("address-delete", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	_, err = global.AddressSrvCli.DeleteAddress(ctx.Request.Context(), &proto.AddressRequest{Id: int32(i)})
 	if err != nil {
 		zap.S().Errorw("删除地址失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -119,6 +164,20 @@ func UpdateAddress(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("address-update", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	_, err = global.AddressSrvCli.UpdateAddress(ctx.Request.Context(), &proto.AddressRequest{
 		Id:           int32(i),
 		Province:     addressForm.Province,
@@ -130,6 +189,7 @@ func UpdateAddress(ctx *gin.Context) {
 	})
 	if err != nil {
 		zap.S().Errorw("更新地址失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}

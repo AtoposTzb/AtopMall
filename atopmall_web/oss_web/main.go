@@ -48,7 +48,10 @@ func main() {
 		zap.S().Panic("初始化MinIO客户端失败:", zap.Error(err))
 	}
 
-	//8.初始化consul注册中心
+	//8.初始化sentinel限流
+	initialize.SentinelInit()
+
+	//9.初始化consul注册中心
 	registryClient := consul.NewRegistryClient(global.ServerConfig.ConsulInfo.Host, global.ServerConfig.ConsulInfo.Port)
 
 	//9.注册服务

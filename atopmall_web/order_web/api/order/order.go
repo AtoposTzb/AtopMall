@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -32,9 +34,24 @@ func OrderList(ctx *gin.Context) {
 	perNumsInt, _ := strconv.Atoi(perNums)
 	request.PagePerNums = int32(perNumsInt)
 
+	// 限流
+	e, b := sentinel.Entry("order-list", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	orderRspList, err := global.OrderSrvCli.Order.OrderList(ctx.Request.Context(), &request)
 	if err != nil {
 		zap.S().Errorw("[OrderList] 调用【订单列表查询】接口失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -77,6 +94,20 @@ func OrderDetail(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("order-detail", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	//如果是普通用户，只返回自己的订单(简单的权限校验)
 	request := proto.OrderRequest{
 		Id: int32(i),
@@ -90,6 +121,7 @@ func OrderDetail(ctx *gin.Context) {
 	rsp, err := global.OrderSrvCli.Order.OrderDetail(ctx.Request.Context(), &request)
 	if err != nil {
 		zap.S().Errorw("[OrderDetail] 调用【订单详情查询】接口失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -135,6 +167,19 @@ func OrderCreate(ctx *gin.Context) {
 		return
 	}
 	user_id, _ := ctx.Get("userId")
+	// 限流
+	e, b := sentinel.Entry("order-create", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	orderRsp, err := global.OrderSrvCli.Order.CreateOrder(ctx.Request.Context(), &proto.OrderRequest{
 		UserId:  int32(user_id.(uint)),
 		Name:    orderForm.Name,
@@ -144,6 +189,7 @@ func OrderCreate(ctx *gin.Context) {
 	})
 	if err != nil {
 		zap.S().Errorw("[OrderCreate] 调用【订单创建】接口失败", "err", err)
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}

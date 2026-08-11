@@ -3,6 +3,7 @@ package middlewares
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,10 @@ func JWTAuth() gin.HandlerFunc {
 			})
 			c.Abort()
 			return
+		}
+		//剔除kong前面的Bearer空格，兼容直连微服务（不带 Bearer 前缀）
+		if strings.HasPrefix(token, "Bearer ") {
+			token = strings.Split(token, " ")[1]
 		}
 		j := NewJWT()
 		// parseToken 解析token包含的信息

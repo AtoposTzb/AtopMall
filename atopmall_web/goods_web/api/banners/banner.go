@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/protobuf/ptypes/empty"
 
@@ -15,8 +17,22 @@ import (
 
 func GetBannerList(ctx *gin.Context) {
 	// 获取轮播图列表
+	// 限流
+	e, b := sentinel.Entry("banner-list", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	rsp, err := global.GoodsSrvCli.Banner.BannerList(ctx.Request.Context(), &empty.Empty{})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -43,12 +59,27 @@ func NewBanner(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("create-banner", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	rsp, err := global.GoodsSrvCli.Banner.CreateBanner(ctx.Request.Context(), &proto.BannerRequest{
 		Index: int32(bannerForm.Index),
 		Url:   bannerForm.Url,
 		Image: bannerForm.Image,
 	})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -77,12 +108,27 @@ func UpdateBanner(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("update-banner", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	_, err = global.GoodsSrvCli.Banner.UpdateBanner(ctx.Request.Context(), &proto.BannerRequest{
 		Id:    int32(i),
 		Index: int32(bannerForm.Index),
 		Url:   bannerForm.Url,
 	})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -98,8 +144,22 @@ func DeleteBanner(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
+	// 限流
+	e, b := sentinel.Entry("delete-banner", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	_, err = global.GoodsSrvCli.Banner.DeleteBanner(ctx.Request.Context(), &proto.BannerRequest{Id: int32(i)})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}

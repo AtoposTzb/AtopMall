@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 
 	"atopmall_web/goods_web/api"
@@ -21,10 +23,25 @@ func GetCategoryBrandList(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("category-brand-list", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	rsp, err := global.GoodsSrvCli.CategoryBrand.GetCategoryBrandList(ctx.Request.Context(), &proto.CategoryInfoRequest{
 		Id: int32(i),
 	})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -44,6 +61,19 @@ func GetCategoryBrandList(ctx *gin.Context) {
 
 func CategoryBrandList(ctx *gin.Context) {
 	//获取所有品牌分类列表
+	// 限流
+	e, b := sentinel.Entry("category-brand-all", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	//所有的list返回的数据结构
 	/*
 		{
@@ -53,6 +83,7 @@ func CategoryBrandList(ctx *gin.Context) {
 	*/
 	rsp, err := global.GoodsSrvCli.CategoryBrand.CategoryBrandList(ctx.Request.Context(), &proto.CategoryBrandFilterRequest{})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -89,11 +120,26 @@ func NewCategoryBrand(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("create-category-brand", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	rsp, err := global.GoodsSrvCli.CategoryBrand.CreateCategoryBrand(ctx.Request.Context(), &proto.CategoryBrandRequest{
 		CategoryId: int32(categoryBrandForm.CategoryId),
 		BrandId:    int32(categoryBrandForm.BrandId),
 	})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -119,12 +165,27 @@ func UpdateCategoryBrand(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("update-category-brand", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	_, err = global.GoodsSrvCli.CategoryBrand.UpdateCategoryBrand(ctx.Request.Context(), &proto.CategoryBrandRequest{
 		Id:         int32(i),
 		CategoryId: int32(categoryBrandForm.CategoryId),
 		BrandId:    int32(categoryBrandForm.BrandId),
 	})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -139,8 +200,22 @@ func DeleteCategoryBrand(ctx *gin.Context) {
 		ctx.Status(http.StatusNotFound)
 		return
 	}
+	// 限流
+	e, b := sentinel.Entry("delete-category-brand", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	_, err = global.GoodsSrvCli.CategoryBrand.DeleteCategoryBrand(ctx.Request.Context(), &proto.CategoryBrandRequest{Id: int32(i)})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}

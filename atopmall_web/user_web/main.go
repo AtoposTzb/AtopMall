@@ -39,7 +39,9 @@ func main() {
 	r := initialize.RoutersInit()
 	//5.初始化翻译器
 	initialize.TransInit("zh")
-	//6.初始化srv-grpc客户端的连接 ,目前只连接用户服务，后续完善
+	//6.初始化sentinel限流
+	initialize.SentinelInit()
+	//7.初始化srv-grpc客户端的连接 ,目前只连接用户服务，后续完善
 	// initialize.UserSrcClientInit()
 	initialize.UserSrcClientInitBL() //带负载均衡策略的连接
 	//7.动态获取端口号,本地调试还是使用配置文件的端口号8081,方便apifox调试

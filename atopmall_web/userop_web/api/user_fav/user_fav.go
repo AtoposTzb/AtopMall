@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -16,11 +18,25 @@ import (
 func GetUserFavList(ctx *gin.Context) {
 	// 获取收藏列表
 	userId, _ := ctx.Get("userId")
+	// 限流
+	e, b := sentinel.Entry("fav-list", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	userFavRsp, err := global.UserFavSrvCli.GetFavList(ctx.Request.Context(), &proto.UserFavRequest{
 		UserId: int32(userId.(uint)),
 	})
 	if err != nil {
 		zap.S().Errorw("获取收藏列表失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -43,6 +59,7 @@ func GetUserFavList(ctx *gin.Context) {
 	})
 	if err != nil {
 		zap.S().Errorw("[Goods] 批量查询【商品列表】失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -76,12 +93,27 @@ func NewUserFav(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("fav-create", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	// 校验商品是否存在
 	_, err := global.GoodsSrvCli.Goods.GetGoodsDetail(ctx.Request.Context(), &proto.GoodInfoRequest{
 		Id: userFavForm.GoodsId,
 	})
 	if err != nil {
 		zap.S().Errorw("查询商品详情失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -93,6 +125,7 @@ func NewUserFav(ctx *gin.Context) {
 	})
 	if err != nil {
 		zap.S().Errorw("添加收藏记录失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -110,12 +143,26 @@ func DeleteUserFav(ctx *gin.Context) {
 	}
 
 	userId, _ := ctx.Get("userId")
+	// 限流
+	e, b := sentinel.Entry("fav-delete", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	_, err = global.UserFavSrvCli.DeleteUserFav(ctx.Request.Context(), &proto.UserFavRequest{
 		UserId:  int32(userId.(uint)),
 		GoodsId: int32(i),
 	})
 	if err != nil {
 		zap.S().Errorw("删除收藏记录失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -134,12 +181,26 @@ func GetUserFavDetail(ctx *gin.Context) {
 		return
 	}
 	userId, _ := ctx.Get("userId")
+	// 限流
+	e, b := sentinel.Entry("fav-detail", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	_, err = global.UserFavSrvCli.GetUserFavDetail(ctx.Request.Context(), &proto.UserFavRequest{
 		UserId:  int32(userId.(uint)),
 		GoodsId: int32(goodsIdInt),
 	})
 	if err != nil {
 		zap.S().Errorw("查询收藏状态失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}

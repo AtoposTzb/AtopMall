@@ -40,8 +40,8 @@ func RoutersInit() *gin.Engine {
 			"title": "posts/index",
 		})
 	})
-
-	ApiGroup := r.Group("/oss/v1")
+	//kong配置为/oss前缀，匹配请求:/oss/v1/...
+	ApiGroup := r.Group("/v1")
 	{
 		router.OssRouterInit(ApiGroup)
 	}

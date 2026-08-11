@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -15,12 +17,26 @@ import (
 
 func ShoppingCartList(ctx *gin.Context) {
 	userId, _ := ctx.Get("userId")
+	// 限流
+	e, b := sentinel.Entry("cart-list", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	//调用订单服务的购物车接口列表
 	resp, err := global.OrderSrvCli.ShoppingCart.CartItemList(ctx.Request.Context(), &proto.UserInfo{
 		Id: int32(userId.(uint)),
 	})
 	if err != nil {
 		zap.S().Errorw("[ShoppingCartList] 调用【购物车列表查询】接口失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -41,6 +57,7 @@ func ShoppingCartList(ctx *gin.Context) {
 	})
 	if err != nil {
 		zap.S().Errorw("[ShoppingCartList] 调用【商品列表查询】接口失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -76,12 +93,26 @@ func NewShoppingCart(ctx *gin.Context) {
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
+	// 限流
+	e, b := sentinel.Entry("cart-create", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	//先判断商品是否存在
 	_, err := global.GoodsSrvCli.Goods.GetGoodsDetail(ctx.Request.Context(), &proto.GoodInfoRequest{
 		Id: itemForm.GoodsId,
 	})
 	if err != nil {
 		zap.S().Errorw("[NewShoppingCart] 调用【商品详情查询】接口失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -91,6 +122,7 @@ func NewShoppingCart(ctx *gin.Context) {
 	})
 	if err != nil {
 		zap.S().Errorw("[NewShoppingCart] 调用【商品库存详情查询】接口失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -109,6 +141,7 @@ func NewShoppingCart(ctx *gin.Context) {
 	})
 	if err != nil {
 		zap.S().Errorw("[NewShoppingCart] 调用【购物车添加】接口失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -130,12 +163,26 @@ func DeleteShoppingCart(ctx *gin.Context) {
 		return
 	}
 	userId, _ := ctx.Get("userId")
+	// 限流
+	e, b := sentinel.Entry("cart-delete", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	_, err = global.OrderSrvCli.ShoppingCart.DeleteCartItem(ctx.Request.Context(), &proto.CartItemRequest{
 		UserId:  int32(userId.(uint)),
 		GoodsId: int32(i),
 	})
 	if err != nil {
 		zap.S().Errorw("[DeleteShoppingCart] 调用【购物车删除】接口失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -161,6 +208,19 @@ func UpdateShoppingCart(ctx *gin.Context) {
 		})
 		return
 	}
+	// 限流
+	e, b := sentinel.Entry("cart-update", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	request := &proto.CartItemRequest{
 		UserId:  int32(userId.(uint)),
 		GoodsId: int32(i),
@@ -174,6 +234,7 @@ func UpdateShoppingCart(ctx *gin.Context) {
 	_, err = global.OrderSrvCli.ShoppingCart.UpdateCartItem(ctx.Request.Context(), request)
 	if err != nil {
 		zap.S().Errorw("[UpdateShoppingCart] 调用【购物车更新】接口失败")
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}

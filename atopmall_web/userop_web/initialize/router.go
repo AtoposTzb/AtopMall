@@ -28,8 +28,8 @@ func RoutersInit() *gin.Engine {
 	// 拦截器放在健康检查路由之后, 这样HTTP 健康检查不会产生大量无意义的 span
 
 	r.Use(otelgin.Middleware(global.ServerConfig.JaegerInfo.Name))
-
-	ApiRouter := r.Group("/op/v1")
+	//kong配置为/op前缀，匹配请求:/op/v1/...
+	ApiRouter := r.Group("/v1")
 	{
 		router.MessageRouterInit(ApiRouter)
 		router.UserFavRouterInit(ApiRouter)

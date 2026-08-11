@@ -40,7 +40,9 @@ func main() {
 	initialize.TransInit("zh")
 	//5.初始化订单服务的grpc客户端连接
 	initialize.SrcClientInitBL() //带负载均衡策略的连接
-	//6.动态获取端口号,方便apifox调试使用固定8084
+	//6.初始化sentinel限流
+	initialize.SentinelInit()
+	//7.动态获取端口号,方便apifox调试使用固定8084
 	if debug := initialize.GetEnvInfo(global.Env); !debug {
 		orderPort, err := utils.GetAddrPort()
 		if err != nil {

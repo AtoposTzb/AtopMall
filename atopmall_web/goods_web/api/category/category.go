@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	sentinel "github.com/alibaba/sentinel-golang/api"
+	"github.com/alibaba/sentinel-golang/core/base"
 	"github.com/gin-gonic/gin"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	"go.uber.org/zap"
@@ -17,8 +19,22 @@ import (
 
 func GetCategoryList(ctx *gin.Context) {
 	//获取所有分类列表
+	// 限流
+	e, b := sentinel.Entry("category-list", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
 	r, err := global.GoodsSrvCli.Category.GetAllCategorysList(ctx.Request.Context(), &empty.Empty{})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -41,11 +57,26 @@ func GetCategoryDetail(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("category-detail", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	reMap := make(map[string]interface{})
 	subCategorys := make([]interface{}, 0)
 	if r, err := global.GoodsSrvCli.Category.GetSubCategory(ctx.Request.Context(), &proto.CategoryListRequest{
 		Id: int32(i),
 	}); err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	} else {
@@ -78,6 +109,20 @@ func NewCategory(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("create-category", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	rsp, err := global.GoodsSrvCli.Category.CreateCategory(ctx.Request.Context(), &proto.CategoryInfoRequest{
 		Name:           categoryForm.Name,
 		IsTab:          *categoryForm.IsTab,
@@ -85,6 +130,7 @@ func NewCategory(ctx *gin.Context) {
 		ParentCategory: categoryForm.ParentCategory,
 	})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -108,11 +154,26 @@ func DeleteCategory(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("delete-category", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	//1. 先查询出该分类写的所有子分类
 	//2. 将所有的分类全部逻辑删除
 	//3. 将该分类下的所有的商品逻辑删除
 	_, err = global.GoodsSrvCli.Category.DeleteCategory(ctx.Request.Context(), &proto.DeleteCategoryRequest{Id: int32(i)})
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
@@ -135,6 +196,20 @@ func UpdateCategory(ctx *gin.Context) {
 		return
 	}
 
+	// 限流
+	e, b := sentinel.Entry("update-category", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+
 	request := &proto.CategoryInfoRequest{
 		Id:   int32(i),
 		Name: categoryForm.Name,
@@ -144,6 +219,7 @@ func UpdateCategory(ctx *gin.Context) {
 	}
 	_, err = global.GoodsSrvCli.Category.UpdateCategory(ctx.Request.Context(), request)
 	if err != nil {
+		sentinel.TraceError(e, err)
 		api.HandleGrpcErrorToHttpError(err, ctx)
 		return
 	}
