@@ -53,30 +53,6 @@ protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=p
 python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. xxx.proto
 ```
 
-## 一键启停脚本
-
-项目提供一键启停脚本，使用 tmux 管理所有微服务进程，方便本地开发和调试。
-
-| 脚本            | 平台    | 说明                                       |
-| --------------- | ------- | ------------------------------------------ |
-| `start-all.sh`  | Linux   | 使用 tmux 会话管理，一键启动所有微服务     |
-| `stop-all.sh`   | Linux   | 销毁 tmux 会话 + 兜底清理残留进程          |
-| `start-all.ps1` | Windows | 使用 PowerShell 多窗口，一键启动所有微服务 |
-| `stop-all.ps1`  | Windows | 关闭所有微服务窗口及其子进程               |
-
-**依赖**：Linux 需安装 `tmux`（终端复用器）。
-
-```bash
-# Linux
-tmux --version       # 检查 tmux 是否安装
-./start-all.sh       # 一键启动所有微服务
-./stop-all.sh        # 一键停止所有微服务
-
-# Windows PowerShell
-.\start-all.ps1      # 一键启动所有微服务
-.\stop-all.ps1       # 一键停止所有微服务
-```
-
 ## 中间件 / 基础设施
 
 项目运行依赖以下中间件，建议使用 Docker 部署：

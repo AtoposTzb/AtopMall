@@ -488,15 +488,6 @@ xxx_web/
 | `router/pay.go`     | 支付路由 `/o/v1/pay/alipay/notify` + `/o/v1/pay/alipay/return` |
 | `config/config.go`  | `AlipayConfig` 配置结构体定义                                  |
 
-### 启停脚本
-
-| 文件            | 说明                                       |
-| --------------- | ------------------------------------------ |
-| `start-all.sh`  | tmux 会话管理，一键启动所有微服务（Linux） |
-| `stop-all.sh`   | 销毁 tmux 会话 + 兜底清理残留进程（Linux） |
-| `start-all.ps1` | PowerShell 多窗口启动所有微服务（Windows） |
-| `stop-all.ps1`  | 关闭所有微服务窗口及其子进程（Windows）    |
-
 ### 链路追踪关键文件（Jaeger 相关）
 
 | 文件                           | 说明                                                                         |

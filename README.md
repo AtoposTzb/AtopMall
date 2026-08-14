@@ -384,29 +384,7 @@ go run main.go
      → 用户支付成功 → 支付宝异步通知 → 更新订单状态为已支付
 ```
 
-## 十二、一键启停脚本
-
-项目提供一键启停脚本，方便本地开发和测试：
-(不熟悉脚本使用的，请勿使用)
-
-| 脚本            | 平台    | 说明                                       |
-| --------------- | ------- | ------------------------------------------ |
-| `start-all.sh`  | Linux   | 使用 tmux 会话管理，一键启动所有微服务     |
-| `stop-all.sh`   | Linux   | 销毁 tmux 会话 + 兜底清理残留进程          |
-| `start-all.ps1` | Windows | 使用 PowerShell 多窗口，一键启动所有微服务 |
-| `stop-all.ps1`  | Windows | 关闭所有微服务窗口及其子进程               |
-
-```bash
-# Linux
-./start-all.sh   # 一键启动（需先安装 tmux）
-./stop-all.sh    # 一键停止
-
-# Windows PowerShell
-.\start-all.ps1  # 一键启动
-.\stop-all.ps1   # 一键停止
-```
-
-## 十三、配置中心与消息架构图
+## 十二、配置中心与消息架构图
 
 ```
 Nacos 配置中心                         RocketMQ 消息队列
@@ -434,7 +412,7 @@ Kong API 网关							Sentinel 限流熔断
 └── /oss → oss_web    (8083)
 ```
 
-## 十四、各服务 README
+## 十三、各服务 README
 
 > 每个微服务将拥有独立的 README 文档，开发中...
 
