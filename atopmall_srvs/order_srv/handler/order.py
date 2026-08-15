@@ -277,8 +277,7 @@ class OrderServicer(order_pb2_grpc.OrderServicer):
 
                 #发送延时消息
                 msg = Message("order_timeout")
-                msg.set_delay_time_level(5) #设置为超时时间为1min
-                msg.set_keys("atopmall")
+                msg.set_delay_time_level(14) 
                 msg.set_tags("cancel")
                 msg.set_body(json.dumps({"orderSn":order_sn}))
                 sync_producer = Producer("cancel") #此处的topic 是cancel，用于取消订单，不能和之前的topic一样

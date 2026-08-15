@@ -33,6 +33,7 @@ func RoutersInit() *gin.Engine {
 	{
 		router.OrderRouterInit(ApiRouter)
 		router.ShoppingCartRouterInit(ApiRouter)
+		router.PayRouterInit(ApiRouter)
 	}
 
 	return r
