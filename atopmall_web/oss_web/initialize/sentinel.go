@@ -15,20 +15,23 @@ func SentinelInit() {
 		log.Fatalf("初始化sentinel异常:%v", err)
 	}
 	//配置限流规则
+	// oss-token: 用户上传图片前获取token，前端操作频繁
+	// oss-callback: OSS回调，正常流量
+	// oss-cleanup: 定时清理任务，低频即可
 	_, err = flow.LoadRules([]*flow.Rule{
 		{
 			Resource:               "oss-token",
 			TokenCalculateStrategy: flow.Direct,
 			ControlBehavior:        flow.Reject,
-			Threshold:              5,
-			StatIntervalInMs:       6000,
+			Threshold:              30,
+			StatIntervalInMs:       1000,
 		},
 		{
 			Resource:               "oss-callback",
 			TokenCalculateStrategy: flow.Direct,
 			ControlBehavior:        flow.Reject,
-			Threshold:              10,
-			StatIntervalInMs:       6000,
+			Threshold:              30,
+			StatIntervalInMs:       1000,
 		},
 		{
 			Resource:               "oss-cleanup",
@@ -47,25 +50,25 @@ func SentinelInit() {
 			Resource:         "oss-token",
 			Strategy:         circuitbreaker.ErrorRatio,
 			Threshold:        0.5,
-			MinRequestAmount: 5,
+			MinRequestAmount: 20,
 			StatIntervalMs:   10000,
-			RetryTimeoutMs:   5000,
+			RetryTimeoutMs:   3000,
 		},
 		{
 			Resource:         "oss-callback",
 			Strategy:         circuitbreaker.ErrorRatio,
 			Threshold:        0.5,
-			MinRequestAmount: 5,
+			MinRequestAmount: 20,
 			StatIntervalMs:   10000,
-			RetryTimeoutMs:   5000,
+			RetryTimeoutMs:   3000,
 		},
 		{
 			Resource:         "oss-cleanup",
 			Strategy:         circuitbreaker.ErrorRatio,
 			Threshold:        0.5,
-			MinRequestAmount: 5,
+			MinRequestAmount: 10,
 			StatIntervalMs:   10000,
-			RetryTimeoutMs:   5000,
+			RetryTimeoutMs:   3000,
 		},
 	})
 	if err != nil {
