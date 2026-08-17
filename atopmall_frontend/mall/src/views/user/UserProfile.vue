@@ -112,6 +112,65 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .user-profile {
-  padding: 20px 0;
+  padding: 8px 0;
+
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f0f5ff;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 60px;
+      height: 2px;
+      background: $primary-color;
+      border-radius: 1px;
+    }
+  }
+
+  :deep(.el-form) {
+    .el-form-item__label {
+      font-weight: 500;
+      color: $text-primary;
+    }
+
+    .el-input__wrapper {
+      border-radius: 8px;
+      transition: all 0.3s;
+      box-shadow: 0 0 0 1px $border-light inset;
+
+      &:hover {
+        box-shadow: 0 0 0 1px $primary-color inset;
+      }
+
+      &.is-focus {
+        box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2) inset;
+      }
+    }
+
+    .el-radio-group {
+      .el-radio {
+        margin-right: 24px;
+      }
+    }
+
+    .el-button--primary {
+      border-radius: 8px;
+      padding: 10px 28px;
+      font-weight: 500;
+    }
+
+    .el-button:not(.el-button--primary) {
+      border-radius: 8px;
+      padding: 10px 28px;
+    }
+  }
 }
 </style>

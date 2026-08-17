@@ -5,7 +5,7 @@ export interface CategoryItem {
   id: number
   name: string
   level: number
-  is_tab: boolean
+  isTab: boolean
   parent: number | null
   sub_category: CategoryItem[]
 }

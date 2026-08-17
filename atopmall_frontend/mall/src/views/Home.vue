@@ -1,6 +1,5 @@
 <template>
   <div class="home-page">
-    <AppHeader />
 
     <div class="container" v-if="pageError">
       <div class="page-error-bar">
@@ -12,194 +11,103 @@
       </div>
     </div>
 
-    <div class="hero-section">
-      <div class="container hero-layout">
-        <!-- 左侧全部分类 -->
-        <div class="sidebar" @mouseleave="handleCategoryLeave">
-          <div class="sidebar-title">
-            <el-icon><Menu /></el-icon>
-            <span>全部商品分类</span>
-          </div>
-          <div class="sidebar-list" v-loading="catLoading">
-            <template v-if="catError">
-              <div class="sidebar-error">
-                <el-icon><WarningFilled /></el-icon>
-                <span>分类加载失败</span>
-                <el-button type="primary" link size="small" @click="loadCategories">点击重试</el-button>
-              </div>
-            </template>
-            <template v-else-if="!catLoading && categories.length === 0">
-              <div class="sidebar-empty">
-                <span>暂无分类</span>
-              </div>
-            </template>
-            <template v-else>
-              <div
-                v-for="cat in categories"
-                :key="cat.id"
-                class="sidebar-item"
-                :class="{ active: activeCategory === cat.id }"
-                @mouseenter="handleCategoryEnter(cat.id)"
-              >
-                <span class="item-name">{{ cat.name }}</span>
-                <el-icon><ArrowRight /></el-icon>
-                <div class="category-dropdown" v-show="activeCategory === cat.id && cat.sub_category?.length">
-                  <div class="dropdown-inner">
-                    <div v-for="sub in cat.sub_category" :key="sub.id" class="dropdown-column">
-                      <router-link :to="{ path: '/goods', query: { ctg: sub.id } }" class="column-title">
-                        {{ sub.name }}
-                      </router-link>
-                      <div class="column-links">
-                        <router-link
-                          v-for="item in sub.sub_category"
-                          :key="item.id"
-                          :to="{ path: '/goods', query: { ctg: item.id } }"
-                          class="link-item"
-                        >
-                          {{ item.name }}
-                        </router-link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </div>
-        </div>
-
-        <!-- 中间轮播 -->
-        <div class="center-panel">
-          <el-carousel height="420px" indicator-position="outside" arrow="always" :interval="4000">
-            <el-carousel-item v-for="banner in bannerList" :key="banner.id">
-              <a :href="banner.url || '#'" class="carousel-link" target="_blank">
-                <img :src="banner.image" :alt="'Banner ' + banner.index" class="carousel-img" />
-              </a>
-            </el-carousel-item>
-          </el-carousel>
-        </div>
-
-        <!-- 右侧用户信息 + 快捷入口 -->
-        <div class="right-panel">
-          <div class="user-entry">
-            <template v-if="userStore.isAuthenticated">
-              <div class="user-avatar">
-                <el-icon :size="30"><UserFilled /></el-icon>
-              </div>
-              <p class="user-greeting">Hi，{{ userStore.userName || '用户' }}</p>
-            </template>
-            <template v-else>
-              <div class="user-avatar">
-                <el-icon :size="30"><UserFilled /></el-icon>
-              </div>
-              <p class="user-greeting">Hi，欢迎光临</p>
-              <div class="user-btns">
-                <span class="btn-login" @click="openLogin">登录</span>
-                <span class="btn-register" @click="openRegister">注册</span>
-              </div>
-            </template>
-          </div>
-
-          <div class="quick-links">
-            <div class="quick-item" @click="$router.push('/order')">
-              <el-icon :size="20"><Document /></el-icon>
-              <span>我的订单</span>
-            </div>
-            <div class="quick-item" @click="$router.push('/cart')">
-              <el-icon :size="20"><ShoppingCart /></el-icon>
-              <span>购物车</span>
-            </div>
-            <div class="quick-item" @click="$router.push('/user')">
-              <el-icon :size="20"><Star /></el-icon>
-              <span>我的收藏</span>
-            </div>
-          </div>
+    <!-- ==================== 大 Banner 区域 ==================== -->
+    <div class="hero-wrapper">
+      <!-- 轮播图背景层 -->
+      <div class="hero-carousel-bg">
+        <el-carousel
+          v-if="bannerList.length > 0"
+          height="520px"
+          trigger="click"
+          :interval="5000"
+          arrow="hover"
+          :autoplay="true"
+        >
+          <el-carousel-item v-for="(banner, idx) in bannerList" :key="banner.id">
+            <a :href="banner.url || '#'" class="carousel-link" target="_blank">
+              <img :src="banner.image" :alt="'Banner ' + (idx + 1)" class="carousel-img" />
+            </a>
+          </el-carousel-item>
+        </el-carousel>
+        <div v-else class="carousel-placeholder">
+          <el-icon :size="48"><PictureFilled /></el-icon>
+          <p>暂无轮播图，请前往管理后台添加</p>
         </div>
       </div>
-    </div>
 
-    <!-- 中部服务保障 -->
-    <div class="features-section">
-      <div class="container">
-        <div class="features-grid">
-          <div class="feature-item">
-            <el-icon :size="32"><Shield /></el-icon>
-            <div>
-              <h3>品质保障</h3>
-              <p>正品行货 品质护航</p>
+      <!-- 浮于轮播图右侧的用户信息卡片 -->
+      <div class="hero-user-card">
+        <template v-if="userStore.isAuthenticated">
+          <router-link to="/user" class="huc-avatar-link">
+            <div class="huc-avatar">
+              <el-icon :size="24"><UserFilled /></el-icon>
             </div>
+            <span class="huc-name">{{ userStore.userName }}</span>
+          </router-link>
+        </template>
+        <template v-else>
+          <div class="huc-avatar-guest" @click="openLogin">
+            <el-icon :size="24"><UserFilled /></el-icon>
           </div>
-          <div class="feature-item">
-            <el-icon :size="32"><Truck /></el-icon>
-            <div>
-              <h3>极速物流</h3>
-              <p>多仓直发 极速送达</p>
-            </div>
-          </div>
-          <div class="feature-item">
-            <el-icon :size="32"><CircleCheck /></el-icon>
-            <div>
-              <h3>售后无忧</h3>
-              <p>7天无理由退换货</p>
-            </div>
-          </div>
-          <div class="feature-item">
-            <el-icon :size="32"><Headset /></el-icon>
-            <div>
-              <h3>贴心服务</h3>
-              <p>7x24小时客服在线</p>
-            </div>
-          </div>
+          <span class="huc-welcome">Hi，欢迎</span>
+          <span class="huc-sub-welcome">来到AtopMall</span>
+        </template>
+        <div class="huc-auth-row" v-if="!userStore.isAuthenticated">
+          <span class="huc-auth-link" @click="openLogin">登录</span>
+          <span class="huc-divider">|</span>
+          <span class="huc-auth-link" @click="openRegister">注册</span>
         </div>
-      </div>
-    </div>
-
-    <!-- 下方功能入口 -->
-    <div class="container">
-      <div class="entry-grid">
-        <div class="entry-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" @click="$router.push('/goods?ishot=1')">
-          <div class="entry-icon">
-            <el-icon :size="28"><TrendCharts /></el-icon>
-          </div>
-          <div class="entry-text">
-            <div class="entry-title">热销爆品</div>
-            <div class="entry-desc">大家都在买</div>
-          </div>
-        </div>
-        <div class="entry-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" @click="$router.push('/goods?isnew=1')">
-          <div class="entry-icon">
-            <el-icon :size="28"><Present /></el-icon>
-          </div>
-          <div class="entry-text">
-            <div class="entry-title">新品首发</div>
-            <div class="entry-desc">抢先体验</div>
-          </div>
-        </div>
-        <div class="entry-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" @click="$router.push('/goods?istab=1')">
-          <div class="entry-icon">
-            <el-icon :size="28"><Goods /></el-icon>
-          </div>
-          <div class="entry-text">
-            <div class="entry-title">推荐好物</div>
-            <div class="entry-desc">精选品质</div>
-          </div>
-        </div>
-        <div class="entry-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%)" @click="$router.push('/goods')">
-          <div class="entry-icon">
-            <el-icon :size="28"><Discount /></el-icon>
-          </div>
-          <div class="entry-text">
-            <div class="entry-title">限时特惠</div>
-            <div class="entry-desc">超值抢购</div>
-          </div>
-        </div>
-        <div class="entry-card" style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)" @click="$router.push('/goods')">
-          <div class="entry-icon">
-            <el-icon :size="28"><More /></el-icon>
-          </div>
-          <div class="entry-text">
-            <div class="entry-title">全部分类</div>
-            <div class="entry-desc">海量商品</div>
-          </div>
+        <div class="huc-actions">
+          <a
+            v-if="userStore.isAuthenticated"
+            class="huc-action-btn"
+            @click="$router.push('/user/orders')"
+          >
+            <el-icon :size="15"><Document /></el-icon>
+            <span>我的订单</span>
+          </a>
+          <a v-else class="huc-action-btn" @click="openLogin">
+            <el-icon :size="15"><Document /></el-icon>
+            <span>我的订单</span>
+          </a>
+          <a
+            v-if="userStore.isAuthenticated"
+            class="huc-action-btn"
+            @click="$router.push('/user/favorite')"
+          >
+            <el-icon :size="15"><Star /></el-icon>
+            <span>我的收藏</span>
+          </a>
+          <a v-else class="huc-action-btn" @click="openLogin">
+            <el-icon :size="15"><Star /></el-icon>
+            <span>我的收藏</span>
+          </a>
+          <a
+            v-if="userStore.isAuthenticated"
+            class="huc-action-btn"
+            @click="$router.push('/user/address')"
+          >
+            <el-icon :size="15"><Location /></el-icon>
+            <span>地址管理</span>
+          </a>
+          <a v-else class="huc-action-btn" @click="openLogin">
+            <el-icon :size="15"><Location /></el-icon>
+            <span>地址管理</span>
+          </a>
+          <a
+            v-if="userStore.isAuthenticated"
+            class="huc-action-btn huc-action-cart"
+            @click="$router.push('/user/cart')"
+          >
+            <el-icon :size="15"><ShoppingCart /></el-icon>
+            <span>购物车</span>
+            <el-badge :value="cartStore.totalCount" :hidden="cartStore.totalCount === 0" class="huc-cart-badge" />
+          </a>
+          <a v-else class="huc-action-btn huc-action-cart" @click="openLogin">
+            <el-icon :size="15"><ShoppingCart /></el-icon>
+            <span>购物车</span>
+            <el-badge :value="cartStore.totalCount" :hidden="cartStore.totalCount === 0" class="huc-cart-badge" />
+          </a>
         </div>
       </div>
     </div>
@@ -281,6 +189,36 @@
     <!-- 底部 -->
     <footer class="app-footer">
       <div class="container">
+        <div class="features-row">
+          <div class="feature-item">
+            <el-icon :size="28"><Shield /></el-icon>
+            <div>
+              <h3>品质保障</h3>
+              <p>正品行货 品质护航</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <el-icon :size="28"><Truck /></el-icon>
+            <div>
+              <h3>极速物流</h3>
+              <p>多仓直发 极速送达</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <el-icon :size="28"><CircleCheck /></el-icon>
+            <div>
+              <h3>售后无忧</h3>
+              <p>7天无理由退换货</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <el-icon :size="28"><Headset /></el-icon>
+            <div>
+              <h3>贴心服务</h3>
+              <p>7x24小时客服在线</p>
+            </div>
+          </div>
+        </div>
         <div class="footer-content">
           <div class="footer-section">
             <h4>购物指南</h4>
@@ -323,12 +261,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getGoodsList, type GoodsItem } from '@/api/goods'
-import { getCategoryList, getBannerList, type CategoryItem, type BannerItem } from '@/api/category'
+import { getBannerList, type BannerItem } from '@/api/category'
 import { useUserStore } from '@/store/user'
+import { useCartStore } from '@/store/cart'
 import { useAuthModal } from '@/composables/useAuthModal'
-import AppHeader from '@/components/AppHeader.vue'
+
 
 const userStore = useUserStore()
+const cartStore = useCartStore()
 const { open } = useAuthModal()
 
 const openLogin = () => open('login')
@@ -336,27 +276,9 @@ const openRegister = () => open('register')
 
 const newGoods = ref<GoodsItem[]>([])
 const hotGoods = ref<GoodsItem[]>([])
-const categories = ref<CategoryItem[]>([])
-const activeCategory = ref<number | null>(null)
 const loading = ref(false)
-const catLoading = ref(false)
-const catError = ref(false)
 const pageError = ref(false)
 const bannerList = ref<BannerItem[]>([])
-
-const loadCategories = async () => {
-  catLoading.value = true
-  catError.value = false
-  try {
-    const res = await getCategoryList()
-    categories.value = (res as unknown as CategoryItem[]) || []
-  } catch {
-    catError.value = true
-    categories.value = []
-  } finally {
-    catLoading.value = false
-  }
-}
 
 const loadData = async () => {
   loading.value = true
@@ -383,20 +305,10 @@ const loadData = async () => {
 
 const retryAll = () => {
   loadData()
-  loadCategories()
-}
-
-const handleCategoryEnter = (catId: number) => {
-  activeCategory.value = catId
-}
-
-const handleCategoryLeave = () => {
-  activeCategory.value = null
 }
 
 onMounted(() => {
   loadData()
-  loadCategories()
 })
 </script>
 
@@ -412,7 +324,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  margin: 12px 0;
+  margin: 0 0 20px 0;
   background: #fef0f0;
   border: 1px solid #fde2e2;
   border-radius: 8px;
@@ -430,142 +342,28 @@ onMounted(() => {
   }
 }
 
-// ======= Hero 区域 =======
-.hero-section {
-  padding: 20px 0;
-  background: #fff;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-}
-
-.hero-layout {
-  display: flex;
-  gap: 16px;
-  align-items: stretch;
-}
-
-// ======= 左侧分类 =======
-.sidebar {
-  width: 240px;
-  flex-shrink: 0;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+// ==================== Banner 大区域 ====================
+.hero-wrapper {
+  position: relative;
+  z-index: 0;
+  height: 520px;
   overflow: visible;
-
-  .sidebar-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 18px;
-    background: $primary-color;
-    color: #fff;
-    font-size: 15px;
-    font-weight: 600;
-  }
-
-  .sidebar-list {
-    padding: 8px 0;
-    min-height: 200px;
-  }
-
-  .sidebar-item {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 18px;
-    cursor: pointer;
-    font-size: 14px;
-    color: $text-regular;
-    transition: all 0.2s;
-
-    &:hover,
-    &.active {
-      color: $primary-color;
-      background: #ecf5ff;
-    }
-
-    .item-name {
-      flex: 1;
-    }
-  }
-
-  .sidebar-error,
-  .sidebar-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 40px 20px;
-    color: #909399;
-    font-size: 14px;
-  }
-
-  .category-dropdown {
-    position: absolute;
-    left: 100%;
-    top: 0;
-    width: 640px;
-    min-height: 320px;
-    background: #fff;
-    border-radius: 0 10px 10px 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    z-index: 100;
-    padding: 20px;
-
-    .dropdown-inner {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    .dropdown-column {
-      .column-title {
-        display: block;
-        font-size: 14px;
-        font-weight: 600;
-        color: $text-primary;
-        margin-bottom: 10px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid $border-lighter;
-        text-decoration: none;
-
-        &:hover {
-          color: $primary-color;
-        }
-      }
-
-      .column-links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-
-        .link-item {
-          font-size: 12px;
-          color: $text-secondary;
-          padding: 3px 8px;
-          border-radius: 4px;
-          text-decoration: none;
-          transition: all 0.2s;
-
-          &:hover {
-            color: $primary-color;
-            background: #ecf5ff;
-          }
-        }
-      }
-    }
-  }
 }
 
-// ======= 中间轮播 =======
-.center-panel {
-  flex: 1;
-  min-width: 0;
-  border-radius: 10px;
+// 轮播图背景层
+.hero-carousel-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+
+  .carousel-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
 
   .carousel-link {
     display: block;
@@ -573,221 +371,243 @@ onMounted(() => {
     height: 100%;
   }
 
-  .carousel-img {
-    width: 100%;
+  .carousel-placeholder {
     height: 100%;
-    object-fit: cover;
-  }
-}
-
-// ======= 右侧面板 =======
-.right-panel {
-  width: 240px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.user-entry {
-  background: #fff;
-  border-radius: 10px;
-  padding: 24px 16px;
-  text-align: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-
-  .user-avatar {
-    width: 60px;
-    height: 60px;
-    margin: 0 auto 14px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #ecf5ff 0%, #d9ecff 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: $primary-color;
-    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.15);
-  }
-
-  .user-greeting {
-    font-size: 14px;
-    color: $text-primary;
-    font-weight: 500;
-  }
-
-  .user-btns {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-
-    a,
-    span {
-      display: inline-block;
-      padding: 6px 20px;
-      border-radius: 6px;
-      font-size: 13px;
-      text-decoration: none;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-login {
-      background: $primary-color;
-      color: #fff;
-
-      &:hover {
-        opacity: 0.85;
-      }
-    }
-
-    .btn-register {
-      background: #f5f7fa;
-      color: $text-primary;
-
-      &:hover {
-        background: #ecf5ff;
-        color: $primary-color;
-      }
-    }
-  }
-}
-
-.quick-links {
-  background: #fff;
-  border-radius: 10px;
-  padding: 14px 16px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  display: flex;
-  justify-content: space-around;
-
-  .quick-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    color: $text-regular;
-    font-size: 12px;
-    transition: all 0.3s;
-    padding: 4px 8px;
-    border-radius: 8px;
-
-    &:hover {
-      color: $primary-color;
-      background: #ecf5ff;
-      transform: translateY(-2px);
-    }
-  }
-}
-
-// ======= 服务保障 =======
-.features-section {
-  background: #fff;
-  padding: 32px 0;
-  margin-top: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0;
-  }
-
-  .feature-item {
-    display: flex;
-    align-items: center;
     justify-content: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #ebeef5 100%);
+    color: #909399;
     gap: 14px;
-    padding: 18px 24px;
-    transition: all 0.3s;
-    border-right: 1px solid #f0f0f0;
+    font-size: 14px;
+  }
 
-    &:last-child {
-      border-right: none;
-    }
+  :deep(.el-carousel),
+  :deep(.el-carousel__container) {
+    height: 100% !important;
+  }
 
-    &:hover {
-      background: #f8fafc;
-      transform: translateY(-2px);
+  :deep(.el-carousel__indicators) {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
 
-      .el-icon {
-        transform: scale(1.1);
+    .el-carousel__indicator {
+      padding: 4px;
+
+      .el-carousel__button {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        opacity: 1;
+        transition: all 0.35s ease;
+      }
+
+      &.is-active .el-carousel__button {
+        width: 24px;
+        border-radius: 4px;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
       }
     }
+  }
 
-    .el-icon {
-      color: $primary-color;
-      flex-shrink: 0;
-      transition: transform 0.3s;
-    }
+  :deep(.el-carousel__arrow) {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.12);
+    color: #fff;
+    font-size: 14px;
+    transition: all 0.3s;
+    opacity: 0;
+    z-index: 5;
 
-    h3 {
-      font-size: 16px;
-      margin-bottom: 4px;
-      color: $text-primary;
+    &:hover {
+      background: rgba(0, 0, 0, 0.25);
     }
+  }
 
-    p {
-      font-size: 13px;
-      color: $text-secondary;
-      margin: 0;
-    }
+  &:hover :deep(.el-carousel__arrow) {
+    opacity: 1;
   }
 }
 
-// ======= 入口卡片 =======
-.entry-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
-  padding: 28px 0;
+// ======= 浮于轮播图右侧的用户信息卡片 =======
+.hero-user-card {
+  position: absolute;
+  right: 6%;
+  top: 50%; 
+  transform: translateY(-50%); 
+  z-index: 5; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;          /* 增大内部元素间距 */
+  padding: 28px 24px; /* 上下、左右内边距，横向留白加宽 */
+  width: 280px;       /* 280px，解决过窄问题 */
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  border-radius: 18px; 
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.13); 
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  max-width: 90vw;    /* 小屏幕防溢出，响应式兜底 */
+  box-sizing: border-box;
 }
 
-.entry-card {
+.huc-avatar-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+
+  &:hover .huc-name {
+    color: $primary-color;
+  }
+}
+
+.huc-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $primary-color, #66b1ff);
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 20px 20px;
-  border-radius: 10px;
+  justify-content: center;
   color: #fff;
-  cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.45);
+  transition: transform 0.2s;
 
   &:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+    transform: scale(1.08);
+  }
+}
+
+.huc-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text-primary;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.huc-avatar-guest {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $primary-color, #66b1ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.45);
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.08);
+  }
+}
+
+.huc-welcome {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-primary;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.huc-sub-welcome {
+  font-size: 12px;
+  color: $text-secondary;
+  white-space: nowrap;
+}
+
+.huc-auth-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.huc-auth-link {
+  font-size: 15px;
+  color: $primary-color;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    color: #398ee5;
+    text-decoration: underline;
+  }
+}
+
+.huc-divider {
+  color: #dcdfe6;
+  font-size: 15px;
+  user-select: none;
+}
+
+.huc-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.huc-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 6px;
+  background: #f5f7fa;
+  border-radius: 22px;
+  color: $text-regular;
+  text-decoration: none;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: 1px solid transparent;
+  font-weight: 500;
+
+  &:hover {
+    color: $primary-color;
+    background: #ecf5ff;
+    border-color: rgba(64, 158, 255, 0.25);
+    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.12);
   }
 
-  .entry-icon {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
+  &.huc-action-cart {
+    position: relative;
   }
 
-  .entry-text {
-    flex: 1;
-  }
-
-  .entry-title {
-    font-size: 17px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .entry-desc {
-    font-size: 13px;
-    opacity: 0.85;
+  .huc-cart-badge {
+    position: absolute;
+    top: 1px;
+    right: 8px;
   }
 }
 
 // ======= 商品区 =======
 .goods-section {
-  padding: 42px 0;
+  padding: 40px 0;
 
   .goods-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    gap: 18px;
     min-height: 200px;
 
     .goods-empty {
@@ -800,10 +620,6 @@ onMounted(() => {
       padding: 60px 20px;
       color: #909399;
       font-size: 14px;
-
-      .el-icon {
-        font-size: 40px;
-      }
     }
   }
 
@@ -812,12 +628,12 @@ onMounted(() => {
     border-radius: 10px;
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 
     &:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+      transform: translateY(-6px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
     }
 
     .goods-image-wrapper {
@@ -833,20 +649,20 @@ onMounted(() => {
       }
 
       &:hover .goods-img {
-        transform: scale(1.1);
+        transform: scale(1.08);
       }
 
       .goods-tags {
         position: absolute;
-        top: 12px;
-        left: 12px;
+        top: 10px;
+        left: 10px;
         display: flex;
         gap: 6px;
 
         .tag {
-          padding: 4px 10px;
+          padding: 3px 8px;
           border-radius: 4px;
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 600;
           color: #fff;
 
@@ -862,12 +678,12 @@ onMounted(() => {
     }
 
     .goods-info {
-      padding: 16px;
+      padding: 14px;
 
       .goods-name {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 500;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         line-height: 1.4;
         color: $text-primary;
         overflow: hidden;
@@ -878,9 +694,9 @@ onMounted(() => {
       }
 
       .goods-brief {
-        font-size: 13px;
+        font-size: 12px;
         color: $text-secondary;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -892,13 +708,13 @@ onMounted(() => {
         gap: 8px;
 
         .price {
-          font-size: 22px;
+          font-size: 20px;
           font-weight: bold;
           color: $danger-color;
         }
 
         .market-price {
-          font-size: 13px;
+          font-size: 12px;
           color: $text-secondary;
           text-decoration: line-through;
         }
@@ -911,16 +727,16 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
-  padding-bottom: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
   border-bottom: 1px solid $border-lighter;
 
   .section-title {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: bold;
     color: $text-primary;
     position: relative;
-    padding-left: 16px;
+    padding-left: 14px;
 
     &::before {
       content: '';
@@ -929,21 +745,24 @@ onMounted(() => {
       top: 50%;
       transform: translateY(-50%);
       width: 4px;
-      height: 22px;
+      height: 20px;
       background: $primary-color;
       border-radius: 2px;
     }
   }
 
   .view-all {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     color: $text-secondary;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 13px;
     transition: all 0.2s;
 
     &:hover {
       color: $primary-color;
-      transform: translateX(4px);
+      transform: translateX(3px);
     }
   }
 }
@@ -952,27 +771,87 @@ onMounted(() => {
 .app-footer {
   background: #2c3e50;
   color: #ecf0f1;
-  padding: 40px 0 20px;
+  padding: 48px 0 24px;
   margin-top: 60px;
+
+  .features-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding: 24px 0;
+    margin-bottom: 36px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s;
+
+    &:hover {
+      transform: translateY(-2px);
+
+      .el-icon {
+        opacity: 1;
+      }
+    }
+
+    .el-icon {
+      color: #409eff;
+      flex-shrink: 0;
+      opacity: 0.8;
+      transition: all 0.3s;
+    }
+
+    h3 {
+      font-size: 14px;
+      margin-bottom: 2px;
+      color: #ecf0f1;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    p {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.55);
+      margin: 0;
+      white-space: nowrap;
+    }
+  }
 
   .footer-content {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 32px;
-    margin-bottom: 32px;
+    gap: 40px;
+    margin-bottom: 36px;
   }
 
   .footer-section {
     h4 {
       font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 16px;
+      font-weight: 600;
+      margin-bottom: 18px;
       color: #fff;
+      position: relative;
+      padding-bottom: 10px;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 28px;
+        height: 2px;
+        background: $primary-color;
+        border-radius: 1px;
+      }
     }
 
     p {
-      font-size: 14px;
-      line-height: 1.8;
+      font-size: 13px;
+      line-height: 2;
       color: #bdc3c7;
     }
 
@@ -981,15 +860,16 @@ onMounted(() => {
       padding: 0;
 
       li {
-        margin-bottom: 8px;
+        margin-bottom: 10px;
 
         a {
           color: #bdc3c7;
           text-decoration: none;
-          font-size: 14px;
+          font-size: 13px;
+          transition: color 0.2s;
 
           &:hover {
-            color: #fff;
+            color: $primary-color;
           }
         }
       }
@@ -999,12 +879,22 @@ onMounted(() => {
   .footer-bottom {
     text-align: center;
     padding-top: 20px;
-    border-top: 1px solid #34495e;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 
     p {
-      font-size: 13px;
-      color: #95a5a6;
+      font-size: 12px;
+      color: #7f8c8d;
     }
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes carouselFadeIn {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
 }
 </style>

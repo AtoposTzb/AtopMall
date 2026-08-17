@@ -1,6 +1,5 @@
 <template>
   <div class="goods-list-page">
-    <AppHeader />
 
     <div class="container goods-container">
       <div class="page-header">
@@ -20,11 +19,10 @@
           <template #prefix>
             <el-icon><Search /></el-icon>
           </template>
-          <template #append>
-            <el-button @click="handleSearch">
-              <el-icon><Search /></el-icon>
-              搜索
-            </el-button>
+          <template #suffix>
+            <div class="goods-search-suffix" @click="handleSearch">
+              <el-icon :size="20"><Search /></el-icon>
+            </div>
           </template>
         </el-input>
       </div>
@@ -206,11 +204,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { getGoodsList, type GoodsItem } from "@/api/goods";
 import { getCategoryList, type CategoryItem } from "@/api/category";
-import AppHeader from "@/components/AppHeader.vue";
+
 
 const router = useRouter();
 const route = useRoute();
@@ -312,8 +310,10 @@ const loadGoods = async () => {
   loadError.value = false;
   try {
     const res = await getGoodsList(params);
-    goodsList.value = (res as any).data || [];
-    total.value = (res as any).total || 0;
+    const allGoods = (res as any).data || []
+    const onSaleGoods = allGoods.filter((g: GoodsItem) => g.on_sale)
+    goodsList.value = onSaleGoods
+    total.value = onSaleGoods.length
   } catch (error) {
     console.error("加载商品列表失败", error);
     loadError.value = true;
@@ -342,33 +342,57 @@ const handleFilterChange = () => {
   handleSearch();
 };
 
-onMounted(() => {
+const syncFromRoute = () => {
   if (route.query.ctg) {
-    searchParams.c = Number(route.query.ctg);
-  }
-  if (route.query.c) {
-    searchParams.c = Number(route.query.c);
+    searchParams.c = Number(route.query.ctg)
+  } else if (route.query.c) {
+    searchParams.c = Number(route.query.c)
+  } else {
+    searchParams.c = undefined
   }
   if (route.query.ishot) {
-    searchParams.ishot = Number(route.query.ishot);
-    hotChecked.value = true;
+    searchParams.ishot = Number(route.query.ishot)
+    hotChecked.value = true
+  } else {
+    searchParams.ishot = undefined
+    hotChecked.value = false
   }
   if (route.query.isnew) {
-    searchParams.isnew = Number(route.query.isnew);
-    newChecked.value = true;
+    searchParams.isnew = Number(route.query.isnew)
+    newChecked.value = true
+  } else {
+    searchParams.isnew = undefined
+    newChecked.value = false
   }
   if (route.query.istab) {
-    searchParams.istab = Number(route.query.istab);
+    searchParams.istab = Number(route.query.istab)
+  } else {
+    searchParams.istab = undefined
   }
   if (route.query.skey) {
-    searchParams.q = String(route.query.skey);
+    searchParams.q = String(route.query.skey)
+  } else if (route.query.q) {
+    searchParams.q = String(route.query.q)
+  } else {
+    searchParams.q = ''
   }
-  if (route.query.q) {
-    searchParams.q = String(route.query.q);
+  searchParams.p = 1
+  activeCategory.value = searchParams.c ?? null
+  activeSubCategory.value = null
+  loadGoods()
+}
+
+onMounted(() => {
+  syncFromRoute()
+  loadCategories()
+})
+
+watch(
+  () => route.query,
+  () => {
+    syncFromRoute()
   }
-  loadCategories();
-  loadGoods();
-});
+)
 </script>
 
 <style lang="scss" scoped>
@@ -394,8 +418,18 @@ onMounted(() => {
 
   .search-input {
     :deep(.el-input__wrapper) {
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-      border-radius: 8px;
+      border-radius: 24px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s;
+      padding-right: 0;
+
+      &:hover {
+        box-shadow: 0 4px 16px rgba(64, 158, 255, 0.12);
+      }
+
+      &.is-focus {
+        box-shadow: 0 4px 20px rgba(64, 158, 255, 0.2);
+      }
     }
   }
 }
@@ -767,5 +801,27 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   margin-top: 40px;
+}
+</style>
+
+<style lang="scss">
+.goods-search-suffix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #409eff;
+  padding: 0 14px;
+  transition: all 0.2s;
+  border-radius: 0 24px 24px 0;
+
+  &:hover {
+    background: rgba(64, 158, 255, 0.1);
+    color: #337ecc;
+  }
+
+  &:active {
+    background: rgba(64, 158, 255, 0.18);
+  }
 }
 </style>

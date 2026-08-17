@@ -1,6 +1,5 @@
 <template>
   <div class="checkout-page">
-    <AppHeader />
 
     <div class="container">
       <div class="page-header">
@@ -165,7 +164,7 @@ import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useCartStore } from '@/store/cart'
 import { getAddressList, createAddress, type AddressItem } from '@/api/address'
 import { createOrder } from '@/api/order'
-import AppHeader from '@/components/AppHeader.vue'
+
 
 const router = useRouter()
 const cartStore = useCartStore()

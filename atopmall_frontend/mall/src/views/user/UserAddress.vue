@@ -200,13 +200,39 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.user-address {
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: $text-primary;
+    margin: 0;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f0f5ff;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 60px;
+      height: 2px;
+      background: $primary-color;
+      border-radius: 1px;
+    }
+  }
+}
+
 .address-item {
   margin-bottom: 12px;
   padding: 16px;
   transition: all 0.3s;
+  border-radius: 10px;
+  border: 1px solid #f0f0f0;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: transparent;
   }
 }
 </style>

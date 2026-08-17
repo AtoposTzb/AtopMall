@@ -1,6 +1,5 @@
 <template>
   <div class="order-detail-page">
-    <AppHeader />
 
     <div class="container" v-loading="loading">
       <!-- 面包屑导航 -->
@@ -214,7 +213,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { getOrderDetail, type OrderItem } from "@/api/order";
-import AppHeader from "@/components/AppHeader.vue";
+
 
 const route = useRoute();
 const router = useRouter();

@@ -1,7 +1,6 @@
 <template>
   <div class="user-center-page">
-    <AppHeader />
-    
+
     <div class="container">
       <div class="user-center-layout">
         <!-- 侧边栏 -->
@@ -46,7 +45,7 @@
 
 <script setup lang="ts">
 import { useUserStore } from '@/store/user'
-import AppHeader from '@/components/AppHeader.vue'
+
 
 const userStore = useUserStore()
 </script>
@@ -54,11 +53,11 @@ const userStore = useUserStore()
 <style lang="scss" scoped>
 .user-center-page {
   min-height: 100vh;
-  background: #f5f7fa;
+  background: linear-gradient(180deg, #f0f5ff 0%, #f5f7fa 30%);
 }
 
 .container {
-  padding: 24px 0;
+  padding: 28px 0;
 }
 
 .user-center-layout {
@@ -68,40 +67,90 @@ const userStore = useUserStore()
 }
 
 .sidebar {
-  width: 220px;
+  width: 240px;
   flex-shrink: 0;
   background: #fff;
-  border-radius: 8px;
-  padding: 24px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 
   .user-info {
     text-align: center;
-    padding: 0 24px 24px;
-    border-bottom: 1px solid #f0f0f0;
-    margin-bottom: 16px;
+    padding: 28px 24px 24px;
+    background: linear-gradient(135deg, $primary-color 0%, #66b1ff 100%);
+    position: relative;
 
-    .el-avatar {
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 20px;
+      background: #fff;
+      border-radius: 50% 50% 0 0;
+    }
+
+    :deep(.el-avatar) {
       margin-bottom: 12px;
-      background: $primary-color;
+      background: rgba(255, 255, 255, 0.2);
+      border: 3px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s;
+
+      &:hover {
+        transform: scale(1.05);
+      }
     }
 
     h3 {
       font-size: 16px;
-      color: $text-primary;
+      font-weight: 600;
+      color: #fff;
       margin: 0;
+      padding-bottom: 8px;
     }
   }
 
   .user-menu {
     border-right: none;
+    padding: 8px 0;
 
-    .el-menu-item {
+    :deep(.el-menu-item) {
       height: 48px;
       line-height: 48px;
+      margin: 2px 8px;
+      border-radius: 8px;
+      font-size: 14px;
+      color: $text-primary;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #f0f5ff;
+        color: $primary-color;
+      }
+
+      &.is-active {
+        background: linear-gradient(135deg, #ecf5ff 0%, #f0f5ff 100%);
+        color: $primary-color;
+        font-weight: 600;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3px;
+          height: 20px;
+          background: $primary-color;
+          border-radius: 0 3px 3px 0;
+        }
+      }
 
       .el-icon {
         margin-right: 8px;
+        font-size: 18px;
       }
     }
   }
@@ -110,8 +159,9 @@ const userStore = useUserStore()
 .content {
   flex: 1;
   background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  min-height: 500px;
 }
 </style>

@@ -89,6 +89,29 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.user-favorite {
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f0f5ff;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 60px;
+      height: 2px;
+      background: $primary-color;
+      border-radius: 1px;
+    }
+  }
+}
+
 .fav-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -100,10 +123,13 @@ onMounted(() => {
   padding: 16px;
   cursor: pointer;
   transition: all 0.3s;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    border-color: transparent;
   }
 }
 

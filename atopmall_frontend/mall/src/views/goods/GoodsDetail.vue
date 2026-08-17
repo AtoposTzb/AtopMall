@@ -1,6 +1,5 @@
 <template>
   <div class="goods-detail-page" v-loading="loading">
-    <AppHeader />
 
     <div class="container" v-if="goods">
       <!-- 面包屑导航 -->

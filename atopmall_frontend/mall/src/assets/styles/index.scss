@@ -67,6 +67,14 @@ a {
   box-shadow: $box-shadow-base;
   padding: $spacing-lg;
   margin-bottom: $spacing-lg;
+  transition:
+    box-shadow 0.3s,
+    transform 0.3s;
+  border: 1px solid #f0f0f0;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
 }
 
 // 文本省略

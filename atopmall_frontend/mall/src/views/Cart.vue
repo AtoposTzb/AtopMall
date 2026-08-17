@@ -1,7 +1,6 @@
 <template>
   <div class="cart-page">
-    <AppHeader />
-    
+
     <div class="container">
       <div class="page-header">
         <div class="header-left">
@@ -109,7 +108,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useCartStore } from '@/store/cart'
-import AppHeader from '@/components/AppHeader.vue'
+
 
 const cartStore = useCartStore()
 
