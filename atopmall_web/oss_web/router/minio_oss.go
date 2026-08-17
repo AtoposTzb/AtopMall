@@ -11,6 +11,8 @@ func OssRouterInit(Router *gin.RouterGroup) {
 	{
 		// 前端获取MinIO直传签名接口
 		OssRouter.GET("token", handler.Token)
+		// 上传文件到MinIO
+		OssRouter.POST("upload", handler.Upload)
 		// 原阿里云回调接口，MinIO场景兼容占位
 		OssRouter.POST("/callback", handler.HandlerRequest)
 		// 清理孤儿文件（上传后超过指定时间未被业务服务认领的文件）

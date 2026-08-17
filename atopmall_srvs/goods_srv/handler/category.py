@@ -146,6 +146,16 @@ class CategoryServicer(goods_pb2_grpc.CategoryServicer):
     def DeleteCategory(self, request: goods_pb2.DeleteCategoryRequest, context):
         try:
             category = Category.get(request.id)
+            grandparent = category.parent_category   # 祖父节点（可能是 None）
+            def downgrade(pid, new_parent, dec):
+                for c in Category.select().where(Category.parent_category == pid):
+                    c.parent_category = new_parent
+                    c.level = c.level - dec
+                    c.save()
+                    downgrade(c.id, c, dec)
+
+            # 直接子分类挂到祖父节点，全部降 1 级
+            downgrade(request.id, grandparent, 1)  
             category.delete_instance()
             return empty_pb2.Empty()
         except DoesNotExist:
@@ -157,14 +167,12 @@ class CategoryServicer(goods_pb2_grpc.CategoryServicer):
     def UpdateCategory(self, request: goods_pb2.CategoryInfoRequest, context):
         try:
             category = Category.get(request.id)
-            if request.name:
-                category.name = request.name
-            if request.parentCategory:
+            category.name = request.name
+            if request.parentCategory:                      # 保留 if（web 层不发，默认0非法）
                 category.parent_category = request.parentCategory
-            if request.level:
+            if request.level:                               # 保留 if（web 层不发，默认0非法）
                 category.level = request.level
-            if request.isTab:
-                category.is_tab = request.isTab
+            category.is_tab = request.isTab
             category.save()
 
             return empty_pb2.Empty()

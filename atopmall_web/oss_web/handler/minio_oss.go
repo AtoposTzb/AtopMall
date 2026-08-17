@@ -66,6 +66,64 @@ func Token(c *gin.Context) {
 	})
 }
 
+// Upload 代理上传：前端→后端→MinIO，避免浏览器直连MinIO的ERR_CONNECTION_RESET问题
+func Upload(c *gin.Context) {
+	// 限流
+	e, b := sentinel.Entry("oss-upload", sentinel.WithTrafficType(base.Inbound))
+	if b != nil {
+		c.JSON(http.StatusTooManyRequests, gin.H{
+			"msg": "请求频率过快,请稍后重试",
+		})
+		return
+	}
+	defer func() {
+		if e != nil {
+			e.Exit()
+		}
+	}()
+	//1.1. 从HTTP请求中读取文件（Gin自动处理multipart解析）
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(400, gin.H{"code": 400, "msg": "请选择文件"})
+		return
+	}
+	// 获得一个 io.Reader 流
+	src, err := file.Open() // 打开文件流
+	if err != nil {
+		c.JSON(500, gin.H{"code": 500, "msg": "读取文件失败"})
+		return
+	}
+	defer src.Close()
+
+	conf := global.ServerConfig.MinIOInfo
+	cli := global.MinioCli
+
+	// 2. 生成唯一文件名
+	objPath := "goods/" + uuid.NewString() + ".jpg"
+	contentType := file.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "image/jpeg"
+	}
+
+	// 3. 直接流式上传到MinIO（不落盘，不切片） - 简单说文件不保存到后端本地，直接上传到MinIO
+	_, err = cli.PutObject(context.Background(), conf.BucketName, objPath, src, file.Size, minio.PutObjectOptions{
+		ContentType: contentType,
+	})
+	if err != nil {
+		sentinel.TraceError(e, err)
+		c.JSON(500, gin.H{"code": 500, "msg": "上传MinIO失败", "err": err.Error()})
+		return
+	}
+	// 4. 拼接访问URL返回给前端
+	fullImgUrl := conf.PublicPrefix + objPath
+	c.JSON(200, gin.H{
+		"code": 200,
+		"data": gin.H{
+			"url": fullImgUrl,
+		},
+	})
+}
+
 // HandlerRequest 阿里云专属回调接口，MinIO无服务端回调，保留空兼容（前端直传后主动提交url，此接口可注释删除）
 func HandlerRequest(c *gin.Context) {
 	// 限流

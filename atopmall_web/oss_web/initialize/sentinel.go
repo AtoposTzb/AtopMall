@@ -27,6 +27,13 @@ func SentinelInit() {
 			StatIntervalInMs:       1000,
 		},
 		{
+			Resource:               "oss-upload",
+			TokenCalculateStrategy: flow.Direct,
+			ControlBehavior:        flow.Reject,
+			Threshold:              10,
+			StatIntervalInMs:       1000,
+		},
+		{
 			Resource:               "oss-callback",
 			TokenCalculateStrategy: flow.Direct,
 			ControlBehavior:        flow.Reject,
