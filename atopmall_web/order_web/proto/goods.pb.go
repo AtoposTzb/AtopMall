@@ -1662,7 +1662,7 @@ type GoodsFilterRequest struct {
 	PagePerNums   int32                  `protobuf:"varint,8,opt,name=pagePerNums,proto3" json:"pagePerNums,omitempty"`
 	KeyWords      string                 `protobuf:"bytes,9,opt,name=keyWords,proto3" json:"keyWords,omitempty"`
 	Brand         int32                  `protobuf:"varint,10,opt,name=brand,proto3" json:"brand,omitempty"`
-	OnSale        bool                   `protobuf:"varint,11,opt,name=onSale,proto3" json:"onSale,omitempty"` //新增：是否上架
+	OnSale        int32                  `protobuf:"varint,11,opt,name=onSale,proto3" json:"onSale,omitempty"` //新增：是否上架
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1767,11 +1767,11 @@ func (x *GoodsFilterRequest) GetBrand() int32 {
 	return 0
 }
 
-func (x *GoodsFilterRequest) GetOnSale() bool {
+func (x *GoodsFilterRequest) GetOnSale() int32 {
 	if x != nil {
 		return x.OnSale
 	}
-	return false
+	return 0
 }
 
 type GoodsInfoResponse struct {
@@ -2233,7 +2233,7 @@ const file_goods_proto_rawDesc = "" +
 	"\bkeyWords\x18\t \x01(\tR\bkeyWords\x12\x14\n" +
 	"\x05brand\x18\n" +
 	" \x01(\x05R\x05brand\x12\x16\n" +
-	"\x06onSale\x18\v \x01(\bR\x06onSale\"\xfb\x04\n" +
+	"\x06onSale\x18\v \x01(\x05R\x06onSale\"\xfb\x04\n" +
 	"\x11GoodsInfoResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x1e\n" +
 	"\n" +

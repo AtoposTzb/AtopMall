@@ -53,8 +53,10 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
             goods = goods.filter(Goods.is_hot == True)
         if request.isNew:
             goods = goods.filter(Goods.is_new == True)
-        if request.onSale:
+        if request.onSale == 1: # 1表示上架，2表示下架
             goods = goods.filter(Goods.on_sale == True)
+        elif request.onSale == 2:
+            goods = goods.filter(Goods.on_sale == False)
         if request.priceMin:
             goods = goods.filter(Goods.shop_price >= request.priceMin)
         if request.priceMax:
@@ -67,12 +69,17 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
                 ids=[]
                 category = Category.get(Category.id == request.topCategory)
                 level = category.level
-                if level == 1: 
-                    #SELECT * FROM category WHERE parent_category_id IN ( SELECT category.id FROM category WHERE parent_category_id=130358)
-                    categorys = Category.select().where(Category.parent_category_id.in_(Category.select().where(Category.parent_category_id == request.topCategory)))
-                    for category in categorys:
-                        ids.append(category.id)
+                if level == 1:
+                    # 先查二级分类
+                    l2 = Category.select().where(Category.parent_category_id == request.topCategory)
+                    for cat in l2:
+                        ids.append(cat.id)
+                    # 再查三级分类
+                    l3 = Category.select().where(Category.parent_category_id.in_(l2))
+                    for cat in l3:
+                        ids.append(cat.id)
                 elif level == 2:
+                    ids.append(request.topCategory)
                     categorys = Category.select().where(Category.parent_category_id == request.topCategory)
                     for category in categorys:
                         ids.append(category.id)
