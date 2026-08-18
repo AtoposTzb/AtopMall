@@ -4,8 +4,8 @@ import request from '@/utils/request'
 export interface OssTokenResponse {
   code: number
   data: {
-    UploadUrl: string
-    Url: string
+    upload_url: string
+    url: string
   }
 }
 
@@ -14,19 +14,17 @@ export const getOssToken = () => {
   return request.get<OssTokenResponse>('/oss/v1/oss/token')
 }
 
-// 上传文件到 MinIO
+// 上传文件到 MinIO（通过后端代理，避免浏览器直连 MinIO 的兼容性问题）
 export const uploadFile = async (file: File): Promise<string> => {
-  const res = await getOssToken()
-  const uploadUrl = res.data.UploadUrl
-  const fileUrl = res.data.Url
-
-  await fetch(uploadUrl, {
-    method: 'PUT',
-    body: file,
-    headers: {
-      'Content-Type': file.type
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await request.post<{ code: number; data: { url: string } }>(
+    '/oss/v1/oss/upload',
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000
     }
-  })
-
-  return fileUrl
+  )
+  return (res as any).data.url
 }

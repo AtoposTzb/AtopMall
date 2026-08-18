@@ -45,7 +45,7 @@
               </div>
             </div>
             <div class="item-price">
-              <span class="price">¥{{ item.goods_price }}</span>
+              <span class="price">{{ item.goods_price }}</span>
             </div>
             <div class="item-quantity">
               <el-input-number
@@ -57,7 +57,7 @@
               />
             </div>
             <div class="item-total">
-              <span class="price">¥{{ (item.goods_price * item.nums).toFixed(2) }}</span>
+              <span class="price">{{ (item.goods_price * item.nums).toFixed(2) }}</span>
             </div>
             <div class="item-action">
               <el-button type="danger" link @click="cartStore.removeCartItem(item.goods_id)">
@@ -87,7 +87,7 @@
             <span>已选 <strong>{{ cartStore.checkedCount }}</strong> 件商品</span>
             <div class="total-wrapper">
               <span class="total-label">合计：</span>
-              <span class="total-price price">¥{{ cartStore.checkedTotalPrice }}</span>
+              <span class="total-price price">{{ cartStore.checkedTotalPrice }}</span>
             </div>
           </div>
           <el-button 

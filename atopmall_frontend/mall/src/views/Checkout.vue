@@ -67,12 +67,12 @@
             <div class="goods-info">
               <p class="goods-name">{{ item.goods_name }}</p>
               <div class="goods-meta">
-                <span class="goods-price price">¥{{ item.goods_price }}</span>
+                <span class="goods-price price">{{ item.goods_price }}</span>
                 <span class="goods-nums">× {{ item.nums }}</span>
               </div>
             </div>
             <div class="goods-total">
-              <span class="price">¥{{ (item.goods_price * item.nums).toFixed(2) }}</span>
+              <span class="price">{{ (item.goods_price * item.nums).toFixed(2) }}</span>
             </div>
           </div>
         </div>
@@ -80,7 +80,7 @@
         <div class="order-summary">
           <div class="summary-row">
             <span>商品总额</span>
-            <span class="price">¥{{ cartStore.checkedTotalPrice }}</span>
+            <span class="price">{{ cartStore.checkedTotalPrice }}</span>
           </div>
           <div class="summary-row">
             <span>运费</span>
@@ -88,7 +88,7 @@
           </div>
           <div class="summary-row total-row">
             <span>应付金额</span>
-            <span class="total-price price">¥{{ cartStore.checkedTotalPrice }}</span>
+            <span class="total-price price">{{ cartStore.checkedTotalPrice }}</span>
           </div>
         </div>
       </div>
@@ -114,7 +114,7 @@
         <div class="submit-action">
           <div class="amount-wrapper">
             <span class="amount-label">应付金额：</span>
-            <span class="amount-value price">¥{{ cartStore.checkedTotalPrice }}</span>
+            <span class="amount-value price">{{ cartStore.checkedTotalPrice }}</span>
           </div>
           <el-button type="danger" size="large" :loading="submitting" @click="handleSubmitOrder"
             :disabled="!selectedAddress || checkedItems.length === 0" class="submit-btn">

@@ -20,7 +20,7 @@ atopmall_frontend/
 │   │   └── utils/          # 工具函数
 │   └── package.json
 │
-├── admin/                   # 管理后台 🚧 待开发
+├── admin/                   # 管理后台 ✅ 已完成
 │   ├── src/
 │   │   ├── api/            # API 接口封装
 │   │   ├── assets/         # 静态资源
@@ -31,6 +31,9 @@ atopmall_frontend/
 │   │   ├── views/          # 页面视图
 │   │   └── utils/          # 工具函数
 │   └── package.json
+│
+├── deploy/                  # 部署配置
+│   └── nginx_atopmall.conf # Nginx 部署配置
 │
 ├── README.md               # 本文件
 └── PROMPT_TEMPLATES.md     # AI 代码生成 Prompt 模板
@@ -90,20 +93,21 @@ npm run dev
 | 购物车    | 商品管理、数量修改、全选/批量删除、购物车合计、继续购物入口                |   ✅   |
 | 结算页    | 地址选择、订单确认                                                         |   ✅   |
 | 订单管理  | 订单列表、订单详情                                                         |   ✅   |
-| 用户中心  | 地址管理、收藏列表                                                         |   ✅   |
+| 用户中心  | 地址管理、收藏列表、留言管理（含附件上传/详情弹窗）                        |   ✅   |
 | 登录/注册 | 弹窗模态框（不离开当前页面）、邮箱验证码注册、图形验证码登录               |   ✅   |
 
-### 管理后台（admin）🚧 待开发
+### 管理后台（admin）✅ 已完成
 
-| 模块       | 功能                         | 状态  |
-| ---------- | ---------------------------- | :---: |
-| 控制台     | 数据统计、最新订单、热销商品 |   🚧   |
-| 商品管理   | 商品列表、新增/编辑商品      |   🚧   |
-| 分类管理   | 树形结构、增删改查           |   🚧   |
-| 品牌管理   | 品牌列表、增删改查           |   🚧   |
-| 轮播图管理 | 轮播图列表、增删改查         |   🚧   |
-| 订单管理   | 订单列表、订单详情           |   🚧   |
-| 用户管理   | 用户列表                     |   🚧   |
+| 模块       | 功能                                                    | 状态  |
+| ---------- | ------------------------------------------------------- | :---: |
+| 控制台     | 数据统计、最新订单、热销商品                            |   ✅   |
+| 商品管理   | 商品列表、新增/编辑商品、上下架筛选、分类搜索、价格筛选 |   ✅   |
+| 分类管理   | 树形结构、增删改查                                      |   ✅   |
+| 品牌管理   | 品牌列表、增删改查                                      |   ✅   |
+| 轮播图管理 | 轮播图列表、增删改查                                    |   ✅   |
+| 订单管理   | 订单列表、订单详情                                      |   ✅   |
+| 用户管理   | 用户列表                                                |   ✅   |
+| 留言管理   | 留言列表、详情弹窗、附件预览/下载                       |   ✅   |
 
 ## API 接口
 
@@ -215,7 +219,7 @@ VITE_API_BASE_URL=http://localhost:8000
 
 ## AI 代码生成
 
-项目提供了完整的 Prompt 模板，用于 AI 辅助代码生成。详见 [PROMPT_TEMPLATES.md](./PROMPT_TEMPLATES.md)
+项目提供了完整的 Prompt 模板，用于 AI 辅助代码生成。~~详见 [PROMPT_TEMPLATES.md](./PROMPT_TEMPLATES.md)~~
 
 ## 常见问题
 
@@ -257,23 +261,43 @@ npm run build
 
 ### 部署到服务器
 
-将 `dist` 目录下的文件部署到 Nginx 或其他 Web 服务器。
+将 `dist` 目录下的文件部署到 Nginx 服务器。
 
-Nginx 配置示例：
+**部署路径**：
+- Mall 用户前台 → `/usr/share/nginx/html/user/`
+- Admin 管理后台 → `/usr/share/nginx/html/admin/`
+
+**访问地址**：
+- 用户前台：`http://your-server-ip/`
+- 管理后台：`http://your-server-ip/admin`
+
+Nginx 配置参考 `deploy/nginx_atopmall.conf`：
 
 ```nginx
 server {
     listen 80;
-    server_name mall.example.com;
-    root /path/to/mall/dist;
-    index index.html;
+    server_name _;
 
-    location / {
-        try_files $uri $uri/ /index.html;
+    set $backend_host 192.168.1.106:8000;
+
+    # API 网关代理
+    location /u/v1  { proxy_pass http://$backend_host; ... }
+    location /g/v1  { proxy_pass http://$backend_host; ... }
+    location /o/v1  { proxy_pass http://$backend_host; ... }
+    location /op/v1 { proxy_pass http://$backend_host; ... }
+    location /oss/v1{ proxy_pass http://$backend_host; ... }
+
+    # 管理后台（子路径 /admin）
+    location ^~ /admin {
+        alias /usr/share/nginx/html/admin/;
+        try_files $uri $uri/ /admin/index.html;
     }
 
-    location /api {
-        proxy_pass http://backend-server;
+    # 用户前台（根路径 /）
+    root /usr/share/nginx/html/user/;
+    index index.html index.htm;
+    location / {
+        try_files $uri $uri/ /index.html;
     }
 }
 ```
@@ -284,4 +308,4 @@ MIT
 
 ## 联系方式
 
-如有问题，请联系开发团队。
+如有问题，请联系yolo_t@outlook.com。

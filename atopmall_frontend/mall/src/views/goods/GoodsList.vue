@@ -169,7 +169,7 @@
                 <h3 class="goods-name text-ellipsis-2">{{ goods.name }}</h3>
                 <p class="goods-brief text-ellipsis">{{ goods.goods_brief }}</p>
                 <div class="goods-footer">
-                  <span class="price">¥{{ goods.shop_price }}</span>
+                  <span class="price">{{ goods.shop_price }}</span>
                 </div>
               </div>
             </div>

@@ -33,12 +33,11 @@ docs/notes/
 #忽略nacos缓存文件
 nacos-data/
 
-#忽略前端node_modules和dist文件夹
+#忽略前端node_modules和dist/文件夹
 node_modules/
 dist/
-
-#忽略前端代码
-atopmall_frontend/admin/
+#下一轮提交
+admin/
 
 #忽略python虚拟环境文件夹
 .venv/

@@ -45,7 +45,7 @@
             }}</el-descriptions-item>
             <el-descriptions-item label="订单金额">
               <span class="price" style="font-size: 20px; font-weight: bold"
-                >¥{{ order.total }}</span
+                >{{ order.total }}</span
               >
             </el-descriptions-item>
             <el-descriptions-item label="支付方式">{{
@@ -68,7 +68,7 @@
             <div class="goods-info">
               <p>{{ goods.name }}</p>
               <p class="text-secondary">
-                <span class="price">¥{{ goods.price }}</span> × {{ goods.nums }}
+                <span class="price">{{ goods.price }}</span> × {{ goods.nums }}
               </p>
             </div>
           </div>

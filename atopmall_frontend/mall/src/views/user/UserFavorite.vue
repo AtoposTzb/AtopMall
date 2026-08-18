@@ -25,7 +25,7 @@
             {{ item.goods_brief }}
           </p>
           <div class="fav-footer">
-            <span class="price">¥{{ item.shop_price }}</span>
+            <span class="price">{{ item.shop_price }}</span>
             <el-button
               type="danger"
               size="small"

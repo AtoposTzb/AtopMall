@@ -43,7 +43,7 @@
             
             <div class="order-total">
               <span class="label">合计：</span>
-              <span class="price">¥{{ order.total }}</span>
+              <span class="price">{{ order.total }}</span>
             </div>
             
             <div class="order-time">

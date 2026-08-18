@@ -142,7 +142,7 @@
             <h3 class="goods-name">{{ goods.name }}</h3>
             <p class="goods-brief">{{ goods.goods_brief }}</p>
             <div class="goods-footer">
-              <span class="price">¥{{ goods.shop_price }}</span>
+              <span class="price">{{ goods.shop_price }}</span>
             </div>
           </div>
         </div>
@@ -179,7 +179,7 @@
             <h3 class="goods-name">{{ goods.name }}</h3>
             <p class="goods-brief">{{ goods.goods_brief }}</p>
             <div class="goods-footer">
-              <span class="price">¥{{ goods.shop_price }}</span>
+              <span class="price">{{ goods.shop_price }}</span>
             </div>
           </div>
         </div>

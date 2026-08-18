@@ -31,6 +31,10 @@
               <el-icon><Document /></el-icon>
               <span>我的订单</span>
             </el-menu-item>
+            <el-menu-item index="/user/message">
+              <el-icon><ChatLineSquare /></el-icon>
+              <span>我的留言</span>
+            </el-menu-item>
           </el-menu>
         </aside>
 
