@@ -3,7 +3,9 @@ from loguru import logger
 from peewee import DoesNotExist
 from google.protobuf import empty_pb2
 from goods_srv.model.models import Goods,Category,Brands
-from goods_srv.proto import goods_pb2,goods_pb2_grpc
+from goods_srv.proto import goods_pb2,goods_pb2_grpc,inventory_pb2,inventory_pb2_grpc
+from goods_srv.settings import settings
+from common.register.consul import ConsulRegister
 
 # 商品服务
 class GoodsServicer(goods_pb2_grpc.GoodsServicer):
@@ -51,6 +53,8 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
             goods = goods.filter(Goods.is_hot == True)
         if request.isNew:
             goods = goods.filter(Goods.is_new == True)
+        if request.onSale:
+            goods = goods.filter(Goods.on_sale == True)
         if request.priceMin:
             goods = goods.filter(Goods.shop_price >= request.priceMin)
         if request.priceMax:
@@ -175,8 +179,28 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
         goods.on_sale = request.onSale
 
         goods.save()
+        #设置初始库存
+        if request.stocks > 0:
+            try:
+                inv_consul = ConsulRegister(settings.CONSUL_HOST, settings.CONSUL_PORT)
+                inv_srv_address, inv_srv_port = inv_consul.get_host_port(
+                    f'Service=="{settings.INVENTORY_SRV_NAME}"'
+                )
+                if not inv_srv_address or not inv_srv_port:
+                    logger.error("库存服务不可用，无法设置初始库存")
+                else:
+                    inv_channel = grpc.insecure_channel(f"{inv_srv_address}:{inv_srv_port}")
+                    inv_stub = inventory_pb2_grpc.InventoryStub(inv_channel)
+                    inv_stub.SetInv(
+                        inventory_pb2.GoodsInvInfo(
+                            goodsId=goods.id,
+                            num=request.stocks,
+                        )
+                    )
+                    logger.info(f"商品id={goods.id}库存设置成功，库存数量={request.stocks}")
+            except Exception as e:
+                logger.error(f"设置库存失败: {e}")
 
-        #TODO 此处完善库存的设置 - 分布式事务
         return self.convert_model_to_message(goods)
     
     @logger.catch # 更新商品
@@ -221,7 +245,27 @@ class GoodsServicer(goods_pb2_grpc.GoodsServicer):
 
         goods.save()
 
-        #TODO 此处完善库存的设置 - 分布式事务
+        if request.stocks > 0:
+            try:
+                inv_consul = ConsulRegister(settings.CONSUL_HOST, settings.CONSUL_PORT)
+                inv_srv_address, inv_srv_port = inv_consul.get_host_port(
+                    f'Service=="{settings.INVENTORY_SRV_NAME}"'
+                )
+                if not inv_srv_address or not inv_srv_port:
+                    logger.error("库存服务不可用，无法更新库存")
+                else:
+                    inv_channel = grpc.insecure_channel(f"{inv_srv_address}:{inv_srv_port}")
+                    inv_stub = inventory_pb2_grpc.InventoryStub(inv_channel)
+                    inv_stub.SetInv(
+                        inventory_pb2.GoodsInvInfo(
+                            goodsId=goods.id,
+                            num=request.stocks,
+                        )
+                    )
+                    logger.info(f"商品id={goods.id}库存更新成功，库存数量={request.stocks}")
+            except Exception as e:
+                logger.error(f"更新库存失败: {e}")
+
         return self.convert_model_to_message(goods)
 
     @logger.catch 

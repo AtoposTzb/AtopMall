@@ -36,6 +36,10 @@ func GetGoodsList(ctx *gin.Context) {
 	if isTab == "1" {
 		req.IsTab = true
 	}
+	onSale := ctx.DefaultQuery("onsale", "0")
+	if onSale == "1" {
+		req.OnSale = true
+	}
 	categoryId := ctx.DefaultQuery("c", "0")
 	categoryIdInt, _ := strconv.Atoi(categoryId)
 	req.TopCategory = int32(categoryIdInt)

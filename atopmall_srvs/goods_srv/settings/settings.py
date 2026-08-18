@@ -44,5 +44,8 @@ SERVICE_NAME = data["name"]
 SERVICE_ID = data["name"]
 SERVICE_TAGS = data["tags"]
 
+# 库存服务配置
+INVENTORY_SRV_NAME = data["inventory_srv"]["name"]
+
 # jaeger链路追踪配置,SERVICE_NAME同上
 JAEGER_ENDPOINT = data["jaeger"]["endpoint"]

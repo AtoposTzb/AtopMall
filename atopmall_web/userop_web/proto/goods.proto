@@ -235,6 +235,7 @@ message GoodsFilterRequest {
   int32 pagePerNums = 8;
   string keyWords = 9;
   int32 brand = 10;
+  bool onSale = 11; //新增：是否上架
 }
 
 
