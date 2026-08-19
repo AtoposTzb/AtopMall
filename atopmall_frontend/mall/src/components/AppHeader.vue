@@ -1,6 +1,11 @@
 <template>
   <header class="app-header">
-    <div class="container flex-between">
+    <div class="container header-main">
+      <!-- 移动端汉堡菜单按钮 -->
+      <div class="hamburger show-mobile" @click="mobileMenuOpen = !mobileMenuOpen">
+        <el-icon :size="24"><Menu /></el-icon>
+      </div>
+
       <!-- Logo -->
       <router-link to="/" class="logo">
         <el-icon :size="28"><Shop /></el-icon>
@@ -8,7 +13,7 @@
       </router-link>
 
       <!-- 搜索框 -->
-      <div class="header-search">
+      <div class="header-search hide-mobile">
         <el-input
           v-model="searchKeyword"
           placeholder="搜索商品"
@@ -27,24 +32,24 @@
       <!-- 右侧导航 -->
       <div class="header-right">
         <template v-if="userStore.isAuthenticated">
-          <router-link to="/user" class="header-link">{{ userStore.userName }}</router-link>
-          <el-button size="small" @click="handleLogout">退出</el-button>
+          <router-link to="/user" class="header-link hide-mobile">{{ userStore.userName }}</router-link>
+          <el-button size="small" class="hide-mobile" @click="handleLogout">退出</el-button>
         </template>
         <template v-else>
-          <span class="header-link" @click="openLogin">登录</span>
-          <span class="header-link" @click="openRegister">注册</span>
+          <span class="header-link hide-mobile" @click="openLogin">登录</span>
+          <span class="header-link hide-mobile" @click="openRegister">注册</span>
         </template>
         <router-link to="/cart" class="header-link cart-link">
           <el-badge :value="cartStore.totalCount" :hidden="cartStore.totalCount === 0">
             <el-icon :size="20"><ShoppingCart /></el-icon>
           </el-badge>
-          <span>购物车</span>
+          <span class="hide-mobile">购物车</span>
         </router-link>
       </div>
     </div>
 
-    <!-- 横向分类标签栏 -->
-    <div class="container header-tab-bar">
+    <!-- 横向分类标签栏（PC端） -->
+    <div class="container header-tab-bar hide-mobile">
       <div class="tab-bar">
         <!-- 全部商品分类（级联菜单） -->
         <div
@@ -81,6 +86,46 @@
         </router-link>
       </div>
     </div>
+
+    <!-- 移动端展开菜单 -->
+    <transition name="slide-down">
+      <div class="mobile-menu" v-if="mobileMenuOpen">
+        <div class="mobile-search">
+          <el-input
+            v-model="searchKeyword"
+            placeholder="搜索商品"
+            size="large"
+            @keyup.enter="handleMobileSearch"
+          >
+            <template #suffix>
+              <div class="search-suffix" @click="handleMobileSearch">
+                <el-icon :size="20"><Search /></el-icon>
+              </div>
+            </template>
+          </el-input>
+        </div>
+        <div class="mobile-nav">
+          <router-link to="/goods" class="mobile-nav-item" @click="mobileMenuOpen = false">全部商品</router-link>
+          <router-link
+            v-for="tab in tabCategories"
+            :key="tab.id"
+            :to="{ path: '/goods', query: { ctg: tab.id } }"
+            class="mobile-nav-item"
+            @click="mobileMenuOpen = false"
+          >
+            {{ tab.name }}
+          </router-link>
+        </div>
+        <div class="mobile-user" v-if="!userStore.isAuthenticated">
+          <el-button type="primary" size="large" @click="openLogin; mobileMenuOpen = false">登录</el-button>
+          <el-button size="large" @click="openRegister; mobileMenuOpen = false">注册</el-button>
+        </div>
+        <div class="mobile-user" v-else>
+          <router-link to="/user" class="mobile-nav-item" @click="mobileMenuOpen = false">个人中心</router-link>
+          <el-button size="small" @click="handleLogout">退出</el-button>
+        </div>
+      </div>
+    </transition>
   </header>
 
   <!-- Teleport: 级联下拉菜单渲染到 body，彻底脱离所有父容器堆叠上下文 -->
@@ -159,8 +204,13 @@ const openRegister = () => open('register')
 
 const handleSearch = () => {
   if (searchKeyword.value) {
+    mobileMenuOpen.value = false
     router.push({ path: '/goods', query: { q: searchKeyword.value } })
   }
+}
+
+const handleMobileSearch = () => {
+  handleSearch()
 }
 
 const handleLogout = () => {
@@ -175,6 +225,7 @@ const catError = ref(false)
 const activeTab = ref(0)
 const showCatDropdown = ref(false)
 const hoveredL1 = ref<number | null>(null)
+const mobileMenuOpen = ref(false)
 let closeTimer: ReturnType<typeof setTimeout> | null = null
 
 const categoryTriggerRef = ref<HTMLElement | null>(null)
@@ -428,6 +479,94 @@ onUnmounted(() => {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+// 移动端汉堡菜单样式
+.hamburger {
+  cursor: pointer;
+  padding: 8px;
+  color: $text-primary;
+  margin-right: 8px;
+}
+
+// 移动端展开菜单
+.mobile-menu {
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+
+  .mobile-search {
+    margin-bottom: 16px;
+  }
+
+  .mobile-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+
+    .mobile-nav-item {
+      display: block;
+      padding: 12px 16px;
+      font-size: 15px;
+      color: $text-primary;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #ecf5ff;
+        color: $primary-color;
+      }
+    }
+  }
+
+  .mobile-user {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+  }
+}
+
+// 移动端滑入动画
+.slide-down-enter-active {
+  transition: all 0.3s ease;
+}
+.slide-down-leave-active {
+  transition: all 0.2s ease;
+}
+.slide-down-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+// 响应式：移动端
+@media (max-width: $bp-mobile) {
+  .app-header {
+    padding: 10px 0 0 0;
+
+    .header-main {
+      .logo {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+
+      .header-right {
+        gap: 8px;
+        margin-left: auto;
+
+        .cart-link {
+          padding: 6px 10px;
+        }
+      }
+    }
+  }
+}
 </style>
 
 <!-- 级联下拉菜单样式（非 scoped，因为 Teleport 到 body 后脱离组件作用域） -->
@@ -579,6 +718,13 @@ onUnmounted(() => {
     padding: 40px 20px;
     color: #909399;
     font-size: 13px;
+  }
+}
+
+// 移动端隐藏级联下拉菜单
+@media (max-width: $bp-mobile) {
+  .cascade-dropdown {
+    display: none !important;
   }
 }
 </style>

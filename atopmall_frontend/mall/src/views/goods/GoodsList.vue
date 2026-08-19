@@ -147,6 +147,15 @@
             </el-tag>
           </div>
             <div class="filter-right">
+              <div class="price-sort" @click="toggleSort">
+                <el-icon :size="16"><Sort /></el-icon>
+                <span>价格</span>
+                <el-icon :size="12" class="sort-arrow">
+                  <CaretTop v-if="sortOrder === 'asc'" />
+                  <CaretBottom v-else-if="sortOrder === 'desc'" />
+                  <Sort v-else />
+                </el-icon>
+              </div>
               <span class="result-count">共 {{ total }} 件商品</span>
             </div>
           </div>
@@ -224,6 +233,7 @@ const activeCategory = ref<number | null>(null);
 const activeSubCategory = ref<number | null>(null);
 const expandedCategories = ref<number[]>([]);
 const expandedSubCategories = ref<number[]>([]);
+const sortOrder = ref<'default' | 'asc' | 'desc'>('default');
 
 const searchParams = reactive({
   p: 1,
@@ -314,6 +324,7 @@ const loadGoods = async () => {
     const onSaleGoods = allGoods.filter((g: GoodsItem) => g.on_sale)
     goodsList.value = onSaleGoods
     total.value = onSaleGoods.length
+    applySort()
   } catch (error) {
     console.error("加载商品列表失败", error);
     loadError.value = true;
@@ -340,6 +351,25 @@ const handleFilterChange = () => {
   searchParams.ishot = hotChecked.value ? 1 : undefined;
   searchParams.isnew = newChecked.value ? 1 : undefined;
   handleSearch();
+};
+
+const toggleSort = () => {
+  if (sortOrder.value === 'default') {
+    sortOrder.value = 'asc';
+  } else if (sortOrder.value === 'asc') {
+    sortOrder.value = 'desc';
+  } else {
+    sortOrder.value = 'default';
+  }
+  applySort();
+};
+
+const applySort = () => {
+  if (sortOrder.value === 'asc') {
+    goodsList.value.sort((a, b) => a.shop_price - b.shop_price);
+  } else if (sortOrder.value === 'desc') {
+    goodsList.value.sort((a, b) => b.shop_price - a.shop_price);
+  }
 };
 
 const syncFromRoute = () => {
@@ -676,6 +706,33 @@ watch(
   }
 
   .filter-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .price-sort {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 14px;
+      border: 1px solid $border-light;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: $text-regular;
+      user-select: none;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: $primary-color;
+        color: $primary-color;
+      }
+
+      .sort-arrow {
+        color: $primary-color;
+      }
+    }
+
     .result-count {
       font-size: 14px;
       color: $text-secondary;
@@ -801,6 +858,63 @@ watch(
   display: flex;
   justify-content: center;
   margin-top: 40px;
+}
+
+// ==================== 响应式 ====================
+@media (max-width: $bp-mobile) {
+  .page-header {
+    padding: 20px 0 16px;
+
+    .page-title {
+      font-size: 24px;
+    }
+  }
+
+  .goods-layout {
+    flex-direction: column;
+
+    .sidebar {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+
+      .sidebar-section {
+        flex: 1;
+        min-width: 140px;
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .goods-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .goods-card {
+    .goods-image-wrapper .goods-img {
+      height: 160px;
+    }
+
+    .goods-info {
+      padding: 10px;
+
+      .goods-name {
+        font-size: 13px;
+      }
+
+      .goods-footer .price {
+        font-size: 18px;
+      }
+    }
+  }
 }
 </style>
 

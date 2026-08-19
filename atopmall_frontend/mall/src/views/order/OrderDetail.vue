@@ -74,37 +74,22 @@
           </div>
         </div>
 
-        <!-- 待支付：显示支付倒计时和支付方式 -->
+        <!-- 待支付：显示支付提示和支付方式 -->
         <div class="card" v-if="isPayable">
           <h3>完成支付</h3>
 
-          <div class="countdown-bar" :class="{ urgent: remainingSeconds <= 120 }" v-if="!isExpired">
-            <div class="countdown-left">
-              <el-icon class="countdown-icon" :class="{ pulse: remainingSeconds <= 120 }"><Clock /></el-icon>
-              <span class="countdown-label">支付剩余</span>
-              <span class="countdown-time">{{ countdownText }}</span>
-            </div>
-            <div class="countdown-progress">
-              <div class="progress-track">
-                <div class="progress-fill" :style="{ width: (remainingSeconds / COUNTDOWN_SECONDS * 100) + '%' }"></div>
-              </div>
-            </div>
-          </div>
-          <div class="countdown-bar expired" v-else>
-            <div class="expired-content">
-              <el-icon><WarningFilled /></el-icon>
-              <span>支付已超时，订单可能已关闭</span>
-            </div>
-            <el-button
-              type="primary"
-              size="small"
-              @click="loadOrder"
-              >刷新状态</el-button
-            >
-          </div>
+          <el-alert
+            type="warning"
+            :closable="false"
+            show-icon
+            class="pay-warning"
+          >
+            <template #title>
+              订单将在 <strong>10分钟</strong> 后超时自动取消，请尽快完成支付
+            </template>
+          </el-alert>
 
-          <template v-if="!isExpired">
-            <div class="pay-section">
+          <div class="pay-section">
               <div class="pay-methods">
                 <div class="pay-method-label">选择支付方式</div>
                 <div class="pay-method-cards">
@@ -185,12 +170,7 @@
                 </el-button>
               </div>
             </div>
-          </template>
-
-          <div class="pay-actions" v-else>
-            <el-button @click="goBack">返回订单列表</el-button>
           </div>
-        </div>
 
         <!-- 已支付/已发货等 -->
         <div class="card action-card" v-if="!isPayable">
@@ -209,7 +189,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { getOrderDetail, type OrderItem } from "@/api/order";
@@ -222,40 +202,6 @@ const loading = ref(false);
 const paying = ref(false);
 const payMethod = ref("alipay");
 const postMessage = ref("");
-
-// 支付倒计时（与后端 RocketMQ delay_level=14 对应，10分钟）
-const COUNTDOWN_SECONDS = 600;
-const remainingSeconds = ref(COUNTDOWN_SECONDS);
-const isExpired = ref(false);
-let timer: ReturnType<typeof setInterval> | null = null;
-
-const countdownText = computed(() => {
-  const m = Math.floor(remainingSeconds.value / 60);
-  const s = remainingSeconds.value % 60;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-});
-
-function startCountdown() {
-  stopCountdown();
-  remainingSeconds.value = COUNTDOWN_SECONDS;
-  isExpired.value = false;
-
-  timer = setInterval(() => {
-    remainingSeconds.value--;
-    if (remainingSeconds.value <= 0) {
-      isExpired.value = true;
-      stopCountdown();
-      loadOrder();
-    }
-  }, 1000);
-}
-
-function stopCountdown() {
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
-  }
-}
 
 const orderId = Number(route.params.id);
 
@@ -303,13 +249,9 @@ const getStatusType = (
   return "info";
 };
 
-// 返回上一页（用户中心 > 订单列表），如果没有上一页则回首页
+// 返回订单列表
 const goBack = () => {
-  if (window.history.length > 1) {
-    router.back();
-  } else {
-    router.push("/");
-  }
+  router.push("/user/orders");
 };
 
 const handlePay = () => {
@@ -336,9 +278,6 @@ async function loadOrder() {
   try {
     const res = await getOrderDetail(orderId);
     order.value = res as unknown as OrderItem;
-    if (order.value && isPayable.value) {
-      startCountdown();
-    }
   } catch (error) {
     console.error("加载订单详情失败", error);
   } finally {
@@ -348,10 +287,6 @@ async function loadOrder() {
 
 onMounted(() => {
   loadOrder();
-});
-
-onUnmounted(() => {
-  stopCountdown();
 });
 </script>
 
@@ -435,93 +370,8 @@ onUnmounted(() => {
   }
 }
 
-.countdown-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #fef0f0 0%, #fff5f5 100%);
-  border: 1px solid #fde2e2;
-  border-radius: 10px;
+.pay-warning {
   margin-bottom: 24px;
-  font-size: 14px;
-  color: #f56c6c;
-  transition: all 0.3s;
-
-  &.urgent {
-    background: linear-gradient(135deg, #fef0f0 0%, #fde2e2 100%);
-    border-color: #fab6b6;
-    animation: urgentPulse 2s ease-in-out infinite;
-  }
-
-  .countdown-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .countdown-icon {
-    font-size: 18px;
-
-    &.pulse {
-      animation: pulse 1s ease-in-out infinite;
-    }
-  }
-
-  .countdown-label {
-    color: #606266;
-    font-size: 13px;
-  }
-
-  .countdown-time {
-    font-size: 22px;
-    font-weight: bold;
-    font-variant-numeric: tabular-nums;
-    color: #f56c6c;
-    letter-spacing: 1px;
-  }
-
-  .countdown-progress {
-    .progress-track {
-      width: 100%;
-      height: 4px;
-      background: #fde2e2;
-      border-radius: 2px;
-      overflow: hidden;
-
-      .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #f56c6c 0%, #e6a23c 100%);
-        border-radius: 2px;
-        transition: width 1s linear;
-      }
-    }
-  }
-
-  &.expired {
-    background: #f5f7fa;
-    border-color: #e4e7ed;
-    color: #909399;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-
-    .expired-content {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-@keyframes urgentPulse {
-  0%, 100% { border-color: #fab6b6; }
-  50% { border-color: #f56c6c; }
 }
 
 .pay-section {
@@ -694,6 +544,94 @@ onUnmounted(() => {
   p {
     font-size: 16px;
     margin-bottom: 24px;
+  }
+}
+
+// ==================== 响应式 ====================
+@media (max-width: $bp-mobile) {
+  .breadcrumb {
+    padding: 12px 0 0;
+  }
+
+  .page-title {
+    font-size: 18px;
+    margin: 12px 0;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+
+    h3 {
+      font-size: 15px;
+    }
+  }
+
+  :deep(.el-descriptions) {
+    --el-descriptions-item-bordered-label-background: #fafafa;
+  }
+
+  :deep(.el-descriptions__body) {
+    .el-descriptions__table {
+      display: block;
+
+      tbody {
+        display: block;
+      }
+
+      tr {
+        display: flex;
+        flex-direction: column;
+      }
+
+      td {
+        display: flex;
+        padding: 8px 12px;
+
+        .el-descriptions__label {
+          width: 70px;
+          flex-shrink: 0;
+          font-weight: 500;
+        }
+
+        .el-descriptions__content {
+          flex: 1;
+        }
+      }
+    }
+  }
+
+  .goods-item {
+    .goods-img {
+      width: 64px;
+      height: 64px;
+    }
+  }
+
+  .countdown-bar {
+    padding: 12px 14px;
+
+    .countdown-time {
+      font-size: 18px;
+    }
+
+    &.expired {
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start;
+    }
+  }
+
+  .pay-section {
+    .pay-card {
+      padding: 12px 14px;
+
+      .pay-card-icon {
+        width: 36px;
+        height: 36px;
+      }
+    }
   }
 }
 </style>

@@ -191,14 +191,14 @@
       <div class="container">
         <div class="features-row">
           <div class="feature-item">
-            <el-icon :size="28"><Shield /></el-icon>
+            <el-icon :size="28"><Medal /></el-icon>
             <div>
               <h3>品质保障</h3>
               <p>正品行货 品质护航</p>
             </div>
           </div>
           <div class="feature-item">
-            <el-icon :size="28"><Truck /></el-icon>
+            <el-icon :size="28"><Ship /></el-icon>
             <div>
               <h3>极速物流</h3>
               <p>多仓直发 极速送达</p>
@@ -884,6 +884,64 @@ onMounted(() => {
     p {
       font-size: 12px;
       color: #7f8c8d;
+    }
+  }
+}
+
+// ==================== 响应式 ====================
+@media (max-width: $bp-mobile) {
+  .hero-wrapper {
+    height: 260px;
+  }
+
+  .hero-user-card {
+    display: none;
+  }
+
+  .goods-section {
+    padding: 24px 0;
+
+    .goods-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .goods-card {
+      .goods-info {
+        padding: 10px;
+
+        .goods-name {
+          font-size: 13px;
+        }
+
+        .goods-footer .price {
+          font-size: 16px;
+        }
+      }
+    }
+  }
+
+  .section-header {
+    margin-bottom: 16px;
+
+    .section-title {
+      font-size: 18px;
+    }
+  }
+
+  .app-footer {
+    padding: 32px 0 20px;
+    margin-top: 40px;
+
+    .features-row {
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 16px 0;
+    }
+
+    .footer-content {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
     }
   }
 }

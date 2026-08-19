@@ -221,3 +221,29 @@ a {
   justify-content: center;
   padding: $spacing-lg 0;
 }
+
+// ==================== 响应式工具类 ====================
+.hide-mobile {
+  @media (max-width: $bp-mobile) {
+    display: none !important;
+  }
+}
+
+.show-mobile {
+  display: none !important;
+
+  @media (max-width: $bp-mobile) {
+    display: flex !important;
+  }
+}
+
+// 移动端容器
+@media (max-width: $bp-mobile) {
+  .container {
+    padding: 0 12px;
+  }
+
+  body {
+    font-size: 14px;
+  }
+}

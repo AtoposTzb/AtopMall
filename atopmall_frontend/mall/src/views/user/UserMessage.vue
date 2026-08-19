@@ -627,4 +627,24 @@ onMounted(() => {
     text-decoration: underline;
   }
 }
+
+@media (max-width: $bp-mobile) {
+  .page-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .message-list .message-item {
+    padding: 14px;
+
+    .message-header h4 {
+      font-size: 14px;
+    }
+
+    .message-body p {
+      font-size: 13px;
+    }
+  }
+}
 </style>

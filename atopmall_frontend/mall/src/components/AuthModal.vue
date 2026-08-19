@@ -272,4 +272,12 @@ onMounted(() => {
   font-size: 13px;
   color: #909399;
 }
+
+// 响应式：移动端弹窗宽度
+@media (max-width: $bp-mobile) {
+  :deep(.el-dialog) {
+    width: 90% !important;
+    max-width: 400px;
+  }
+}
 </style>

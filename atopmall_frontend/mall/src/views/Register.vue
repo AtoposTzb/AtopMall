@@ -347,6 +347,13 @@ const handleRegister = async () => {
     transform: translateY(0);
   }
 }
+
+@media (max-width: $bp-mobile) {
+  .register-card {
+    width: 90%;
+    padding: 32px 24px;
+  }
+}
 </style>
 
 <style lang="scss">

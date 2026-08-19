@@ -881,4 +881,77 @@ onUnmounted(() => {
 .fade-leave-to {
   opacity: 0;
 }
+
+// ==================== 响应式 ====================
+@media (max-width: $bp-mobile) {
+  .product-card {
+    padding: 16px;
+
+    .product-body {
+      flex-direction: column;
+      gap: 24px;
+    }
+  }
+
+  .gallery {
+    width: 100%;
+
+    .main-image-box {
+      width: 100%;
+      height: 0;
+      padding-bottom: 100%;
+      position: relative;
+
+      .main-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    .thumb-strip {
+      .thumb-item {
+        width: 56px;
+        height: 56px;
+      }
+    }
+  }
+
+  .info {
+    .product-name {
+      font-size: 18px;
+    }
+
+    .price-card .price-row {
+      .price-number {
+        font-size: 28px;
+      }
+    }
+
+    .action-row {
+      flex-wrap: wrap;
+
+      .btn {
+        height: 46px;
+        font-size: 14px;
+        padding: 0 16px;
+      }
+
+      .btn-fav {
+        min-width: 100%;
+        flex-direction: row;
+        gap: 8px;
+      }
+    }
+  }
+
+  .back-to-top {
+    right: 16px;
+    bottom: 60px;
+    width: 40px;
+    height: 40px;
+  }
+}
 </style>

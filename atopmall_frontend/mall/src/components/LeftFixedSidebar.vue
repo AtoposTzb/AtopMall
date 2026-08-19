@@ -124,4 +124,10 @@ const { offsetY, onMouseDown } = useDraggable()
     }
   }
 }
+
+@media (max-width: $bp-mobile) {
+  .left-fixed-sidebar {
+    display: none;
+  }
+}
 </style>

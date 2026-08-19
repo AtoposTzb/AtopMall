@@ -168,4 +168,53 @@ const userStore = useUserStore()
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   min-height: 500px;
 }
+
+@media (max-width: $bp-mobile) {
+  .user-center-page {
+    background: $bg-page;
+  }
+
+  .container {
+    padding: 0;
+  }
+
+  .user-center-layout {
+    flex-direction: column;
+    gap: 0;
+    min-height: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+
+    .user-info {
+      padding: 20px 24px 16px;
+
+      &::after {
+        height: 12px;
+      }
+
+      h3 {
+        font-size: 15px;
+      }
+    }
+
+    .user-menu {
+      :deep(.el-menu-item) {
+        height: 44px;
+        line-height: 44px;
+        font-size: 13px;
+      }
+    }
+  }
+
+  .content {
+    border-radius: 0;
+    box-shadow: none;
+    padding: 16px 12px;
+    min-height: auto;
+  }
+}
 </style>

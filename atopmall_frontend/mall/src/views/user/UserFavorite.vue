@@ -198,4 +198,29 @@ onMounted(() => {
     }
   }
 }
+
+@media (max-width: $bp-mobile) {
+  .fav-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .fav-card {
+    .fav-image {
+      height: 140px;
+    }
+
+    .fav-info {
+      padding: 10px;
+
+      .fav-name {
+        font-size: 13px;
+      }
+
+      .fav-footer .price {
+        font-size: 16px;
+      }
+    }
+  }
+}
 </style>

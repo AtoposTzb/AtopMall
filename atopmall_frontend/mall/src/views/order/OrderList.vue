@@ -129,7 +129,9 @@ const loadOrders = async () => {
   loading.value = true
   try {
     const res = await getOrderList({ p: currentPage.value, pnum: pageSize })
-    orders.value = (res as any).data || []
+    orders.value = ((res as any).data || []).sort((a: OrderItem, b: OrderItem) =>
+      new Date(b.add_time).getTime() - new Date(a.add_time).getTime()
+    )
     total.value = (res as any).total || 0
   } catch (error) {
     console.error('加载订单失败', error)
@@ -240,6 +242,23 @@ onMounted(() => {
     border-top: 1px solid $border-lighter;
     display: flex;
     justify-content: flex-end;
+  }
+}
+
+// ==================== 响应式 ====================
+@media (max-width: $bp-mobile) {
+  .page-title {
+    font-size: 18px;
+  }
+
+  .order-card .order-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .order-body .order-info .info-item span {
+    font-size: 13px;
   }
 }
 </style>

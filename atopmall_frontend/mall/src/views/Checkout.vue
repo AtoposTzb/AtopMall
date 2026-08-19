@@ -572,4 +572,58 @@ onMounted(async () => {
     }
   }
 }
+
+// ==================== 响应式 ====================
+@media (max-width: $bp-mobile) {
+  .page-header {
+    padding: 20px 0 16px;
+
+    .page-title {
+      font-size: 22px;
+    }
+  }
+
+  .section-card {
+    padding: 16px;
+
+    .section-header {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+  }
+
+  .address-list {
+    grid-template-columns: 1fr;
+  }
+
+  .submit-section {
+    padding: 16px;
+
+    .submit-info {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .submit-action {
+      flex-direction: column;
+      gap: 16px;
+      align-items: stretch;
+
+      .amount-wrapper {
+        justify-content: space-between;
+
+        .amount-value {
+          font-size: 24px;
+        }
+      }
+
+      .submit-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 0;
+      }
+    }
+  }
+}
 </style>

@@ -173,4 +173,16 @@ onMounted(() => {
     }
   }
 }
+
+@media (max-width: $bp-mobile) {
+  .user-profile {
+    :deep(.el-form-item__label) {
+      width: 60px !important;
+    }
+
+    :deep(.el-form) {
+      max-width: 100% !important;
+    }
+  }
+}
 </style>

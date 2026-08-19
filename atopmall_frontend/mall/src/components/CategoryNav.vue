@@ -182,4 +182,17 @@ const handleTriggerEnter = async () => {
     }
   }
 }
+
+// 移动端隐藏 Mega Menu
+@media (max-width: $bp-mobile) {
+  .category-nav {
+    .category-trigger {
+      display: none;
+    }
+
+    .mega-menu {
+      display: none !important;
+    }
+  }
+}
 </style>

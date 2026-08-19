@@ -138,4 +138,10 @@ const scrollToTop = () => {
     }
   }
 }
+
+@media (max-width: $bp-mobile) {
+  .fixed-sidebar {
+    display: none;
+  }
+}
 </style>

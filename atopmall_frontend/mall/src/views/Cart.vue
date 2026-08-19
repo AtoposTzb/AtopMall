@@ -327,4 +327,127 @@ onMounted(() => {
     margin-bottom: 24px;
   }
 }
+
+// ==================== 响应式 ====================
+@media (max-width: $bp-mobile) {
+  .cart-page {
+    padding-bottom: 56px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 0 12px;
+
+    .header-left .page-title {
+      font-size: 20px;
+    }
+
+    .header-left .page-subtitle {
+      font-size: 13px;
+    }
+  }
+
+  .cart-wrapper {
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .cart-header {
+    display: none;
+  }
+
+  .cart-items .cart-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 0;
+    position: relative;
+
+    .item-check {
+      flex-shrink: 0;
+      padding-top: 30px;
+    }
+
+    .item-goods {
+      flex: 1;
+      min-width: 0;
+
+      .goods-img {
+        width: 80px;
+        height: 80px;
+        flex-shrink: 0;
+      }
+
+      .goods-info .goods-name {
+        font-size: 13px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+    }
+
+    .item-price {
+      display: none;
+    }
+
+    .item-quantity {
+      margin-left: 30px;
+    }
+
+    .item-total {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+
+      .price {
+        font-size: 15px;
+        font-weight: 700;
+      }
+    }
+
+    .item-action {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      padding-right: 4px;
+      margin-top: -4px;
+    }
+  }
+
+  .cart-footer {
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 8px;
+    position: sticky;
+    bottom: 56px;
+
+    .footer-right {
+      flex-direction: column;
+      width: 100%;
+      gap: 10px;
+
+      .summary {
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+        align-items: center;
+
+        .total-wrapper .total-price {
+          font-size: 20px;
+        }
+      }
+
+      .checkout-btn {
+        width: 100%;
+        padding: 12px;
+        font-size: 15px;
+      }
+    }
+  }
+}
 </style>

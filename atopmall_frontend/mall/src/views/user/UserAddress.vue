@@ -235,4 +235,17 @@ onMounted(() => {
     border-color: transparent;
   }
 }
+
+@media (max-width: $bp-mobile) {
+  .page-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .address-item .address-header {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
 </style>
